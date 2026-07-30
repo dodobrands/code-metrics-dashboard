@@ -1,6 +1,6 @@
-# Metrics data is never committed — fetched fresh at publish time and injected
-# into the Pages artifact only (see .github/workflows/deploy.yml).
+# Metrics data is never committed — generated at publish time (mcm get → build.py)
+# and injected into the Pages artifact only (see .github/workflows/deploy.yml).
 raw.json
 data/raw.json
-metrics.json
-data/metrics.json
+data/meta.json
+data/charts/
