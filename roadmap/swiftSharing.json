@@ -1,0 +1,4 @@
+{
+  "title": "Move from our own repositories to Swift Sharing",
+  "description": "<p>Problems with our current repositories:</p> <ol> <li>Awkward change subscriptions.</li> <li>Misuse: storing <code>[Item]</code> in a <code>SingleRepository</code> instead of a <code>CollectionRepository</code>.</li> <li>Singleton repositories don't fit parallelized Swift Testing.</li> <li>Simple but verbose repository boilerplate.</li> <li>It's all code that could just not exist.</li> </ol> <p>Moving to <a href=\"https://github.com/pointfreeco/swift-sharing\">Swift Sharing</a>:</p> <ol> <li>Built-in change subscriptions, including from SwiftUI.</li> <li>Can't be misused.</li> <li>Built on <code>@TaskLocal</code> — plays nicely with parallel Swift Testing.</li> <li>Super-simple setup.</li> <li>Nothing to maintain.</li> </ol>"
+}

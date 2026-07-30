@@ -20,36 +20,7 @@
   <main class="wrap flow">
     <section id="roadmap">
       <div class="section-head"><h2>Roadmap</h2></div>
-      <div class="board">
-        <div class="col">
-          <div class="col-head"><span class="tag backlog">Backlog</span><span class="count">4</span></div>
-          <ul>
-            <li><button type="button" class="card-item" data-key="codegenAnalytics">Codegen for analytics events</button></li>
-            <li><button type="button" class="card-item" data-key="udf">Move to a UDF architecture</button></li>
-            <li><button type="button" class="card-item" data-key="codegenNetwork">Codegen for the network layer</button></li>
-            <li><button type="button" class="card-item" data-key="stringCatalogs">Move to String Catalogs</button></li>
-          </ul>
-        </div>
-        <div class="col">
-          <div class="col-head"><span class="tag progress">In Progress</span><span class="count">5</span></div>
-          <ul>
-            <li><button type="button" class="card-item" data-key="swiftDeps">Migrate the Core layer from our DI to Swift Dependencies</button></li>
-            <li><button type="button" class="card-item" data-key="ibKill">Remove leftover storyboards &amp; xibs</button></li>
-            <li><button type="button" class="card-item" data-key="uikit2swiftui">Migrate from UIKit to SwiftUI</button></li>
-            <li><button type="button" class="card-item" data-key="swiftTesting">Migrate unit tests from XCTest to Swift Testing</button></li>
-            <li><button type="button" class="card-item" data-key="dsComponents">Move to design-system components</button></li>
-          </ul>
-        </div>
-        <div class="col">
-          <div class="col-head"><span class="tag done">Done</span><span class="count">4</span></div>
-          <ul>
-            <li><button type="button" class="card-item" data-key="swiftSharing">Move from our own repositories to Swift Sharing</button></li>
-            <li><button type="button" class="card-item" data-key="dropIOS16">Drop iOS 16 support</button></li>
-            <li><button type="button" class="card-item" data-key="routing">Unified routing</button></li>
-            <li><button type="button" class="card-item" data-key="swift6">Migrate to Swift 6 &amp; Complete Strict Concurrency</button></li>
-          </ul>
-        </div>
-      </div>
+      <div class="board" id="board"><!--roadmap:board:start--><!--roadmap:board:end--></div>
     </section>
 
     <section id="hero"></section>
@@ -102,11 +73,7 @@
     </section>
   </main>
 
-  <dialog id="detail" class="detail">
-    <form method="dialog" class="dlg-x"><button type="submit" aria-label="Close">✕</button></form>
-    <h3 id="detail-title">Details</h3>
-    <div id="detail-body" class="dlg-body"></div>
-  </dialog>
+  <!--roadmap:dialogs:start--><!--roadmap:dialogs:end-->
 
   <script src="vendor/chart.umd.min.js"></script>
   <script src="vendor/chartjs-plugin-zoom.min.js"></script>

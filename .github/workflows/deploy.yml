@@ -44,6 +44,7 @@ jobs:
         run: |
           mcm get --repo dodobrands/dodo-mobile-ios > data/raw.json
           python data/build.py data/raw.json
+          python data/build_roadmap.py
           rm -f data/raw.json
 
       - name: Upload Pages artifact

@@ -1,0 +1,4 @@
+{
+  "title": "Move to String Catalogs",
+  "description": "<p>Localization lives in legacy <code>.strings</code> and <code>.stringsdict</code> files: verbose, easy to leave untranslated, plurals in a separate file, and no signal when a translation drifts from the source. String Catalogs — <code>.xcstrings</code> — fix that:</p> <ul> <li><b>Simpler files</b> — one catalog per module instead of scattered <code>.strings</code> and <code>.stringsdict</code>.</li> <li><b>Simpler plurals</b> — declare plural variants inline, no separate <code>.stringsdict</code>.</li> <li><b>Stale-translation flags</b> — Xcode marks translations that fell behind the source string.</li> </ul>"
+}

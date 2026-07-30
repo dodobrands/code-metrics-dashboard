@@ -1,0 +1,35 @@
+{
+  "columns": [
+    {
+      "key": "backlog",
+      "title": "Backlog",
+      "items": [
+        "codegenAnalytics",
+        "udf",
+        "codegenNetwork",
+        "stringCatalogs"
+      ]
+    },
+    {
+      "key": "progress",
+      "title": "In Progress",
+      "items": [
+        "swiftDeps",
+        "ibKill",
+        "uikit2swiftui",
+        "swiftTesting",
+        "dsComponents"
+      ]
+    },
+    {
+      "key": "done",
+      "title": "Done",
+      "items": [
+        "swiftSharing",
+        "dropIOS16",
+        "routing",
+        "swift6"
+      ]
+    }
+  ]
+}

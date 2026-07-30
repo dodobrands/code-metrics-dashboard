@@ -1,0 +1,4 @@
+{
+  "title": "Migrate unit tests from XCTest to Swift Testing",
+  "description": "<p>Our unit suite is on XCTest — verbose, class-based, and awkward with async code. We're moving to <b>Swift Testing</b> for:</p> <ul> <li><b>Parallelism</b> — tests run in parallel out of the box.</li> <li><b>Simpler syntax</b> — <code>#expect</code> / <code>#require</code> and <code>@Test</code> instead of <code>XCTAssert</code> boilerplate.</li> <li><b>First-class async/await</b> — no expectation-and-wait dance.</li> <li><b><code>@TaskLocal</code> support</b> — pairs cleanly with Swift Dependencies for per-test mocks.</li> <li><b>Parametrized tests</b> — one <code>@Test</code> with many cases instead of copy-pasted methods.</li> </ul>"
+}

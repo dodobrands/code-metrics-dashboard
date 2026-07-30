@@ -197,124 +197,16 @@ async function main() {
   rangePicker(bounds);
 }
 
-// --- roadmap detail modals (descriptions from buildin, keyed by data-key) -----
-
-const ROADMAP = {
-  udf: `<p>Our current screen architecture no longer works for us. Main problems:</p>
-    <ul>
-      <li><b>Complex</b> — too many layers and boilerplate per screen: up to 6–7 (interactor, presenter, model mapper, view-model mapper, view-model provider, view controller, view).</li>
-      <li><b>Over-abstract</b> — everything is hidden behind protocols; you never know what you're working with.</li>
-      <li><b>Poor fit for SwiftUI</b> — hard to manage state and refresh screens.</li>
-      <li><b>Hard to test</b> — a pile of mocks per layer; hours to spin up DI.</li>
-      <li><b>Fragile</b> — multiple states can diverge; constant threading issues.</li>
-    </ul>
-    <p>Leading candidate — <a href="https://github.com/pointfreeco/swift-composable-architecture">The Composable Architecture</a>:</p>
-    <ul>
-      <li><b>Simple</b> — ~2 layers: reducer and view.</li>
-      <li>No abstractions — you can skip protocols entirely.</li>
-      <li>Great for SwiftUI — state and bindings by design.</li>
-      <li>Easy to plug a UIKit implementation into.</li>
-      <li>Easy to test — pairs with <a href="https://github.com/pointfreeco/swift-dependencies">Swift Dependencies</a>.</li>
-      <li>Robust — a single state, no ambiguous states; handles concurrency well.</li>
-    </ul>`,
-  swiftSharing: `<p>Problems with our current repositories:</p>
-    <ol>
-      <li>Awkward change subscriptions.</li>
-      <li>Misuse: storing <code>[Item]</code> in a <code>SingleRepository</code> instead of a <code>CollectionRepository</code>.</li>
-      <li>Singleton repositories don't fit parallelized Swift Testing.</li>
-      <li>Simple but verbose repository boilerplate.</li>
-      <li>It's all code that could just not exist.</li>
-    </ol>
-    <p>Moving to <a href="https://github.com/pointfreeco/swift-sharing">Swift Sharing</a>:</p>
-    <ol>
-      <li>Built-in change subscriptions, including from SwiftUI.</li>
-      <li>Can't be misused.</li>
-      <li>Built on <code>@TaskLocal</code> — plays nicely with parallel Swift Testing.</li>
-      <li>Super-simple setup.</li>
-      <li>Nothing to maintain.</li>
-    </ol>`,
-  swiftDeps: `<p>Problems with our DI:</p>
-    <ol>
-      <li>Poor concurrency behavior — we even had incidents.</li>
-      <li>Misuse of the approach: huge assemblies, dependency hell, and we register even non-dependencies under DI.</li>
-    </ol>
-    <p>Moving to <a href="https://github.com/pointfreeco/swift-dependencies">Swift Dependencies</a>:</p>
-    <ol>
-      <li>Great concurrency support.</li>
-      <li>Few registrations — only truly external dependencies.</li>
-      <li>Works with parallel Swift Testing — mock per test.</li>
-    </ol>
-    <p>First we move the core pieces: networking, analytics, notifications, feature service.</p>`,
-  ibKill: `<p>We've described views in code for years, and since January 2024 almost everything is SwiftUI — but legacy remains: <b>50 storyboards</b> and <b>35 xibs</b>.</p>
-    <p>Why:</p>
-    <ul>
-      <li>simpler hiring requirements;</li>
-      <li>get the missing snapshot tests;</li>
-      <li>make LLM work easier (XML is verbose and eats tokens).</li>
-    </ul>
-    <p>First we move everything from xibs to code without converting to SwiftUI — it's faster. Steps: add snapshot tests → move views to code.</p>`,
-  codegenAnalytics: `<p>Today both iOS and Android describe events by hand. Problems: human error (easy to misname a field or send the wrong format) and plain fatigue from doing it manually.</p>
-    <p>We'll describe events with an OpenAPI spec and generate request models via <a href="https://github.com/apple/swift-openapi-generator">Swift OpenAPI Generator</a>. We won't use the rest of its networking — we have our own persistence and send in batches.</p>`,
-  codegenNetwork: `<p>Today all network requests are written by hand — human error and fatigue.</p>
-    <p>Our network layer is also dated: it survived several half-finished core migrations and the async/await migration (a third of requests are still on completion handlers).</p>
-    <p>We'll describe every endpoint and model with an OpenAPI spec and generate the <i>entire</i> network layer via <a href="https://github.com/apple/swift-openapi-generator">Swift OpenAPI Generator</a>.</p>`,
-  swift6: `<p>We see big value in compile-time checks for data races and using the UI layer from the right thread.</p>
-    <p>We don't expect a big impact on crash-free rate, but we hope it saves us from dumb issues that cause sudden incidents.</p>`,
-  dropIOS16: `<ol>
-      <li>Wait for the full iOS 26 release.</li>
-      <li>Wait another 2–3 weeks until iOS 16 usage drops to ~2–3%.</li>
-      <li>Drop iOS 16 support in an upcoming release.</li>
-    </ol>`,
-  routing: `<p>Routing is a free-for-all — anyone can present any screen anytime. Constraints:</p>
-    <ul>
-      <li>hard to test navigation;</li>
-      <li>hard to log and track screen transitions;</li>
-      <li>blocks a potential move to SwiftUI navigation.</li>
-    </ul>
-    <p>We're funneling all routing through a single router. It already exists, but only ~20–25% of navigations go through it — we need 100%.</p>`,
-  stringCatalogs: `<p>Localization lives in legacy <code>.strings</code> and <code>.stringsdict</code> files: verbose, easy to leave untranslated, plurals in a separate file, and no signal when a translation drifts from the source. String Catalogs — <code>.xcstrings</code> — fix that:</p>
-    <ul>
-      <li><b>Simpler files</b> — one catalog per module instead of scattered <code>.strings</code> and <code>.stringsdict</code>.</li>
-      <li><b>Simpler plurals</b> — declare plural variants inline, no separate <code>.stringsdict</code>.</li>
-      <li><b>Stale-translation flags</b> — Xcode marks translations that fell behind the source string.</li>
-    </ul>`,
-  uikit2swiftui: `<p>Since January 2024 new screens are SwiftUI, but a large UIKit surface remains — view controllers, custom views, manual layout. We're moving the rest to SwiftUI because it:</p>
-    <ul>
-      <li><b>Eases hiring</b> — newcomers from the market often know only SwiftUI.</li>
-      <li><b>Simplifies UI work</b> — less layout boilerplate, and it plays far better with AI coding agents.</li>
-      <li><b>Ships faster</b> — a working screen with less code, sooner.</li>
-    </ul>`,
-  swiftTesting: `<p>Our unit suite is on XCTest — verbose, class-based, and awkward with async code. We're moving to <b>Swift Testing</b> for:</p>
-    <ul>
-      <li><b>Parallelism</b> — tests run in parallel out of the box.</li>
-      <li><b>Simpler syntax</b> — <code>#expect</code> / <code>#require</code> and <code>@Test</code> instead of <code>XCTAssert</code> boilerplate.</li>
-      <li><b>First-class async/await</b> — no expectation-and-wait dance.</li>
-      <li><b><code>@TaskLocal</code> support</b> — pairs cleanly with Swift Dependencies for per-test mocks.</li>
-      <li><b>Parametrized tests</b> — one <code>@Test</code> with many cases instead of copy-pasted methods.</li>
-    </ul>`,
-  dsComponents: `<p>UI is built from ad-hoc, screen-local components — the same button or cell reimplemented many times, drifting in style and behavior. We're consolidating onto a shared <b>design-system component library</b>:</p>
-    <ul>
-      <li><b>One source of truth</b> — shared tokens and components instead of copies.</li>
-      <li><b>Consistent look</b> — the same component behaves the same everywhere.</li>
-      <li><b>App-wide restyle</b> — tweak a component once and every screen updates, so refreshing the UI stays cheap.</li>
-      <li><b>Faster assembly</b> — build screens from ready-made components.</li>
-      <li><b>Component sandbox</b> — designers see every component in one place, poke them, and toggle states.</li>
-    </ul>`,
-};
+// --- roadmap modals (board + per-task dialogs are built into index.html at
+// deploy from roadmap/*.json; here we only wire click → showModal) -------------
 
 function wireRoadmap() {
-  const dlg = document.getElementById("detail");
-  if (!dlg) return;
-  const title = document.getElementById("detail-title");
-  const body = document.getElementById("detail-body");
-  for (const btn of document.querySelectorAll(".card-item[data-key]")) {
-    btn.addEventListener("click", () => {
-      title.textContent = btn.textContent;
-      body.innerHTML = ROADMAP[btn.dataset.key] || "";
-      dlg.showModal();
-    });
+  for (const btn of document.querySelectorAll(".card-item[data-dialog]")) {
+    const dlg = document.getElementById(btn.dataset.dialog);
+    if (!dlg) continue;
+    btn.addEventListener("click", () => dlg.showModal());
+    dlg.addEventListener("click", (e) => { if (e.target === dlg) dlg.close(); });
   }
-  dlg.addEventListener("click", (e) => { if (e.target === dlg) dlg.close(); });
 }
 
 wireRoadmap();
