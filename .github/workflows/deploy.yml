@@ -17,7 +17,7 @@ concurrency:
 jobs:
   deploy:
     # Dormant until infra secrets exist — set repo variable DEPLOY_ENABLED=true to arm.
-    # Needs secrets: MCM_INSTALL_TOKEN (PAT, read private mcm release), MCM_URL, MCM_READ_TOKEN.
+    # Needs secrets: MOBILE_CODE_METRICS_DASHBOARD (PAT, read private mcm release), MCM_URL, MCM_READ_TOKEN.
     if: vars.DEPLOY_ENABLED == 'true'
     runs-on: ubuntu-latest
     environment:
@@ -30,7 +30,7 @@ jobs:
       # GITHUB_TOKEN must read dodo-ai-platform/mobile-code-metrics).
       - uses: jdx/mise-action@v2
         env:
-          GITHUB_TOKEN: ${{ secrets.MCM_INSTALL_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.MOBILE_CODE_METRICS_DASHBOARD }}
         with:
           mise_toml: |
             [tools]
