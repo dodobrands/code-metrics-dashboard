@@ -26,32 +26,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # mcm is installed via mise from its GitHub release (private, cross-org →
+      # GITHUB_TOKEN must read dodo-ai-platform/mobile-code-metrics).
       - uses: jdx/mise-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.MCM_INSTALL_TOKEN }}
         with:
           mise_toml: |
             [tools]
             python = "3"
+            "ubi:dodo-ai-platform/mobile-code-metrics" = { version = "0.1.0", exe = "mcm", matching = "linux_x86_64" }
 
-      - name: Download mcm binary
-        env:
-          GH_TOKEN: ${{ secrets.MCM_INSTALL_TOKEN }}
-          MCM_VERSION: "0.1.0"
-        run: |
-          gh release download "$MCM_VERSION" \
-            --repo dodo-ai-platform/mobile-code-metrics \
-            --pattern "mcm_${MCM_VERSION}_linux_x86_64.tar.gz" \
-            --output mcm.tar.gz --clobber
-          tar -xzf mcm.tar.gz
-          chmod +x mcm
-
-      - name: Fetch + minify metrics
+      - name: Fetch + build metrics
         env:
           MCM_URL: ${{ secrets.MCM_URL }}
           MCM_TOKEN: ${{ secrets.MCM_READ_TOKEN }}
         run: |
-          ./mcm get --repo dodobrands/dodo-mobile-ios > data/raw.json
+          mcm get --repo dodobrands/dodo-mobile-ios > data/raw.json
           python data/build.py data/raw.json
-          rm -f mcm mcm.tar.gz data/raw.json
+          rm -f data/raw.json
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
