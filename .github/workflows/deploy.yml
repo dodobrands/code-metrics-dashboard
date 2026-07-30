@@ -1,0 +1,63 @@
+name: Deploy
+
+on:
+  schedule:
+    - cron: "17 5 * * *" # daily 05:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    # Dormant until infra secrets exist — set repo variable DEPLOY_ENABLED=true to arm.
+    # Needs secrets: MCM_INSTALL_TOKEN (PAT, read private mcm release), MCM_URL, MCM_READ_TOKEN.
+    if: vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: jdx/mise-action@v2
+        with:
+          mise_toml: |
+            [tools]
+            python = "3"
+
+      - name: Download mcm binary
+        env:
+          GH_TOKEN: ${{ secrets.MCM_INSTALL_TOKEN }}
+          MCM_VERSION: "0.1.0"
+        run: |
+          gh release download "$MCM_VERSION" \
+            --repo dodo-ai-platform/mobile-code-metrics \
+            --pattern "mcm_${MCM_VERSION}_linux_x86_64.tar.gz" \
+            --output mcm.tar.gz --clobber
+          tar -xzf mcm.tar.gz
+          chmod +x mcm
+
+      - name: Fetch + minify metrics
+        env:
+          MCM_URL: ${{ secrets.MCM_URL }}
+          MCM_TOKEN: ${{ secrets.MCM_READ_TOKEN }}
+        run: |
+          ./mcm get --repo dodobrands/dodo-mobile-ios > data/raw.json
+          python data/minify.py data/raw.json > data/metrics.json
+          rm -f mcm mcm.tar.gz data/raw.json
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: Deploy to Pages
+        id: deploy
+        uses: actions/deploy-pages@v4

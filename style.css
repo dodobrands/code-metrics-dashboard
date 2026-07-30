@@ -1,0 +1,165 @@
+@font-face {
+  font-family: "Martian Mono";
+  src: url("vendor/fonts/martian-mono.woff2") format("woff2");
+  font-weight: 100 800;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: light dark;
+  --bg: #fbfbfa;
+  --panel: #ffffff;
+  --border: #eceef1;
+  --grid: #f1f2f5;
+  --text: #191c22;
+  --muted: #697180;
+  --accent: #f05138; /* Swift orange */
+  --mono: "Martian Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  /* Spacing scale (4px base) — the ONLY source of every margin / padding / gap.
+     Inner = padding within a component; outer = margin/gap between components.
+     The chart plots mirror these steps via layout.padding in app.js. */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
+  --sp-8: 64px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1b1d24;
+    --panel: #23252e;
+    --border: #33363f;
+    --grid: #2a2d35;
+    --text: #e9ebf1;
+    --muted: #8b92a1;
+    --accent: #ff6a4d;
+  }
+}
+
+* { box-sizing: border-box; }
+
+#controls {
+  position: fixed;
+  top: var(--sp-2);
+  right: var(--sp-3);
+  z-index: 10;
+  display: flex;
+  gap: var(--sp-2);
+  align-items: center;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--panel) 82%, transparent);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: var(--sp-1) var(--sp-2);
+}
+#controls select {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: var(--sp-1) var(--sp-2);
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.5 var(--sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  text-wrap: pretty; /* inherited: no orphans/rivers anywhere */
+  hanging-punctuation: first;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.wrap {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding-left: clamp(var(--sp-4), 5vw, var(--sp-7));
+  padding-right: clamp(var(--sp-4), 5vw, var(--sp-7));
+}
+
+header { border-bottom: 1px solid var(--border); padding: var(--sp-6) 0 var(--sp-5); }
+.eyebrow {
+  margin: 0 0 var(--sp-3);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+h1 {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: clamp(24px, 3.6vw, 34px);
+  font-weight: 700;
+  letter-spacing: -.02em;
+  line-height: 1.12;
+  text-wrap: balance;
+}
+.meta {
+  margin: var(--sp-4) 0 0;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.meta b { color: var(--text); font-weight: 600; }
+
+/* Hero: the thesis — the codebase's headline modernization fact. */
+#hero { padding-top: var(--sp-5); }
+.hero-stat {
+  display: block;
+  margin: 0;
+  font-family: var(--mono);
+  font-size: clamp(30px, 6vw, 56px);
+  font-weight: 800;
+  letter-spacing: -.03em;
+  line-height: 1;
+}
+.hero-stat b { color: var(--accent); }
+.hero-dek { margin: var(--sp-2) 0 var(--sp-4); color: var(--muted); font-family: var(--mono); font-size: 13px; }
+
+section { padding-top: var(--sp-2); }
+.section-head { margin: var(--sp-6) 0 var(--sp-3); display: flex; align-items: baseline; gap: var(--sp-3); }
+.section-head h2 {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.section-head h2::before { content: "▚ "; color: var(--accent); }
+
+.card {
+  margin: 0 0 var(--sp-4);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: var(--sp-4);
+}
+.card h3 { margin: 0; font-family: var(--mono); font-size: 14px; font-weight: 640; letter-spacing: -.01em; }
+.card figcaption p { margin: var(--sp-1) 0 0; font-size: 12.5px; color: var(--muted); }
+.card figcaption { margin-bottom: var(--sp-4); }
+.canvas-wrap { position: relative; height: 320px; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .card, #hero { animation: rise .5s cubic-bezier(.2, .7, .3, 1) both; }
+  @keyframes rise { from { opacity: 0; transform: translateY(var(--sp-2)); } }
+}
+@media (max-width: 560px) { .canvas-wrap { height: 240px; } }
