@@ -42,6 +42,8 @@
 }
 
 * { box-sizing: border-box; }
+/* iOS-style continuous corners where supported; falls back to normal rounding. */
+:where(*) { corner-shape: superellipse(1.8); }
 
 #controls {
   position: fixed;
