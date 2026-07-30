@@ -1,0 +1,11 @@
+[
+  { "id": "ui-swiftui-uikit", "group": "UI", "title": "SwiftUI vs UIKit", "note": "share of framework imports", "kind": "share", "series": ["SwiftUI", "UIKit"] },
+  { "id": "ui-components", "group": "UI", "title": "UI components", "note": "declarations in the codebase", "kind": "line", "series": ["View", "UIView", "UIViewController"] },
+  { "id": "ui-interface-builder", "group": "UI", "title": "Interface Builder files", "kind": "line", "series": ["storyboard", "xib"] },
+  { "id": "tests-imports", "group": "Tests", "title": "Frameworks — imports", "kind": "line", "series": ["import Testing", "import XCTest", "import Quick", "import Nimble", "import NSpry", "import NSpry_Nimble"] },
+  { "id": "tests-base-classes", "group": "Tests", "title": "Frameworks — base classes", "kind": "line", "series": ["XCTestCase", "QuickSpec"] },
+  { "id": "concurrency-swift-version", "group": "Concurrency", "title": "Swift version adoption", "note": "share of targets by Swift language version", "kind": "versions", "series": ["SWIFT_VERSION"] },
+  { "id": "concurrency-markers", "group": "Concurrency", "title": "Swift 6 concurrency markers", "kind": "line", "series": ["@unchecked Sendable", "nonisolated(unsafe)", "MainActor.run", "MainActor.assumeIsolated", "@preconcurrency", "Task\\b.*\\{.*@MainActor"] },
+  { "id": "techdebt-hygiene", "group": "Tech debt", "title": "Debt & hygiene", "kind": "line", "series": ["// TODO:", "// FIXME:", "#warning(", "@available(*, deprecated", "periphery:ignore", "swiftlint:disable"] },
+  { "id": "techdebt-toggles", "group": "Tech debt", "title": "Feature toggles", "kind": "line", "series": ["Toggles"] }
+]

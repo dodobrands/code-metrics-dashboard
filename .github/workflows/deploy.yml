@@ -50,7 +50,7 @@ jobs:
           MCM_TOKEN: ${{ secrets.MCM_READ_TOKEN }}
         run: |
           ./mcm get --repo dodobrands/dodo-mobile-ios > data/raw.json
-          python data/minify.py data/raw.json > data/metrics.json
+          python data/build.py data/raw.json
           rm -f mcm mcm.tar.gz data/raw.json
 
       - name: Upload Pages artifact

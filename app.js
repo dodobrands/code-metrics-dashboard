@@ -1,4 +1,5 @@
-// Renders the dashboard from a declarative chart spec against data/metrics.json.
+// Renders the dashboard from charts.json (spec) + data/meta.json (bounds/hero)
+// + one data/charts/<id>.json per chart (only that chart's series).
 // Related series share one chart; shares/versions render as 100% stacked areas.
 
 // dataviz categorical palette (validated: adjacent-pair CVD ΔE 9.1 light / 8.4 dark).
@@ -12,18 +13,6 @@ const NAMES = {
   "@available(*, deprecated": "@available deprecated",
 };
 const nameOf = (k) => NAMES[k] || k;
-
-const CHARTS = [
-  { group: "UI", title: "SwiftUI vs UIKit", note: "share of framework imports", kind: "share", series: ["SwiftUI", "UIKit"] },
-  { group: "UI", title: "UI components", note: "declarations in the codebase", kind: "line", series: ["View", "UIView", "UIViewController"] },
-  { group: "UI", title: "Interface Builder files", kind: "line", series: ["storyboard", "xib"] },
-  { group: "Tests", title: "Frameworks — imports", kind: "line", series: ["import Testing", "import XCTest", "import Quick", "import Nimble", "import NSpry", "import NSpry_Nimble"] },
-  { group: "Tests", title: "Frameworks — base classes", kind: "line", series: ["XCTestCase", "QuickSpec"] },
-  { group: "Concurrency", title: "Swift version adoption", note: "share of targets by Swift language version", kind: "versions", series: ["SWIFT_VERSION"] },
-  { group: "Concurrency", title: "Swift 6 concurrency markers", kind: "line", series: ["@unchecked Sendable", "nonisolated(unsafe)", "MainActor.run", "MainActor.assumeIsolated", "@preconcurrency", "Task\\b.*\\{.*@MainActor"] },
-  { group: "Tech debt", title: "Debt & hygiene", kind: "line", series: ["// TODO:", "// FIXME:", "#warning(", "@available(*, deprecated", "periphery:ignore", "swiftlint:disable"] },
-  { group: "Tech debt", title: "Feature toggles", kind: "line", series: ["Toggles"] },
-];
 
 if (window.ChartZoom) Chart.register(window.ChartZoom);
 
@@ -126,31 +115,15 @@ function versionsChart(canvas, spec, byName, bounds) {
   stack100(canvas, datasets, bounds);
 }
 
-// --- headline thesis ----------------------------------------------------------
+// --- headline thesis (stats computed in build.py, shipped in data/meta.json) ---
 
-const latest = (byName, name) => {
-  const m = byName.get(name);
-  return m?.points.length ? m.points[m.points.length - 1][1] : null;
-};
-function swiftUIShare(byName) {
-  const su = latest(byName, "SwiftUI"), uk = latest(byName, "UIKit");
-  return su != null && uk != null && su + uk > 0 ? Math.round((su / (su + uk)) * 100) : null;
-}
-function swift6Share(byName) {
-  const m = byName.get("SWIFT_VERSION");
-  if (!m) return null;
-  const h = m.points[m.points.length - 1][1];
-  const total = Object.values(h).reduce((s, n) => s + n, 0);
-  return { pct: total ? Math.round(((h["6"] || 0) / total) * 100) : 0, total };
-}
-
-function heroThesis(byName) {
-  const v6 = swift6Share(byName), su = swiftUIShare(byName);
-  const stat = v6 ? `<span class="hero-stat"><b>${v6.pct}%</b> of ${v6.total} targets on Swift 6</span>` : "";
+function heroThesis(meta) {
+  const h = meta.hero || {};
+  const stat = h.swift6Total ? `<span class="hero-stat"><b>${h.swift6Pct}%</b> of ${h.swift6Total} targets on Swift 6</span>` : "";
   const dek = [];
-  if (su != null) dek.push(`SwiftUI is ${su}% of framework imports`);
+  if (h.swiftUIShare != null) dek.push(`SwiftUI is ${h.swiftUIShare}% of framework imports`);
   dek.push("Swift Testing is overtaking XCTest");
-  return `${stat}<p class="hero-dek">${escapeHtml(typo(dek.join(" · ")))} — nine years of modernization, one commit at a time.</p>`;
+  return `${stat}<p class="hero-dek">${escapeHtml(typo(dek.join(" · ")))} — ${meta.years} years of modernization, one commit at a time.</p>`;
 }
 
 // --- date-range picker --------------------------------------------------------
@@ -188,20 +161,24 @@ function rangePicker(bounds) {
 // -----------------------------------------------------------------------------
 
 async function main() {
-  const doc = await (await fetch("data/metrics.json", { cache: "no-store" })).json();
-  const byName = new Map(doc.metrics.map((m) => [m.name, m]));
-  if (doc.repo) document.getElementById("repo").textContent = doc.repo;
+  const [specs, meta] = await Promise.all([
+    fetch("charts.json").then((r) => r.json()),
+    fetch("data/meta.json", { cache: "no-store" }).then((r) => r.json()),
+  ]);
+  if (meta.repo) document.getElementById("repo").textContent = meta.repo;
+  document.getElementById("updated").textContent = new Date(meta.updated).toISOString().slice(0, 10);
+  document.getElementById("hero").innerHTML = heroThesis(meta);
+  const bounds = meta.bounds;
 
-  const allTs = doc.metrics.flatMap((m) => m.points.map((p) => p[0]));
-  const bounds = { min: Math.min(...allTs), max: Math.max(...allTs) };
-  document.getElementById("updated").textContent = new Date(bounds.max).toISOString().slice(0, 10);
-  document.getElementById("hero").innerHTML = heroThesis(byName);
+  // Each chart's data lives in its own file — fetch them all in parallel.
+  const datas = await Promise.all(specs.map((s) => fetch(`data/charts/${s.id}.json`, { cache: "no-store" }).then((r) => r.json())));
 
   const app = document.getElementById("app");
   app.textContent = "";
   let group = null, section = null;
-  for (const spec of CHARTS) {
-    if (!spec.series.some((n) => byName.has(n))) continue;
+  specs.forEach((spec, i) => {
+    const byName = new Map(datas[i].series.map((s) => [s.name, s]));
+    if (!spec.series.some((n) => byName.has(n))) return;
     if (spec.group !== group) {
       group = spec.group;
       section = document.createElement("section");
@@ -216,7 +193,7 @@ async function main() {
     if (spec.kind === "share") shareChart(canvas, spec, byName, bounds);
     else if (spec.kind === "versions") versionsChart(canvas, spec, byName, bounds);
     else lineChart(canvas, spec, byName, bounds);
-  }
+  });
   rangePicker(bounds);
 }
 
