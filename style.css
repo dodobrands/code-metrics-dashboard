@@ -168,6 +168,15 @@ section { padding-top: var(--sp-2); }
 .links { margin: 0 0 var(--sp-2); padding: 0; list-style: none; }
 .links li { margin: 0 0 var(--sp-2); font-family: var(--mono); font-size: 13px; }
 .links a { font-weight: 600; }
+.links a.btn {
+  display: inline-block;
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--accent);
+  color: #fff;
+  border-radius: 8px;
+  font-weight: 700;
+}
+.links a.btn:hover { text-decoration: none; opacity: .92; }
 .links span { color: var(--muted); }
 .links span::before { content: " — "; color: var(--muted); }
 .links ul { margin: var(--sp-2) 0 0; padding-left: var(--sp-4); list-style: none; border-left: 1px solid var(--border); }
