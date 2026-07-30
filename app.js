@@ -272,6 +272,34 @@ const ROADMAP = {
       <li>blocks a potential move to SwiftUI navigation.</li>
     </ul>
     <p>We're funneling all routing through a single router. It already exists, but only ~20–25% of navigations go through it — we need 100%.</p>`,
+  stringCatalogs: `<p>Localization lives in legacy <code>.strings</code> and <code>.stringsdict</code> files: verbose, easy to leave untranslated, plurals in a separate file, and no signal when a translation drifts from the source. String Catalogs — <code>.xcstrings</code> — fix that:</p>
+    <ul>
+      <li><b>Simpler files</b> — one catalog per module instead of scattered <code>.strings</code> and <code>.stringsdict</code>.</li>
+      <li><b>Simpler plurals</b> — declare plural variants inline, no separate <code>.stringsdict</code>.</li>
+      <li><b>Stale-translation flags</b> — Xcode marks translations that fell behind the source string.</li>
+    </ul>`,
+  uikit2swiftui: `<p>Since January 2024 new screens are SwiftUI, but a large UIKit surface remains — view controllers, custom views, manual layout. We're moving the rest to SwiftUI because it:</p>
+    <ul>
+      <li><b>Eases hiring</b> — newcomers from the market often know only SwiftUI.</li>
+      <li><b>Simplifies UI work</b> — less layout boilerplate, and it plays far better with AI coding agents.</li>
+      <li><b>Ships faster</b> — a working screen with less code, sooner.</li>
+    </ul>`,
+  swiftTesting: `<p>Our unit suite is on XCTest — verbose, class-based, and awkward with async code. We're moving to <b>Swift Testing</b> for:</p>
+    <ul>
+      <li><b>Parallelism</b> — tests run in parallel out of the box.</li>
+      <li><b>Simpler syntax</b> — <code>#expect</code> / <code>#require</code> and <code>@Test</code> instead of <code>XCTAssert</code> boilerplate.</li>
+      <li><b>First-class async/await</b> — no expectation-and-wait dance.</li>
+      <li><b><code>@TaskLocal</code> support</b> — pairs cleanly with Swift Dependencies for per-test mocks.</li>
+      <li><b>Parametrized tests</b> — one <code>@Test</code> with many cases instead of copy-pasted methods.</li>
+    </ul>`,
+  dsComponents: `<p>UI is built from ad-hoc, screen-local components — the same button or cell reimplemented many times, drifting in style and behavior. We're consolidating onto a shared <b>design-system component library</b>:</p>
+    <ul>
+      <li><b>One source of truth</b> — shared tokens and components instead of copies.</li>
+      <li><b>Consistent look</b> — the same component behaves the same everywhere.</li>
+      <li><b>App-wide restyle</b> — tweak a component once and every screen updates, so refreshing the UI stays cheap.</li>
+      <li><b>Faster assembly</b> — build screens from ready-made components.</li>
+      <li><b>Component sandbox</b> — designers see every component in one place, poke them, and toggle states.</li>
+    </ul>`,
 };
 
 function wireRoadmap() {
