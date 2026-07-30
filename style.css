@@ -42,6 +42,8 @@
 }
 
 * { box-sizing: border-box; }
+/* iOS-style continuous corners where supported; falls back to normal rounding. */
+:where(*) { corner-shape: superellipse(1.8); }
 
 #controls {
   position: fixed;
@@ -92,6 +94,11 @@ a:hover { text-decoration: underline; }
   padding-right: clamp(var(--sp-4), 5vw, var(--sp-7));
 }
 
+/* One vertical rhythm for the whole page: top-level blocks are separated by a
+   single gap, never per-block padding. Multi-section blocks get their own gap. */
+main.flow { display: flex; flex-direction: column; gap: var(--sp-7); padding-top: var(--sp-7); padding-bottom: var(--sp-8); }
+#app, #more { display: flex; flex-direction: column; gap: var(--sp-6); }
+
 header { border-bottom: 1px solid var(--border); padding: var(--sp-6) 0 var(--sp-5); }
 .eyebrow {
   margin: 0 0 var(--sp-3);
@@ -120,7 +127,6 @@ h1 {
 .meta b { color: var(--text); font-weight: 600; }
 
 /* Hero: the thesis — the codebase's headline modernization fact. */
-#hero { padding-top: var(--sp-5); }
 .hero-stat {
   display: block;
   margin: 0;
@@ -133,8 +139,7 @@ h1 {
 .hero-stat b { color: var(--accent); }
 .hero-dek { margin: var(--sp-2) 0 var(--sp-4); color: var(--muted); font-family: var(--mono); font-size: 13px; }
 
-section { padding-top: var(--sp-2); }
-.section-head { margin: var(--sp-6) 0 var(--sp-3); display: flex; align-items: baseline; gap: var(--sp-3); }
+.section-head { margin: 0 0 var(--sp-3); display: flex; align-items: baseline; gap: var(--sp-3); }
 .section-head h2 {
   margin: 0;
   font-family: var(--mono);
@@ -156,7 +161,90 @@ section { padding-top: var(--sp-2); }
 .card h3 { margin: 0; font-family: var(--mono); font-size: 14px; font-weight: 640; letter-spacing: -.01em; }
 .card figcaption p { margin: var(--sp-1) 0 0; font-size: 12.5px; color: var(--muted); }
 .card figcaption { margin-bottom: var(--sp-4); }
+.card:last-child { margin-bottom: 0; }
 .canvas-wrap { position: relative; height: 320px; }
+
+.board { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-3); }
+.col {
+  background: color-mix(in srgb, var(--muted) 8%, var(--panel));
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: var(--sp-3);
+}
+.col-head { display: flex; align-items: center; gap: var(--sp-2); margin-bottom: var(--sp-3); }
+.col-head .tag {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  padding: var(--sp-1) var(--sp-2);
+  border-radius: 6px;
+}
+.col-head .count { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.tag.backlog { background: color-mix(in srgb, var(--muted) 18%, transparent); color: var(--muted); }
+.tag.progress { background: color-mix(in srgb, #3b87e5 20%, transparent); color: #3b87e5; }
+.tag.done { background: color-mix(in srgb, #199e70 20%, transparent); color: #199e70; }
+.col ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--sp-2); }
+.card-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: var(--sp-2) var(--sp-3);
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.35;
+  color: var(--text);
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+}
+button.card-item { cursor: pointer; transition: border-color .12s; }
+button.card-item:hover { border-color: color-mix(in srgb, var(--accent) 55%, var(--border)); }
+@media (max-width: 720px) { .board { grid-template-columns: 1fr; } }
+
+dialog.detail {
+  max-width: 560px;
+  width: calc(100% - 2 * var(--sp-4));
+  padding: var(--sp-5);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--panel);
+  color: var(--text);
+}
+dialog.detail::backdrop { background: rgba(0, 0, 0, .45); backdrop-filter: blur(2px); }
+.dlg-x { float: right; margin: calc(-1 * var(--sp-2)) calc(-1 * var(--sp-2)) 0 0; }
+.dlg-x button { padding: var(--sp-1); background: none; border: 0; color: var(--muted); font-size: 16px; cursor: pointer; }
+dialog.detail h3 { margin: 0 0 var(--sp-3); font-family: var(--mono); font-size: 16px; font-weight: 700; letter-spacing: -.01em; }
+.dlg-body { font-family: var(--sans); font-size: 14px; line-height: 1.55; }
+.dlg-body p { margin: 0 0 var(--sp-3); }
+.dlg-body ul, .dlg-body ol { margin: 0 0 var(--sp-3); padding-left: var(--sp-5); }
+.dlg-body li { margin: 0 0 var(--sp-1); }
+.dlg-body a { color: var(--accent); }
+
+.section-note {
+  margin: 0 0 var(--sp-4);
+  max-width: 60ch;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.links { margin: 0 0 var(--sp-2); padding: 0; list-style: none; }
+.links li { margin: 0 0 var(--sp-2); font-family: var(--mono); font-size: 13px; }
+.links a { font-weight: 600; }
+.links a.btn {
+  display: inline-block;
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--accent);
+  color: #fff;
+  border-radius: 8px;
+  font-weight: 700;
+}
+.links a.btn:hover { text-decoration: none; opacity: .92; }
+.links span { color: var(--muted); }
+.links span::before { content: " — "; color: var(--muted); }
+.links ul { margin: var(--sp-2) 0 0; padding-left: var(--sp-4); list-style: none; border-left: 1px solid var(--border); }
 
 @media (prefers-reduced-motion: no-preference) {
   .card, #hero { animation: rise .5s cubic-bezier(.2, .7, .3, 1) both; }
