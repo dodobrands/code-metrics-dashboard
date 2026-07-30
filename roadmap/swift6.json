@@ -1,0 +1,4 @@
+{
+  "title": "Migrate to Swift 6 & Complete Strict Concurrency",
+  "description": "<p>We see big value in compile-time checks for data races and using the UI layer from the right thread.</p> <p>We don't expect a big impact on crash-free rate, but we hope it saves us from dumb issues that cause sudden incidents.</p>"
+}

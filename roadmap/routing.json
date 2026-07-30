@@ -1,0 +1,4 @@
+{
+  "title": "Unified routing",
+  "description": "<p>Routing is a free-for-all — anyone can present any screen anytime. Constraints:</p> <ul> <li>hard to test navigation;</li> <li>hard to log and track screen transitions;</li> <li>blocks a potential move to SwiftUI navigation.</li> </ul> <p>We're funneling all routing through a single router. It already exists, but only ~20–25% of navigations go through it — we need 100%.</p>"
+}

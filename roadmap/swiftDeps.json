@@ -1,0 +1,4 @@
+{
+  "title": "Migrate the Core layer from our DI to Swift Dependencies",
+  "description": "<p>Problems with our DI:</p> <ol> <li>Poor concurrency behavior — we even had incidents.</li> <li>Misuse of the approach: huge assemblies, dependency hell, and we register even non-dependencies under DI.</li> </ol> <p>Moving to <a href=\"https://github.com/pointfreeco/swift-dependencies\">Swift Dependencies</a>:</p> <ol> <li>Great concurrency support.</li> <li>Few registrations — only truly external dependencies.</li> <li>Works with parallel Swift Testing — mock per test.</li> </ol> <p>First we move the core pieces: networking, analytics, notifications, feature service.</p>"
+}
