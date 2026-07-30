@@ -36,7 +36,14 @@ function ink() {
 const escapeHtml = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 // Typographic cleanup for AUTHORED PROSE only (titles, notes, hero) — never for
 // code labels: legend/tooltip series names stay verbatim (e.g. `import XCTest`).
-const typo = (s) => s.replace(/\.\.\./g, "…").replace(/ --? /g, " — ").replace(/(\w)'(\w)/g, "$1’$2");
+// …, em-dash, curly apostrophe, and a non-breaking space after short words so
+// prepositions/articles/conjunctions don't dangle at a line end.
+const typo = (s) =>
+  s
+    .replace(/\.\.\./g, "…")
+    .replace(/ --? /g, " — ")
+    .replace(/(\w)'(\w)/g, "$1’$2")
+    .replace(/(^|\s)(a|an|the|of|to|in|on|at|by|is|as|or|and|for|vs)\s+/gi, "$1$2 ");
 function hexA(hex, a) {
   const n = parseInt(hex.slice(1), 16);
   return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
