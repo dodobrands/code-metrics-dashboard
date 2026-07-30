@@ -13,5 +13,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # mcm (in mise.toml) is a private cross-org release — mise needs a token
+      # that can read it, or the install step fails.
       - uses: jdx/mise-action@v2
-      - run: mise run lint
+        env:
+          GITHUB_TOKEN: ${{ secrets.MOBILE_CODE_METRICS_DASHBOARD }}
+      - run: npm ci
+      - run: biome check .
+      - run: html-validate index.html
+      - run: ruff check data
+      - run: actionlint
+      - run: node scripts/typography.mjs

@@ -1,4 +1,4 @@
 {
   "title": "Codegen for the network layer",
-  "description": "<p>Today all network requests are written by hand — human error and fatigue.</p> <p>Our network layer is also dated: it survived several half-finished core migrations and the async/await migration (a third of requests are still on completion handlers).</p> <p>We'll describe every endpoint and model with an OpenAPI spec and generate the <i>entire</i> network layer via <a href=\"https://github.com/apple/swift-openapi-generator\">Swift OpenAPI Generator</a>.</p>"
+  "description": "<p>Today all network requests are written by hand—human error and fatigue.</p> <p>Our network layer is also dated: it survived several half-finished core migrations and the async/await migration (a third of requests are still on completion handlers).</p> <p>We’ll describe every endpoint and model with an OpenAPI spec and generate the <i>entire</i> network layer via <a href=\"https://github.com/apple/swift-openapi-generator\">Swift OpenAPI Generator</a>.</p>"
 }

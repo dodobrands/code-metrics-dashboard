@@ -3,7 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Dodo iOS — Engineering</title>
+  <title>Dodo iOS—Engineering</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@100..800&display=swap">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -13,7 +16,7 @@
     <div class="wrap">
       <p class="eyebrow">Dodo Pizza · iOS</p>
       <h1>iOS Engineering</h1>
-      <p class="meta">Beta builds, open source, tech radar and a live look at the <code id="repo">dodobrands/dodo-mobile-ios</code> codebase<br>updated <b id="updated">—</b></p>
+      <p class="meta">Beta builds, open source, tech radar and a live look at the <code id="repo">dodobrands/dodo-mobile-ios</code> codebase<br>updated <b id="updated">—</b></p>
     </div>
   </header>
 
@@ -30,7 +33,7 @@
     <section id="more">
       <section>
         <div class="section-head"><h2>Beta</h2></div>
-        <p class="section-note">Stable beta builds land in a public TestFlight every two weeks — the critical path is fully tested, we're hunting the rare crashes. Turn on auto-update.</p>
+        <p class="section-note">Stable beta builds land in a public TestFlight every two weeks—the critical path is fully tested, we’re hunting the rare crashes. Turn on auto-update.</p>
         <ul class="links">
           <li><a class="btn" href="https://testflight.apple.com/join/DJjtWbmY">Join the TestFlight</a></li>
         </ul>
@@ -40,7 +43,7 @@
         <div class="section-head"><h2>Open source</h2></div>
         <ul class="links">
           <li><a href="https://github.com/dodobrands/Peekie">Peekie</a><span>tool &amp; library for parsing <code>.xcresult</code></span></li>
-          <li><a href="https://github.com/dodobrands/scout">Scout</a><span>code-metrics analysis — everything on this page except feature toggles is gathered with it</span></li>
+          <li><a href="https://github.com/dodobrands/scout">Scout</a><span>code-metrics analysis—everything on this page except feature toggles is gathered with it</span></li>
           <li><a href="https://github.com/dodobrands/BlackBox">BlackBox</a><span>logging library</span>
             <ul>
               <li><a href="https://github.com/dodobrands/BlackBoxFirebaseCrashlytics">BlackBoxFirebaseCrashlytics</a><span>redirect non-fatals &amp; logs to Crashlytics</span></li>
@@ -53,7 +56,7 @@
 
       <section>
         <div class="section-head"><h2>Tech radar</h2></div>
-        <p class="section-note">Our map of technologies — adopt, trial, assess, hold. Refreshed once a year.</p>
+        <p class="section-note">Our map of technologies—adopt, trial, assess, hold. Refreshed once a year.</p>
         <ul class="links">
           <li><a href="https://vk.cc/cW7OYg">2026 · April</a></li>
           <li><a href="https://radar.thoughtworks.com/?documentId=https%3A%2F%2Fdocs.google.com%2Fspreadsheets%2Fd%2Fe%2F2PACX-1vSbM8RXRZzrqSVmJAiltXiLYNbrQ29IVwNQ7pgXLMI4WVWPhMLAwtaYzt1HwmEtgLnspYZeREfBrccr%2Fpub%3Fgid%3D0%26single%3Dtrue%26output%3Dcsv">2025 · April</a></li>
@@ -75,8 +78,6 @@
 
   <!--roadmap:dialogs:start--><!--roadmap:dialogs:end-->
 
-  <script src="vendor/chart.umd.min.js"></script>
-  <script src="vendor/chartjs-plugin-zoom.min.js"></script>
-  <script src="app.js"></script>
+  <script src="bundle.js"></script>
 </body>
 </html>

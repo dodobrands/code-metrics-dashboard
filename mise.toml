@@ -1,18 +1,18 @@
 [settings]
 lockfile = true
 
+# All tooling installs through mise, everywhere (local, lint CI, deploy) — mise's
+# cache makes reinstalling the full set cheap, so we never scope tools per-env.
+# Rule (every tool, no exceptions — mcm included): always request "latest" here
+# and let mise.lock pin the exact version. Never hardcode a version in this file;
+# bump with `mise up`, which rewrites the lock. Browser libraries (Chart.js,
+# typopo) are npm dependencies in package.json instead — see README.
 [tools]
-node = "22"
+node = "latest"
 ruff = "latest"
 actionlint = "latest"
+python = "latest"
 "npm:@biomejs/biome" = "latest"
 "npm:html-validate" = "latest"
-
-[tasks.lint]
-description = "Lint everything: JS/CSS (biome), HTML (html-validate), Python (ruff), workflows (actionlint)"
-run = [
-  "biome check .",
-  "html-validate index.html",
-  "ruff check data",
-  "actionlint",
-]
+"npm:esbuild" = "latest"
+"github:dodo-ai-platform/mobile-code-metrics" = { version = "latest", bin = "mcm" }

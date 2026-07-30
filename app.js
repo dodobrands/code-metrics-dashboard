@@ -2,6 +2,11 @@
 // + one data/charts/<id>.json per chart (only that chart's series).
 // Related series share one chart; shares/versions render as 100% stacked areas.
 
+import Chart from "chart.js/auto";
+import zoomPlugin from "chartjs-plugin-zoom";
+
+Chart.register(zoomPlugin);
+
 // dataviz categorical palette (validated: adjacent-pair CVD ΔE 9.1 light / 8.4 dark).
 const PALETTE = {
   light: ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#4a3aa7", "#e34948"],
@@ -13,8 +18,6 @@ const NAMES = {
   "@available(*, deprecated": "@available deprecated",
 };
 const nameOf = (k) => NAMES[k] || k;
-
-if (window.ChartZoom) Chart.register(window.ChartZoom);
 
 // Every mounted chart, so the date-range picker can retarget all their x-axes.
 const charts = [];
