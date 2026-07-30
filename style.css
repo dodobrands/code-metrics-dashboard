@@ -78,7 +78,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font: 14px/1.5 var(--sans);
+  font: 14px/1.5 var(--mono);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   text-wrap: pretty; /* inherited: no orphans/rivers anywhere */
@@ -86,6 +86,7 @@ body {
 }
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
+code, kbd, samp, pre { font-family: inherit; }
 
 .wrap {
   max-width: 1040px;
@@ -217,7 +218,7 @@ dialog.detail::backdrop { background: rgba(0, 0, 0, .45); backdrop-filter: blur(
 .dlg-x { float: right; margin: calc(-1 * var(--sp-2)) calc(-1 * var(--sp-2)) 0 0; }
 .dlg-x button { padding: var(--sp-1); background: none; border: 0; color: var(--muted); font-size: 16px; cursor: pointer; }
 dialog.detail h3 { margin: 0 0 var(--sp-3); font-family: var(--mono); font-size: 16px; font-weight: 700; letter-spacing: -.01em; }
-.dlg-body { font-family: var(--sans); font-size: 14px; line-height: 1.55; }
+.dlg-body { font-family: var(--mono); font-size: 14px; line-height: 1.55; }
 .dlg-body p { margin: 0 0 var(--sp-3); }
 .dlg-body ul, .dlg-body ol { margin: 0 0 var(--sp-3); padding-left: var(--sp-5); }
 .dlg-body li { margin: 0 0 var(--sp-1); }
