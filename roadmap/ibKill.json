@@ -1,0 +1,4 @@
+{
+  "title": "Remove leftover storyboards & xibs",
+  "description": "<p>We've described views in code for years, and since January 2024 almost everything is SwiftUI — but legacy remains: <b>50 storyboards</b> and <b>35 xibs</b>.</p> <p>Why:</p> <ul> <li>simpler hiring requirements;</li> <li>get the missing snapshot tests;</li> <li>make LLM work easier (XML is verbose and eats tokens).</li> </ul> <p>First we move everything from xibs to code without converting to SwiftUI — it's faster. Steps: add snapshot tests → move views to code.</p>"
+}

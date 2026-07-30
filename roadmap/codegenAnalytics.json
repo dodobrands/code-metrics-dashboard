@@ -1,0 +1,4 @@
+{
+  "title": "Codegen for analytics events",
+  "description": "<p>Today both iOS and Android describe events by hand. Problems: human error (easy to misname a field or send the wrong format) and plain fatigue from doing it manually.</p> <p>We'll describe events with an OpenAPI spec and generate request models via <a href=\"https://github.com/apple/swift-openapi-generator\">Swift OpenAPI Generator</a>. We won't use the rest of its networking — we have our own persistence and send in batches.</p>"
+}

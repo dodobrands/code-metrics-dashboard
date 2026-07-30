@@ -1,0 +1,4 @@
+{
+  "title": "Drop iOS 16 support",
+  "description": "<ol> <li>Wait for the full iOS 26 release.</li> <li>Wait another 2–3 weeks until iOS 16 usage drops to ~2–3%.</li> <li>Drop iOS 16 support in an upcoming release.</li> </ol>"
+}

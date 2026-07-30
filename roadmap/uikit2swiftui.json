@@ -1,0 +1,4 @@
+{
+  "title": "Migrate from UIKit to SwiftUI",
+  "description": "<p>Since January 2024 new screens are SwiftUI, but a large UIKit surface remains — view controllers, custom views, manual layout. We're moving the rest to SwiftUI because it:</p> <ul> <li><b>Eases hiring</b> — newcomers from the market often know only SwiftUI.</li> <li><b>Simplifies UI work</b> — less layout boilerplate, and it plays far better with AI coding agents.</li> <li><b>Ships faster</b> — a working screen with less code, sooner.</li> </ul>"
+}
