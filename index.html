@@ -3,20 +3,74 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Mobile Code Metrics — dodo-mobile-ios</title>
+  <title>Dodo iOS — Engineering</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div id="controls"><label>range <select id="rangepick"></select></label></div>
   <header>
     <div class="wrap">
-      <p class="eyebrow">code health</p>
-      <h1>How the iOS codebase is modernizing</h1>
-      <p class="meta"><code id="repo">dodobrands/dodo-mobile-ios</code> · updated <b id="updated">—</b></p>
+      <p class="eyebrow">Dodo Pizza · iOS</p>
+      <h1>iOS Engineering</h1>
+      <p class="meta">Beta builds, open source, tech radar and a live look at the <code id="repo">dodobrands/dodo-mobile-ios</code> codebase · updated <b id="updated">—</b></p>
     </div>
   </header>
   <div class="wrap" id="hero"></div>
+
   <main class="wrap" id="app">Loading…</main>
+
+  <div class="wrap" id="more">
+    <section>
+      <div class="section-head"><h2>Beta</h2></div>
+      <p class="section-note">Stable beta builds land in a public TestFlight every two weeks — the critical path is fully tested, we're hunting the rare crashes. Turn on auto-update.</p>
+      <ul class="links">
+        <li><a href="https://testflight.apple.com/join/DJjtWbmY">Join the TestFlight</a><span>testflight.apple.com</span></li>
+      </ul>
+    </section>
+
+    <section>
+      <div class="section-head"><h2>Open source</h2></div>
+      <ul class="links">
+        <li><a href="https://github.com/dodobrands/Peekie">Peekie</a><span>tool &amp; library for parsing <code>.xcresult</code></span></li>
+        <li><a href="https://github.com/dodobrands/scout">Scout</a><span>tool &amp; library for code-metrics analysis</span></li>
+        <li><a href="https://github.com/dodobrands/BlackBox">BlackBox</a><span>logging library</span>
+          <ul>
+            <li><a href="https://github.com/dodobrands/BlackBoxFirebaseCrashlytics">BlackBoxFirebaseCrashlytics</a><span>redirect non-fatals &amp; logs to Crashlytics</span></li>
+            <li><a href="https://github.com/dodobrands/BlackBoxFirebasePerformance">BlackBoxFirebasePerformance</a><span>redirect traces to Firebase Performance</span></li>
+          </ul>
+        </li>
+        <li><a href="https://github.com/dodobrands/DBThreadSafe-ios">DBThreadSafe</a><span>thread-safety wrapper with <code>Sendable</code> support</span></li>
+      </ul>
+    </section>
+
+    <section>
+      <div class="section-head"><h2>Tech radar</h2></div>
+      <p class="section-note">Our map of technologies — adopt, trial, assess, hold. Refreshed once a year.</p>
+      <ul class="links">
+        <li><a href="https://vk.cc/cW7OYg">2026 · April</a></li>
+        <li><a href="https://radar.thoughtworks.com/?documentId=https%3A%2F%2Fdocs.google.com%2Fspreadsheets%2Fd%2Fe%2F2PACX-1vSbM8RXRZzrqSVmJAiltXiLYNbrQ29IVwNQ7pgXLMI4WVWPhMLAwtaYzt1HwmEtgLnspYZeREfBrccr%2Fpub%3Fgid%3D0%26single%3Dtrue%26output%3Dcsv">2025 · April</a></li>
+        <li><a href="https://radar.thoughtworks.com/?documentId=https%3A%2F%2Fdocs.google.com%2Fspreadsheets%2Fd%2Fe%2F2PACX-1vTZHO6cbYs2MPGmpXvhu-nyOlCLj6aS3mm3rWmrSOpmu0ZF7gHxqF3Xg5YL6sImy1xdyx9eGMtgXpJe%2Fpub%3Fgid%3D0%26single%3Dtrue%26output%3Dcsv">2024 · October</a></li>
+        <li><a href="https://radar.thoughtworks.com/?documentId=https%3A%2F%2Fdocs.google.com%2Fspreadsheets%2Fd%2Fe%2F2PACX-1vSNCJEF7o6lYiu7z9WIdLqEyyoW6V94_50wyK5AWP9uW0oA3w4jKaU__jy3fyhOeGdZI2yiSL6VwjL3%2Fpub%3Fgid%3D0%26single%3Dtrue%26output%3Dcsv">2023 · March</a></li>
+      </ul>
+    </section>
+
+    <section>
+      <div class="section-head"><h2>Roadmap</h2></div>
+      <p class="section-note">Major technical initiatives, refreshed monthly.</p>
+      <ul class="links">
+        <li><a href="https://buildin.ai/1563225a-384d-47e1-8088-237dd8314e66">Dodo Pizza iOS roadmap</a><span>buildin.ai</span></li>
+      </ul>
+    </section>
+
+    <section>
+      <div class="section-head"><h2>Telegram</h2></div>
+      <ul class="links">
+        <li><a href="https://t.me/obojekak9koju">Denis Egaluev</a></li>
+        <li><a href="https://t.me/ios_automation_testing">Boris Lysikov</a><span>iOS automation &amp; testing</span></li>
+      </ul>
+    </section>
+  </div>
+
   <script src="vendor/chart.umd.min.js"></script>
   <script src="vendor/chartjs-plugin-zoom.min.js"></script>
   <script src="app.js"></script>
