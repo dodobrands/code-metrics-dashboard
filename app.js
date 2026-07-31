@@ -4,8 +4,20 @@
 
 import Chart from "chart.js/auto";
 import zoomPlugin from "chartjs-plugin-zoom";
+import logo from "./logo.txt";
+import phrases from "./phrases.json";
 
 Chart.register(zoomPlugin);
+
+// Careers easter egg — anyone who opens the console meets the Dodo logo and,
+// if the bird catches their eye, a way in. The logo lives in logo.txt, pulled
+// into the bundle at build time by esbuild's text loader; it prints verbatim,
+// only the invitation below is styled.
+console.log(logo);
+console.log(
+  "%cDodo's iOS team is hiring → https://dodoteam.ru/vacancies/",
+  "font:600 13px 'Martian Mono',ui-monospace,monospace;color:#f05138",
+);
 // Axis ticks and legend default to Chart.js' own sans-serif; match the page's mono.
 Chart.defaults.font.family = getComputedStyle(document.body).getPropertyValue("--mono").trim();
 // The webfont loads async; re-render once it's ready so canvases aren't stuck on the fallback.
@@ -13,7 +25,7 @@ document.fonts.ready.then(() => {
   for (const c of charts) c.update();
 });
 
-// dataviz categorical palette (validated: adjacent-pair CVD ΔE 9.1 light / 8.4 dark).
+// dataviz categorical palette (validated: adjacent-pair CVD dE 9.1 light / 8.4 dark).
 const PALETTE = {
   light: ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#4a3aa7", "#e34948"],
   dark: ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#008300", "#9085e9", "#e66767"],
@@ -271,5 +283,26 @@ function wireRoadmap() {
   }
 }
 
+// Footer easter egg — tap the dodo for a random one-liner from phrases.json.
+function wireDodo() {
+  const dodo = document.getElementById("dodo-egg");
+  const bubble = document.getElementById("dodo-bubble");
+  if (!dodo || !bubble || !phrases.length) return;
+  let last = -1;
+  let hideTimer;
+  dodo.addEventListener("click", () => {
+    let i = Math.floor(Math.random() * phrases.length);
+    if (phrases.length > 1 && i === last) i = (i + 1) % phrases.length; // no repeat in a row
+    last = i;
+    bubble.textContent = phrases[i];
+    bubble.classList.remove("show");
+    void bubble.offsetWidth; // reflow so re-adding replays the pop on every tap
+    bubble.classList.add("show");
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(() => bubble.classList.remove("show"), 4000);
+  });
+}
+
 wireRoadmap();
+wireDodo();
 main().catch((e) => { document.getElementById("app").textContent = `Failed to load metrics: ${e}`; });

@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  merge_group:
 
 permissions:
   contents: read
@@ -34,3 +35,4 @@ jobs:
       - run: html-validate index.html
       - run: actionlint
       - run: node scripts/typography.mjs
+      - run: node scripts/latin-only.mjs

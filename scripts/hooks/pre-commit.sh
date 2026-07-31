@@ -14,9 +14,9 @@ cd "$ROOT"
 # is always typographed. Needs `npm ci` once to install typopo.
 if [ -d node_modules/typopo ]; then
     node scripts/typography.mjs --fix
-    git add roadmap index.html
+    git add roadmap index.html phrases.json
 else
     echo "pre-commit: node_modules/typopo missing — run 'npm ci' to enable auto-typography" >&2
 fi
 
-biome check . && html-validate index.html && actionlint && node scripts/typography.mjs
+biome check . && html-validate index.html && actionlint && node scripts/typography.mjs && node scripts/latin-only.mjs

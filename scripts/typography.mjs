@@ -27,11 +27,16 @@ async function targets() {
   const files = (await readdir(dir)).filter((f) => f.endsWith(".json") && f !== "index.json");
   const list = files.map((f) => ({ path: path.join(dir, f), kind: "roadmap" }));
   list.push({ path: path.join(ROOT, "index.html"), kind: "html" });
+  list.push({ path: path.join(ROOT, "phrases.json"), kind: "phrases" });
   return list;
 }
 
 function fixed(kind, raw) {
   if (kind === "html") return typoHtml(raw);
+  if (kind === "phrases") {
+    const arr = JSON.parse(raw);
+    return `${JSON.stringify(arr.map((s) => fixTypos(s, LOCALE)), null, 2)}\n`;
+  }
   const json = JSON.parse(raw);
   json.title = fixTypos(json.title, LOCALE);
   json.description = typoHtml(json.description);
