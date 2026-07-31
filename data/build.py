@@ -96,7 +96,8 @@ def main():
         return sorted([t, v] for t, v in acc.items())
 
     if "View" in metrics:
-        metrics["SwiftUI"] = {"name": "SwiftUI", "kind": "count", "points": list(metrics["View"]["points"])}
+        pts = list(metrics["View"]["points"])
+        metrics["SwiftUI"] = {"name": "SwiftUI", "kind": "count", "points": pts}
     uikit = summed("UIView", "UIViewController")
     if uikit:
         metrics["UIKit"] = {"name": "UIKit", "kind": "count", "points": uikit}
