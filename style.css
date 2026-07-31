@@ -119,6 +119,7 @@ h1 {
   color: var(--muted);
 }
 .meta b { color: var(--text); font-weight: 600; }
+.updated { margin-top: var(--sp-2); }
 
 /* Hero: the thesis — the codebase's headline modernization fact. */
 .hero-stat {
@@ -131,7 +132,6 @@ h1 {
   line-height: 1;
 }
 .hero-stat b { color: var(--accent); }
-.hero-dek { margin: var(--sp-2) 0 var(--sp-4); color: var(--muted); font-family: var(--mono); font-size: 13px; }
 
 .section-head { margin: 0 0 var(--sp-3); display: flex; align-items: baseline; gap: var(--sp-3); }
 .section-head h2 {

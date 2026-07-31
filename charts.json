@@ -3,7 +3,7 @@
   "id": "ui-swiftui-uikit",
   "group": "UI",
   "title": "SwiftUI vs UIKit",
-  "note": "share of framework imports",
+  "note": "share of view types",
   "kind": "share",
   "series": [
    "SwiftUI",
