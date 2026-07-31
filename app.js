@@ -14,7 +14,7 @@ Chart.register(zoomPlugin);
 // only the invitation below is styled.
 console.log(logo);
 console.log(
-  "%ciOS-команда Dodo ищет инженеров → https://dodoteam.ru/vacancies/",
+  "%cDodo's iOS team is hiring → https://dodoteam.ru/vacancies/",
   "font:600 13px 'Martian Mono',ui-monospace,monospace;color:#f05138",
 );
 // Axis ticks and legend default to Chart.js' own sans-serif; match the page's mono.
