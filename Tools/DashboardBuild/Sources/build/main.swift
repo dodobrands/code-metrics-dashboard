@@ -246,12 +246,87 @@ func pyRound(_ x: Double) -> Int64 { Int64(x.rounded(.toNearestOrEven)) }
 // MARK: - resolve_series
 
 func resolveSeries(_ chart: [String: Any], _ metricNames: [String]) -> [(String, String)] {
+    // A toggle chart draws one of several prefix groups at a time (the client
+    // switches). Emit the union of every group's series, keeping FULL names so
+    // the client can split them back per group.
+    if let toggle = chart["toggle"] as? [[String: Any]] {
+        var out: [(String, String)] = []
+        for group in toggle {
+            guard let prefix = group["seriesPrefix"] as? String else { continue }
+            out += metricNames.sorted().filter { $0.hasPrefix(prefix) }.map { ($0, $0) }
+        }
+        return out
+    }
     if let prefix = chart["seriesPrefix"] as? String {
         return metricNames.sorted().filter { $0.hasPrefix(prefix) }
             .map { ($0, String($0.dropFirst(prefix.count))) }
     }
     let series = chart["series"] as? [String] ?? []
     return series.map { ($0, $0) }
+}
+
+// MARK: - BuildWarnings: derive the drawn families from the rich value
+
+// The collector ships ONE `BuildWarnings` metric whose per-commit value is the
+// raw issues (`{types:[{name, issues:[{file,line,message}]}]}`). The service
+// stores that as-is; the breakdown lives here, so how we slice it (by symbol,
+// by module, per type) is a dashboard decision, not baked into what's collected.
+
+/// Deprecated/warned symbol from the message: `'FooView' is deprecated…` →
+/// `FooView`. Falls back to the first few words when nothing is quoted.
+func warningSymbol(_ message: String) -> String {
+    if
+        let open = message.firstIndex(of: "'"),
+        let close = message[message.index(after: open)...].firstIndex(of: "'") {
+        return String(message[message.index(after: open)..<close])
+    }
+    return message.split(separator: " ").prefix(5).joined(separator: " ")
+}
+
+/// SPM module from an issue's resolved path (`Modules/<M>/…`).
+func warningModule(_ file: String) -> String {
+    if let range = file.range(of: "(?:^|/)Modules/([^/]+)", options: .regularExpression) {
+        return String(file[range].split(separator: "/").last ?? "unknown")
+    }
+    if !file.contains("/") || file.hasSuffix(".generated.swift") { return "Generated/root" }
+    return String(file.split(separator: "/").first ?? "unknown")
+}
+
+/// Slice the rich BuildWarnings commits into count metrics the charts draw:
+/// `BuildWarnings:<type>` (per-type totals), `DeprecationBySymbol:<symbol>`,
+/// `DeprecationByModule:<module>`, `WarningBySymbol:<symbol>`. Every metric is
+/// 0-filled across all commits so the total line stays continuous.
+func deriveBuildWarnings(_ commits: [[String: Any]]) -> [String: Metric] {
+    var perCommit: [(ts: Int64, counts: [String: Int])] = []
+    var names = Set<String>()
+    for c in commits {
+        let ts = toMs(c["timestamp"] as? String ?? "")
+        var counts: [String: Int] = [:]
+        func bump(_ name: String) { counts[name, default: 0] += 1; names.insert(name) }
+        let value = c["value"] as? [String: Any] ?? [:]
+        for group in (value["types"] as? [[String: Any]] ?? []) {
+            let typeName = group["name"] as? String ?? ""
+            for issue in (group["issues"] as? [[String: Any]] ?? []) {
+                let message = issue["message"] as? String ?? ""
+                let file = issue["file"] as? String ?? ""
+                bump("BuildWarnings:\(typeName)")
+                if typeName == "DeprecatedDeclaration" {
+                    bump("DeprecationBySymbol:\(warningSymbol(message))")
+                    bump("DeprecationByModule:\(warningModule(file))")
+                } else {
+                    bump("WarningBySymbol:\(warningSymbol(message))")
+                }
+            }
+        }
+        perCommit.append((ts, counts))
+    }
+    perCommit.sort { $0.ts < $1.ts }
+    var out: [String: Metric] = [:]
+    for name in names {
+        let points = perCommit.map { Point(ts: $0.ts, value: .int(Int64($0.counts[name] ?? 0))) }
+        out[name] = Metric(name: name, kind: "count", points: points)
+    }
+    return out
 }
 
 // MARK: - main
@@ -275,8 +350,15 @@ let doc = (try? JSONSerialization.jsonObject(with: inputData)) as? [String: Any]
 
 var metrics: [String: Metric] = [:]
 for m in (doc["metrics"] as? [[String: Any]] ?? []) {
+    let name = m["name"] as? String ?? ""
+    if name == "BuildWarnings" {
+        for (n, metric) in deriveBuildWarnings(m["commits"] as? [[String: Any]] ?? []) {
+            metrics[n] = metric
+        }
+        continue
+    }
     let (kind, points) = metricPoints(m)
-    if !points.isEmpty, let name = m["name"] as? String {
+    if !points.isEmpty, !name.isEmpty {
         metrics[name] = Metric(name: name, kind: kind, points: points)
     }
 }

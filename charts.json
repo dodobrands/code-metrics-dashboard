@@ -114,19 +114,14 @@
   "selfBounds": true
  },
  {
-  "id": "warnings-deprecations-by-symbol",
+  "id": "warnings-deprecations-breakdown",
   "group": "Warnings",
-  "title": "Deprecations by symbol",
+  "title": "Deprecations breakdown",
   "kind": "bar",
-  "seriesPrefix": "DeprecationBySymbol:",
-  "topN": 20
- },
- {
-  "id": "warnings-deprecations-by-module",
-  "group": "Warnings",
-  "title": "Deprecations by module",
-  "kind": "bar",
-  "seriesPrefix": "DeprecationByModule:"
+  "toggle": [
+   { "label": "By symbol", "seriesPrefix": "DeprecationBySymbol:", "topN": 20 },
+   { "label": "By module", "seriesPrefix": "DeprecationByModule:" }
+  ]
  },
  {
   "id": "warnings-other-by-message",
