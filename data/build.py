@@ -58,10 +58,6 @@ def metric_points(m):
     return kind, points
 
 
-def last(points):
-    return points[-1][1] if points else None
-
-
 def resolve_series(chart, metrics):
     """(metric name, label) for a chart — explicit `series`, or every metric
     matching `seriesPrefix` (prefix stripped for the label)."""
@@ -115,10 +111,6 @@ def main():
         total = sum(h.values())
         hero["swift6Pct"] = round((h.get("6", 0) / total) * 100) if total else 0
         hero["swift6Total"] = total
-    su = last(metrics.get("SwiftUI", {}).get("points", []))
-    uk = last(metrics.get("UIKit", {}).get("points", []))
-    if su is not None and uk is not None and su + uk > 0:
-        hero["swiftUIShare"] = round(su / (su + uk) * 100)
 
     charts_dir = os.path.join(root, "data", "charts")
     os.makedirs(charts_dir, exist_ok=True)

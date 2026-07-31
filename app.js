@@ -143,6 +143,7 @@ function stack100(canvas, datasets, bounds) {
   scales.y = { ...scales.y, stacked: true, min: 0, max: 100, ticks: { ...scales.y.ticks, callback: (v) => `${v}%` } };
   const opts = baseOptions(scales, false, bounds);
   opts.plugins.tooltip = tooltipConfig((y) => `${y.toFixed(1)}%`);
+  opts.plugins.tooltip.filter = (item) => item.parsed.y > 0; // hide 0% rows
   mount(canvas, { type: "line", data: { datasets }, options: opts });
 }
 
@@ -183,11 +184,7 @@ function versionsChart(canvas, spec, byName, bounds) {
 
 function heroThesis(meta) {
   const h = meta.hero || {};
-  const stat = h.swift6Total ? `<span class="hero-stat"><b>${h.swift6Pct}%</b> of ${h.swift6Total} targets on Swift 6</span>` : "";
-  const dek = [];
-  if (h.swiftUIShare != null) dek.push(`SwiftUI is ${h.swiftUIShare}% of framework imports`);
-  dek.push("Swift Testing is overtaking XCTest");
-  return `${stat}<p class="hero-dek">${escapeHtml(typo(dek.join(" · ")))} — ${meta.years} years of modernization, one commit at a time.</p>`;
+  return h.swift6Total ? `<span class="hero-stat"><b>${h.swift6Pct}%</b> of ${h.swift6Total} targets on Swift 6</span>` : "";
 }
 
 // --- date-range picker --------------------------------------------------------
