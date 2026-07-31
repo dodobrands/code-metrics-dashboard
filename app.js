@@ -6,6 +6,12 @@ import Chart from "chart.js/auto";
 import zoomPlugin from "chartjs-plugin-zoom";
 
 Chart.register(zoomPlugin);
+// Axis ticks and legend default to Chart.js' own sans-serif; match the page's mono.
+Chart.defaults.font.family = getComputedStyle(document.body).getPropertyValue("--mono").trim();
+// The webfont loads async; re-render once it's ready so canvases aren't stuck on the fallback.
+document.fonts.ready.then(() => {
+  for (const c of charts) c.update();
+});
 
 // dataviz categorical palette (validated: adjacent-pair CVD ΔE 9.1 light / 8.4 dark).
 const PALETTE = {
