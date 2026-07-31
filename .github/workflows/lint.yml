@@ -13,7 +13,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       # index.html is a template — build_roadmap.py fills the roadmap region at
       # deploy time. The committed source must keep empty markers; otherwise
       # generated markup leaked into git.
