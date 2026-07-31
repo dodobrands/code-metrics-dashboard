@@ -24,7 +24,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # All tooling (node, esbuild, linters, swift, python, mcm) comes from mise.toml.
       # mcm is a private cross-org release, so mise needs a token that can read it.
@@ -55,10 +55,10 @@ jobs:
           mise x "aqua:ImageMagick/ImageMagick@latest" -- bash scripts/og-image.sh
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: .
 
       - name: Deploy to Pages
         id: deploy
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
