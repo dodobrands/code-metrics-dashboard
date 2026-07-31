@@ -18,7 +18,7 @@ provenance_api_failures_fatal = false
 # typopo) are npm dependencies in package.json instead — see README.
 [tools]
 node = "latest"
-ruff = "latest"
+swift = "latest"
 actionlint = "latest"
 python = "latest"
 "npm:@biomejs/biome" = "latest"

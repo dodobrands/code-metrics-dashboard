@@ -23,8 +23,8 @@ Metrics come from the `mobile-code-metrics` service via its `mcm` CLI. Data is *
 committed** — it is generated at publish time and injected into the Pages artifact only.
 
 ```
-mcm get --repo dodobrands/dodo-mobile-ios      # full JSON dump  → data/raw.json
-python data/build.py data/raw.json             # → data/meta.json + data/charts/<id>.json
+mcm get --repo dodobrands/dodo-mobile-ios                          # full JSON dump  → data/raw.json
+swift run --package-path Tools/DashboardBuild build data/raw.json  # → data/meta.json + data/charts/<id>.json
 ```
 
 - `data/meta.json` — shared x-axis bounds, repo/updated, and the headline stats
@@ -64,9 +64,9 @@ token; read from `op` if unset).
 To build from a saved snapshot instead of the live service:
 
 ```
-python3 data/build.py path/to/raw.json    # generate a local data snapshot
-python3 data/build_roadmap.py             # inject the roadmap board into index.html
-python3 -m http.server 8099               # serve the folder
+swift run --package-path Tools/DashboardBuild build path/to/raw.json  # generate a local data snapshot
+swift run --package-path Tools/DashboardBuild build-roadmap           # inject the roadmap board into index.html
+python3 -m http.server 8099                                          # serve the folder
 open http://localhost:8099
 ```
 
@@ -74,8 +74,8 @@ open http://localhost:8099
 
 Nothing is vendored. Every dependency comes from one of three places:
 
-- **mise** (`mise.toml`, pinned by `mise.lock`) — every CLI tool: Node, esbuild, Biome,
-  html-validate, ruff, actionlint, Python, and `mcm` (the metrics fetcher). The full set
+- **mise** (`mise.toml`, pinned by `mise.lock`) — every CLI tool: Node, Swift, esbuild, Biome,
+  html-validate, actionlint, Python, and `mcm` (the metrics fetcher). The full set
   installs in every environment — local, lint CI, deploy — with no per-environment scoping,
   because mise caches installs so reinstalling everything is cheap. Tools are always `latest`
   in `mise.toml`; `mise.lock` pins the exact versions. Bump with `mise up`.
@@ -91,10 +91,10 @@ installs the rest — fine for any local work that doesn't fetch metrics.
 ## Tooling & contributing
 
 - Install everything with `mise install`, and the libraries with `npm ci`. Once mise is
-  installed, call any tool directly — `biome`, `esbuild`, `ruff`, `mcm` — with no `mise exec`
+  installed, call any tool directly — `biome`, `esbuild`, `swift`, `mcm` — with no `mise exec`
   prefix; mise puts them on `PATH`. Build the bundle: `bash scripts/build.sh`.
 - Lint by running the linters directly (no `mise run` task): `biome check .`,
-  `html-validate index.html`, `ruff check data`, `actionlint`, `node scripts/typography.mjs`,
+  `html-validate index.html`, `actionlint`, `node scripts/typography.mjs`,
   `node scripts/latin-only.mjs` (every letter in the sources must be Latin — this is a public English page).
   CI runs the same commands.
 - Install the git hooks once: `./scripts/hooks/install.sh` — pre-commit auto-typographs
