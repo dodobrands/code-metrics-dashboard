@@ -19,7 +19,7 @@ jobs:
     # Dormant until infra secrets exist — set repo variable DEPLOY_ENABLED=true to arm.
     # Needs secrets: MOBILE_CODE_METRICS_DASHBOARD (PAT, read private mcm release), MCM_URL, MCM_READ_TOKEN.
     if: vars.DEPLOY_ENABLED == 'true'
-    runs-on: ubuntu-latest
+    runs-on: bitrise_pool_name:pizza-ubuntu-xs
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
