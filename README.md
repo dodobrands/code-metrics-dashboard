@@ -94,7 +94,8 @@ installs the rest — fine for any local work that doesn't fetch metrics.
   installed, call any tool directly — `biome`, `esbuild`, `ruff`, `mcm` — with no `mise exec`
   prefix; mise puts them on `PATH`. Build the bundle: `bash scripts/build.sh`.
 - Lint by running the linters directly (no `mise run` task): `biome check .`,
-  `html-validate index.html`, `ruff check data`, `actionlint`, `node scripts/typography.mjs`.
+  `html-validate index.html`, `ruff check data`, `actionlint`, `node scripts/typography.mjs`,
+  `node scripts/latin-only.mjs` (every letter in the sources must be Latin — this is a public English page).
   CI runs the same commands.
 - Install the git hooks once: `./scripts/hooks/install.sh` — pre-commit auto-typographs
   authored text and runs the linters.
