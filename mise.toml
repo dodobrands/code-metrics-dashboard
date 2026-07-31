@@ -4,6 +4,11 @@ lockfile = true
 # `@latest` resolves the newest tag instead of the CI install failing with
 # "no versions matching date filter".
 minimum_release_age_excludes = ["github:dodo-ai-platform/mobile-code-metrics"]
+# mcm's release doesn't publish GitHub artifact attestations, and the install
+# token can't read the attestations API — so don't treat that API failure as
+# fatal. The download is still checksum-verified. TODO: attest mcm releases
+# (like the other dodobrands tools) and drop this.
+provenance_api_failures_fatal = false
 
 # All tooling installs through mise, everywhere (local, lint CI, deploy) — mise's
 # cache makes reinstalling the full set cheap, so we never scope tools per-env.
