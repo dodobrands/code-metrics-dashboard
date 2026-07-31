@@ -65,6 +65,7 @@ To build from a saved snapshot instead of the live service:
 
 ```
 python3 data/build.py path/to/raw.json    # generate a local data snapshot
+python3 data/build_roadmap.py             # inject the roadmap board into index.html
 python3 -m http.server 8099               # serve the folder
 open http://localhost:8099
 ```
