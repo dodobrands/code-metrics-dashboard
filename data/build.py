@@ -62,6 +62,15 @@ def last(points):
     return points[-1][1] if points else None
 
 
+def resolve_series(chart, metrics):
+    """(metric name, label) for a chart — explicit `series`, or every metric
+    matching `seriesPrefix` (prefix stripped for the label)."""
+    prefix = chart.get("seriesPrefix")
+    if prefix:
+        return [(n, n[len(prefix):]) for n in sorted(metrics) if n.startswith(prefix)]
+    return [(n, n) for n in chart.get("series", [])]
+
+
 def main():
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     with open(os.path.join(root, "charts.json")) as f:
@@ -76,7 +85,7 @@ def main():
             metrics[m["name"]] = {"name": m["name"], "kind": kind, "points": points}
 
     # Shared x-axis bounds across every series any chart draws.
-    used = {n for c in charts for n in c["series"] if n in metrics}
+    used = {n for c in charts for n, _ in resolve_series(c, metrics) if n in metrics}
     ts = [p[0] for n in used for p in metrics[n]["points"]]
     bounds = {"min": min(ts), "max": max(ts)}
 
@@ -96,7 +105,11 @@ def main():
     charts_dir = os.path.join(root, "data", "charts")
     os.makedirs(charts_dir, exist_ok=True)
     for c in charts:
-        series = [metrics[n] for n in c["series"] if n in metrics]
+        series = [
+            {"name": label, "kind": metrics[n]["kind"], "points": metrics[n]["points"]}
+            for n, label in resolve_series(c, metrics)
+            if n in metrics
+        ]
         with open(os.path.join(charts_dir, c["id"] + ".json"), "w") as f:
             json.dump({"series": series}, f, separators=(",", ":"))
 

@@ -1,18 +1,27 @@
 [settings]
 lockfile = true
+# mcm ships fresh releases; exempt it from mise's minimum-release-age gate so
+# `@latest` resolves the newest tag instead of the CI install failing with
+# "no versions matching date filter".
+minimum_release_age_excludes = ["github:dodo-ai-platform/mobile-code-metrics"]
+# mcm's release doesn't publish GitHub artifact attestations, and the install
+# token can't read the attestations API — so don't treat that API failure as
+# fatal. The download is still checksum-verified. TODO: attest mcm releases
+# (like the other dodobrands tools) and drop this.
+provenance_api_failures_fatal = false
 
+# All tooling installs through mise, everywhere (local, lint CI, deploy) — mise's
+# cache makes reinstalling the full set cheap, so we never scope tools per-env.
+# Rule (every tool, no exceptions — mcm included): always request "latest" here
+# and let mise.lock pin the exact version. Never hardcode a version in this file;
+# bump with `mise up`, which rewrites the lock. Browser libraries (Chart.js,
+# typopo) are npm dependencies in package.json instead — see README.
 [tools]
-node = "22"
+node = "latest"
 ruff = "latest"
 actionlint = "latest"
+python = "latest"
 "npm:@biomejs/biome" = "latest"
 "npm:html-validate" = "latest"
-
-[tasks.lint]
-description = "Lint everything: JS/CSS (biome), HTML (html-validate), Python (ruff), workflows (actionlint)"
-run = [
-  "biome check .",
-  "html-validate index.html",
-  "ruff check data",
-  "actionlint",
-]
+"npm:esbuild" = "latest"
+"github:dodo-ai-platform/mobile-code-metrics" = { version = "latest", bin = "mcm" }

@@ -26,16 +26,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # mcm is installed via mise from its GitHub release (private, cross-org →
-      # GITHUB_TOKEN must read dodo-ai-platform/mobile-code-metrics).
+      # All tooling (node, esbuild, linters, python, mcm) comes from mise.toml.
+      # mcm is a private cross-org release, so mise needs a token that can read it.
       - uses: jdx/mise-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.MOBILE_CODE_METRICS_DASHBOARD }}
-        with:
-          mise_toml: |
-            [tools]
-            python = "3"
-            "ubi:dodo-ai-platform/mobile-code-metrics" = { version = "0.1.0", exe = "mcm", matching = "linux_x86_64" }
+
+      - run: npm ci
+      - run: bash scripts/build.sh
 
       - name: Fetch + build metrics
         env:
@@ -46,6 +44,14 @@ jobs:
           python data/build.py data/raw.json
           python data/build_roadmap.py
           rm -f data/raw.json
+
+      # Render the Open Graph share cards from og.json (gitignored build output).
+      # ImageMagick via mise (aqua, linux-only — fine on this runner); the mono
+      # font is the one system package that can't come through mise.
+      - name: Generate share images
+        run: |
+          sudo apt-get install -y -qq fonts-dejavu-core
+          mise x "aqua:ImageMagick/ImageMagick@latest" -- bash scripts/og-image.sh
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
