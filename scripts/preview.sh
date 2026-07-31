@@ -13,6 +13,11 @@
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
+# build_roadmap.py fills index.html's roadmap region in place; restore the
+# tracked template on exit so a local build never leaves it dirty (and the
+# generated markup can't be committed by accident).
+trap 'git checkout -- index.html 2>/dev/null || true' EXIT
+
 : "${MCM_URL:=https://mobile-code-metrics.dodo-ai-platform.io}"
 if [ -z "${MCM_TOKEN:-}" ]; then
     MCM_TOKEN=$(op read "op://Mobile/mobile-code-metrics DAP READ_TOKEN/credential")
@@ -33,4 +38,4 @@ bash scripts/build.sh # esbuild → bundle.js
 
 PORT="${PORT:-8000}"
 echo "Dashboard built → http://localhost:$PORT  (Ctrl-C to stop)"
-exec python3 -m http.server "$PORT"
+python3 -m http.server "$PORT" # not exec: let the EXIT trap restore index.html
