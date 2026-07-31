@@ -1,5 +1,9 @@
 [settings]
 lockfile = true
+# mcm ships fresh releases; exempt it from mise's minimum-release-age gate so
+# `@latest` resolves the newest tag instead of the CI install failing with
+# "no versions matching date filter".
+minimum_release_age_excludes = ["github:dodo-ai-platform/mobile-code-metrics"]
 
 # All tooling installs through mise, everywhere (local, lint CI, deploy) — mise's
 # cache makes reinstalling the full set cheap, so we never scope tools per-env.
