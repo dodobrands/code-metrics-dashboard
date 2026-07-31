@@ -8,12 +8,12 @@ modernization metrics.
 
 ## What it is
 
-A self-contained static site (no framework, no build step for the page itself):
+A self-contained static site — one HTML page hydrated by a single bundled script:
 
-- `index.html` / `style.css` — the page. Martian Mono display type, Swift-orange accent,
-  auto light/dark, one spacing scale (`--sp-*`).
-- `app.js` — renders the metric charts with a vendored **Chart.js** (+ zoom plugin).
-- `vendor/` — Chart.js, the zoom plugin and the font, all vendored (no CDN, strict-CSP safe).
+- `index.html` / `style.css` — the page. Martian Mono display type (Google Fonts),
+  Swift-orange accent, auto light/dark, one spacing scale (`--sp-*`).
+- `app.js` — renders the metric charts with **Chart.js** (+ zoom plugin), imported as
+  npm dependencies and bundled by esbuild into `bundle.js` (gitignored, built at deploy).
 - `charts.json` — the chart spec (id, title, kind, series). Single source of truth shared
   by the page **and** the build.
 
@@ -33,12 +33,13 @@ python data/build.py data/raw.json             # → data/meta.json + data/chart
 
 ## Deploy
 
-`.github/workflows/deploy.yml` runs daily (and on demand). It installs `mcm` via **mise**,
-fetches + builds the data, and deploys to GitHub Pages.
+`.github/workflows/deploy.yml` runs daily (and on demand). It installs tools via **mise**,
+builds `bundle.js` (`npm ci` + esbuild), fetches + builds the data, and deploys to GitHub Pages.
 
 Dormant until armed: set the repo variable `DEPLOY_ENABLED=true` and add the secrets
-`MCM_URL`, `MCM_READ_TOKEN` and `MCM_INSTALL_TOKEN` (a token that can read the private
-`dodo-ai-platform/mobile-code-metrics` release).
+`MCM_URL` and `MCM_READ_TOKEN` (to fetch metrics) plus `MOBILE_CODE_METRICS_DASHBOARD`
+(a token that can read the private `dodo-ai-platform/mobile-code-metrics` release, which
+mise uses to install `mcm`).
 
 ## Local development
 
@@ -48,10 +49,32 @@ python3 -m http.server 8099               # serve the folder
 open http://localhost:8099
 ```
 
+## Dependencies
+
+Nothing is vendored. Every dependency comes from one of three places:
+
+- **mise** (`mise.toml`, pinned by `mise.lock`) — every CLI tool: Node, esbuild, Biome,
+  html-validate, ruff, actionlint, Python, and `mcm` (the metrics fetcher). The full set
+  installs in every environment — local, lint CI, deploy — with no per-environment scoping,
+  because mise caches installs so reinstalling everything is cheap. Tools are always `latest`
+  in `mise.toml`; `mise.lock` pins the exact versions. Bump with `mise up`.
+- **npm** (`package.json`) — browser libraries (Chart.js + zoom plugin) and the typography
+  tool (typopo). esbuild bundles them into `bundle.js`; `node_modules` is never shipped.
+  Bump with `npm update`.
+- **Google Fonts** — the Martian Mono webfont, via a `<link>` in `index.html`.
+
+`mcm` is a private cross-org release, so mise needs a GitHub token that can read it (CI passes
+the `MOBILE_CODE_METRICS_DASHBOARD` secret). Without the token mise errors on that one tool and
+installs the rest — fine for any local work that doesn't fetch metrics.
+
 ## Tooling & contributing
 
-- Everything installs through **mise** (`mise.toml`, pinned by `mise.lock`).
-- Lint everything with `mise run lint` — Biome (JS/CSS), html-validate (HTML),
-  ruff (Python), actionlint (workflows).
-- Install the git hooks once: `./scripts/hooks/install.sh` (pre-commit runs the linters).
+- Install everything with `mise install`, and the libraries with `npm ci`. Once mise is
+  installed, call any tool directly — `biome`, `esbuild`, `ruff`, `mcm` — with no `mise exec`
+  prefix; mise puts them on `PATH`. Build the bundle: `bash scripts/build.sh`.
+- Lint by running the linters directly (no `mise run` task): `biome check .`,
+  `html-validate index.html`, `ruff check data`, `actionlint`, `node scripts/typography.mjs`.
+  CI runs the same commands.
+- Install the git hooks once: `./scripts/hooks/install.sh` — pre-commit auto-typographs
+  authored text and runs the linters.
 - `main` is protected: changes land via PR with a green `lint` check.
