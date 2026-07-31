@@ -119,8 +119,7 @@ h1 {
   color: var(--muted);
 }
 .meta b { color: var(--text); font-weight: 600; }
-.updated { margin: var(--sp-2) 0 0; font-family: var(--mono); font-size: 12px; color: var(--muted); }
-.updated b { color: var(--text); font-weight: 600; }
+.updated { margin-top: var(--sp-2); }
 
 /* Hero: the thesis — the codebase's headline modernization fact. */
 .hero-stat {
