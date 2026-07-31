@@ -119,8 +119,8 @@
   "title": "Deprecations breakdown",
   "kind": "bar",
   "toggle": [
-   { "label": "By symbol", "seriesPrefix": "DeprecationBySymbol:", "topN": 20 },
-   { "label": "By module", "seriesPrefix": "DeprecationByModule:" }
+   { "label": "By symbol", "seriesPrefix": "DeprecationBySymbol:", "topN": 15 },
+   { "label": "By module", "seriesPrefix": "DeprecationByModule:", "topN": 15 }
   ]
  },
  {
