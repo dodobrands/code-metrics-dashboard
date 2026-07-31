@@ -40,13 +40,13 @@ python data/build.py data/raw.json             # → data/meta.json + data/chart
 
 ## Deploy
 
-`.github/workflows/deploy.yml` runs daily (and on demand). It installs tools via **mise**,
-builds `bundle.js` (`npm ci` + esbuild), fetches + builds the data, and deploys to GitHub Pages.
+`.github/workflows/deploy.yml` runs on every push to `main`, daily, and on demand. It installs
+tools via **mise**, builds `bundle.js` (`npm ci` + esbuild), fetches + builds the data, and
+deploys to GitHub Pages.
 
-Dormant until armed: set the repo variable `DEPLOY_ENABLED=true` and add the secrets
-`MCM_URL` and `MCM_READ_TOKEN` (to fetch metrics) plus `MOBILE_CODE_METRICS_DASHBOARD`
-(a token that can read the private `dodo-ai-platform/mobile-code-metrics` release, which
-mise uses to install `mcm`).
+It needs the secrets `MCM_URL` and `MCM_READ_TOKEN` (to fetch metrics) plus
+`MOBILE_CODE_METRICS_DASHBOARD` (a token that can read the private
+`dodo-ai-platform/mobile-code-metrics` release, which mise uses to install `mcm`).
 
 ## Local development
 
@@ -94,7 +94,8 @@ installs the rest — fine for any local work that doesn't fetch metrics.
   installed, call any tool directly — `biome`, `esbuild`, `ruff`, `mcm` — with no `mise exec`
   prefix; mise puts them on `PATH`. Build the bundle: `bash scripts/build.sh`.
 - Lint by running the linters directly (no `mise run` task): `biome check .`,
-  `html-validate index.html`, `ruff check data`, `actionlint`, `node scripts/typography.mjs`.
+  `html-validate index.html`, `ruff check data`, `actionlint`, `node scripts/typography.mjs`,
+  `node scripts/latin-only.mjs` (every letter in the sources must be Latin — this is a public English page).
   CI runs the same commands.
 - Install the git hooks once: `./scripts/hooks/install.sh` — pre-commit auto-typographs
   authored text and runs the linters.
