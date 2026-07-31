@@ -45,6 +45,14 @@ jobs:
           python data/build_roadmap.py
           rm -f data/raw.json
 
+      # Render the Open Graph share cards from og.json (gitignored build output).
+      # ImageMagick via mise (aqua, linux-only — fine on this runner); the mono
+      # font is the one system package that can't come through mise.
+      - name: Generate share images
+        run: |
+          sudo apt-get install -y -qq fonts-dejavu-core
+          mise x "aqua:ImageMagick/ImageMagick@latest" -- bash scripts/og-image.sh
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
