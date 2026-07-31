@@ -19,4 +19,4 @@ else
     echo "pre-commit: node_modules/typopo missing — run 'npm ci' to enable auto-typography" >&2
 fi
 
-biome check . && html-validate index.html && ruff check data && actionlint && node scripts/typography.mjs && node scripts/latin-only.mjs
+biome check . && html-validate index.html && actionlint && node scripts/typography.mjs && node scripts/latin-only.mjs

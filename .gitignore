@@ -7,3 +7,8 @@ data/charts/
 node_modules/
 bundle.js
 og.png
+
+# SwiftPM build artifacts for the data build tool (Tools/DashboardBuild)
+.build/
+Tools/DashboardBuild/.build/
+Package.resolved
