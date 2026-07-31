@@ -31,6 +31,13 @@ python data/build.py data/raw.json             # → data/meta.json + data/chart
   (Swift 6 %, SwiftUI share, year span) — all computed, never hardcoded.
 - `data/charts/<id>.json` — one file per chart, holding **only** that chart's series.
 
+> **Deploy only what's drawn.** Every deployed chart file carries exactly the
+> points a chart plots — metric, date, value — and nothing else. Reduce the
+> service's richer shapes to the drawn value at build time: a `SWIFT_VERSION`
+> per-target map → a version histogram; a `SwiftUI`/`UIKit` count → derived from
+> the type counts; a deprecation message → its symbol. Never ship raw data a
+> chart doesn't render.
+
 ## Deploy
 
 `.github/workflows/deploy.yml` runs daily (and on demand). It installs tools via **mise**,
