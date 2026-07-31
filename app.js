@@ -36,6 +36,16 @@ function mount(canvas, config) {
   charts.push(chart);
 }
 
+// Min/max timestamp across a chart's own series — for charts that scale to
+// their own data range (`selfBounds`) instead of the shared full-history axis,
+// so a young metric isn't a flat line squished at the far right.
+function seriesBounds(byName) {
+  let min = Infinity, max = -Infinity;
+  for (const s of byName.values())
+    for (const [t] of s.points) { if (t < min) min = t; if (t > max) max = t; }
+  return Number.isFinite(min) && max > min ? { min, max } : null;
+}
+
 const isDark = () => matchMedia("(prefers-color-scheme: dark)").matches;
 const palette = () => (isDark() ? PALETTE.dark : PALETTE.light);
 function ink() {
@@ -90,6 +100,41 @@ function lineChart(canvas, spec, byName, bounds) {
   const opts = baseOptions(commonScales(bounds), datasets.length === 1, bounds);
   opts.plugins.tooltip = tooltipConfig((y) => `${y}`);
   mount(canvas, { type: "line", data: { datasets }, options: opts });
+}
+
+// Ranked horizontal bars from each series' latest value. For high-cardinality
+// breakdowns (by module / by message) where 40+ overlapping lines are
+// unreadable and the shared-index tooltip covers the whole plot. A snapshot,
+// not a time series — so it isn't registered with the date-range picker.
+function barChart(canvas, spec, byName) {
+  const colors = palette();
+  const { muted } = ink();
+  const grid = isDark() ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)";
+  const names = spec.series ?? [...byName.keys()];
+  let rows = names.filter((n) => byName.has(n))
+    .map((n) => { const p = byName.get(n).points; return { label: nameOf(n), value: p.length ? p[p.length - 1][1] : 0 }; })
+    .filter((r) => r.value > 0).sort((a, b) => b.value - a.value);
+  if (spec.topN && rows.length > spec.topN) {
+    const rest = rows.slice(spec.topN).reduce((s, r) => s + r.value, 0);
+    rows = rows.slice(0, spec.topN);
+    if (rest > 0) rows.push({ label: "Other", value: rest });
+  }
+  // Grow the card so every bar keeps a legible height.
+  canvas.parentElement.style.height = `${Math.max(160, rows.length * 22 + 24)}px`;
+  new Chart(canvas, {
+    type: "bar",
+    data: { labels: rows.map((r) => r.label), datasets: [{ data: rows.map((r) => r.value), backgroundColor: colors[0], borderRadius: 3, barThickness: 12 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: false, indexAxis: "y",
+      // Long labels (a few method signatures) truncate with an ellipsis; the
+      // untruncated label is the tooltip title.
+      plugins: { legend: { display: false }, tooltip: { callbacks: { title: (items) => items[0].label, label: (i) => ` ${i.parsed.x}` } } },
+      scales: {
+        x: { beginAtZero: true, grid: { color: grid, drawTicks: false }, border: { display: false }, ticks: { color: muted, font: { size: 11 }, precision: 0 } },
+        y: { grid: { display: false }, border: { display: false }, ticks: { color: muted, font: { size: 11 }, autoSkip: false, callback(v) { const l = this.getLabelForValue(v); return l.length > 28 ? l.slice(0, 27) + "…" : l; } } },
+      },
+    },
+  });
 }
 
 // Stacked 100% area from a set of series (SwiftUI/UIKit) or a version histogram.
@@ -209,9 +254,11 @@ async function main() {
     card.innerHTML = `<figcaption><h3>${escapeHtml(typo(spec.title))}</h3>${spec.note ? `<p>${escapeHtml(typo(spec.note))}</p>` : ""}</figcaption><div class="canvas-wrap"><canvas></canvas></div>`;
     section.appendChild(card);
     const canvas = card.querySelector("canvas");
-    if (spec.kind === "share") shareChart(canvas, spec, byName, bounds);
-    else if (spec.kind === "versions") versionsChart(canvas, spec, byName, bounds);
-    else lineChart(canvas, spec, byName, bounds);
+    const b = spec.selfBounds ? (seriesBounds(byName) || bounds) : bounds;
+    if (spec.kind === "share") shareChart(canvas, spec, byName, b);
+    else if (spec.kind === "versions") versionsChart(canvas, spec, byName, b);
+    else if (spec.kind === "bar") barChart(canvas, spec, byName);
+    else lineChart(canvas, spec, byName, b);
   });
   rangePicker(bounds);
 }
