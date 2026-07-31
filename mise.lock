@@ -46,6 +46,25 @@ url = "https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_
 url_api = "https://api.github.com/repos/rhysd/actionlint/releases/assets/384924919"
 provenance = "github-attestations"
 
+[[tools."github:dodo-ai-platform/mobile-code-metrics"]]
+version = "1.0.1"
+backend = "github:dodo-ai-platform/mobile-code-metrics"
+
+[tools."github:dodo-ai-platform/mobile-code-metrics"."platforms.linux-x64"]
+checksum = "sha256:53aa7d62db900c92fee57211ccd5fc95728edba18d29ee60b5afeec97534cb34"
+url = "https://github.com/dodo-ai-platform/mobile-code-metrics/releases/download/1.0.1/mcm_1.0.1_linux_x86_64.tar.gz"
+url_api = "https://api.github.com/repos/dodo-ai-platform/mobile-code-metrics/releases/assets/496636883"
+
+[tools."github:dodo-ai-platform/mobile-code-metrics"."platforms.linux-x64-musl"]
+checksum = "sha256:53aa7d62db900c92fee57211ccd5fc95728edba18d29ee60b5afeec97534cb34"
+url = "https://github.com/dodo-ai-platform/mobile-code-metrics/releases/download/1.0.1/mcm_1.0.1_linux_x86_64.tar.gz"
+url_api = "https://api.github.com/repos/dodo-ai-platform/mobile-code-metrics/releases/assets/496636883"
+
+[tools."github:dodo-ai-platform/mobile-code-metrics"."platforms.macos-arm64"]
+checksum = "sha256:da42ba964170fdb8d9b13a0a5b30875fa454b5ed86c46664baebc80827b530ca"
+url = "https://github.com/dodo-ai-platform/mobile-code-metrics/releases/download/1.0.1/mcm_1.0.1_darwin_arm64.tar.gz"
+url_api = "https://api.github.com/repos/dodo-ai-platform/mobile-code-metrics/releases/assets/496630641"
+
 [[tools.node]]
 version = "26.5.1"
 backend = "core:node"
