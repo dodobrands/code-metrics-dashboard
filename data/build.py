@@ -11,9 +11,10 @@ x-axis bounds and the headline stats — all computed here, never hardcoded.
 """
 import json
 import os
+import re
 import sys
 from collections import Counter
-from datetime import datetime
+from datetime import datetime, timezone
 
 DAY_MS = 86_400_000
 
@@ -132,6 +133,17 @@ def main():
     }
     with open(os.path.join(root, "data", "meta.json"), "w") as f:
         json.dump(meta, f, separators=(",", ":"))
+
+    # Inline the "updated" date into the page so it doesn't flicker from a "—"
+    # placeholder while meta.json loads — the same deploy-time injection as the
+    # roadmap board. Idempotent: replaces whatever sits between the markers.
+    date = datetime.fromtimestamp(bounds["max"] / 1000, timezone.utc).strftime("%Y-%m-%d")
+    index_path = os.path.join(root, "index.html")
+    with open(index_path) as f:
+        html = f.read()
+    html = re.sub(r'(<b id="updated">)[^<]*(</b>)', rf"\g<1>{date}\g<2>", html)
+    with open(index_path, "w") as f:
+        f.write(html)
 
 
 if __name__ == "__main__":

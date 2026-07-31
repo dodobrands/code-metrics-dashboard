@@ -227,7 +227,6 @@ async function main() {
     fetch("data/meta.json", { cache: "no-store" }).then((r) => r.json()),
   ]);
   if (meta.repo) document.getElementById("repo").textContent = meta.repo;
-  document.getElementById("updated").textContent = new Date(meta.updated).toISOString().slice(0, 10);
   document.getElementById("hero").innerHTML = heroThesis(meta);
   const bounds = meta.bounds;
 
