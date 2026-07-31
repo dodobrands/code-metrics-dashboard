@@ -13,7 +13,7 @@
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
-# build_roadmap.py fills index.html's roadmap region in place; restore the
+# the build tool fills index.html's roadmap region in place; restore the
 # tracked template on exit so a local build never leaves it dirty (and the
 # generated markup can't be committed by accident).
 trap 'git checkout -- index.html 2>/dev/null || true' EXIT
@@ -29,8 +29,8 @@ curl -fsS --retry 5 --retry-all-errors --retry-delay 3 \
     -H "Authorization: Bearer $MCM_TOKEN" \
     "$MCM_URL/metrics?repo=dodobrands/dodo-mobile-ios" >data/raw.json
 
-python3 data/build.py data/raw.json
-python3 data/build_roadmap.py
+swift run --package-path Tools/DashboardBuild build data/raw.json
+swift run --package-path Tools/DashboardBuild build-roadmap
 rm -f data/raw.json
 
 npm ci --silent

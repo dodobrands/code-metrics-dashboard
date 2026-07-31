@@ -32,6 +32,5 @@ jobs:
       - run: npm ci
       - run: biome check .
       - run: html-validate index.html
-      - run: ruff check data
       - run: actionlint
       - run: node scripts/typography.mjs
