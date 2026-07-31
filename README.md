@@ -50,6 +50,19 @@ mise uses to install `mcm`).
 
 ## Local development
 
+Validate the whole dashboard against **real metrics** with one command — it
+fetches from the service, builds the data + bundle, and serves the site:
+
+```
+bash scripts/preview.sh          # → http://localhost:8000  (PORT overrides)
+```
+
+Credentials come from the environment, or 1Password (vault Mobile) as a
+fallback: `MCM_URL` (defaults to the prod service) and `MCM_TOKEN` (a read
+token; read from `op` if unset).
+
+To build from a saved snapshot instead of the live service:
+
 ```
 python3 data/build.py path/to/raw.json    # generate a local data snapshot
 python3 -m http.server 8099               # serve the folder
