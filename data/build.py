@@ -84,6 +84,23 @@ def main():
         if points:
             metrics[m["name"]] = {"name": m["name"], "kind": kind, "points": points}
 
+    # SwiftUI / UIKit are derived, not collected: SwiftUI = View, UIKit = UIView
+    # + UIViewController. Compute them from the fresh type counts so the share
+    # chart and hero track the latest commit instead of freezing at whatever a
+    # legacy collector last stored under those names.
+    def summed(*names):
+        acc = {}
+        for n in names:
+            for t, v in (metrics.get(n) or {}).get("points", []):
+                acc[t] = acc.get(t, 0) + v
+        return sorted([t, v] for t, v in acc.items())
+
+    if "View" in metrics:
+        metrics["SwiftUI"] = {"name": "SwiftUI", "kind": "count", "points": list(metrics["View"]["points"])}
+    uikit = summed("UIView", "UIViewController")
+    if uikit:
+        metrics["UIKit"] = {"name": "UIKit", "kind": "count", "points": uikit}
+
     # Shared x-axis bounds across every series any chart draws.
     used = {n for c in charts for n, _ in resolve_series(c, metrics) if n in metrics}
     ts = [p[0] for n in used for p in metrics[n]["points"]]
