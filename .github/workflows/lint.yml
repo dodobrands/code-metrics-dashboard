@@ -18,9 +18,12 @@ jobs:
       # generated markup leaked into git.
       - name: index.html keeps an empty roadmap
         run: |
-          grep -q '<!--roadmap:board:start--><!--roadmap:board:end-->' index.html \
-            && grep -q '<!--roadmap:dialogs:start--><!--roadmap:dialogs:end-->' index.html \
-            || { echo "::error::index.html has a filled roadmap region — commit the empty template (git checkout index.html)"; exit 1; }
+          if grep -q '<!--roadmap:board:start--><!--roadmap:board:end-->' index.html \
+            && grep -q '<!--roadmap:dialogs:start--><!--roadmap:dialogs:end-->' index.html; then
+            exit 0
+          fi
+          echo "::error::index.html has a filled roadmap region — commit the empty template (git checkout index.html)"
+          exit 1
       # mcm (in mise.toml) is a private cross-org release — mise needs a token
       # that can read it, or the install step fails.
       - uses: jdx/mise-action@v2
