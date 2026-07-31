@@ -40,13 +40,13 @@ python data/build.py data/raw.json             # → data/meta.json + data/chart
 
 ## Deploy
 
-`.github/workflows/deploy.yml` runs daily (and on demand). It installs tools via **mise**,
-builds `bundle.js` (`npm ci` + esbuild), fetches + builds the data, and deploys to GitHub Pages.
+`.github/workflows/deploy.yml` runs on every push to `main`, daily, and on demand. It installs
+tools via **mise**, builds `bundle.js` (`npm ci` + esbuild), fetches + builds the data, and
+deploys to GitHub Pages.
 
-Dormant until armed: set the repo variable `DEPLOY_ENABLED=true` and add the secrets
-`MCM_URL` and `MCM_READ_TOKEN` (to fetch metrics) plus `MOBILE_CODE_METRICS_DASHBOARD`
-(a token that can read the private `dodo-ai-platform/mobile-code-metrics` release, which
-mise uses to install `mcm`).
+It needs the secrets `MCM_URL` and `MCM_READ_TOKEN` (to fetch metrics) plus
+`MOBILE_CODE_METRICS_DASHBOARD` (a token that can read the private
+`dodo-ai-platform/mobile-code-metrics` release, which mise uses to install `mcm`).
 
 ## Local development
 
