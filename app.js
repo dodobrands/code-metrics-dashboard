@@ -4,9 +4,20 @@
 
 import Chart from "chart.js/auto";
 import zoomPlugin from "chartjs-plugin-zoom";
+import logo from "./logo.txt";
 import phrases from "./phrases.json";
 
 Chart.register(zoomPlugin);
+
+// Careers easter egg — anyone who opens the console meets the Dodo logo and,
+// if the bird catches their eye, a way in. The logo lives in logo.txt, pulled
+// into the bundle at build time by esbuild's text loader; it prints verbatim,
+// only the invitation below is styled.
+console.log(logo);
+console.log(
+  "%cDodo's iOS team is hiring → https://dodoteam.ru/vacancies/",
+  "font:600 13px 'Martian Mono',ui-monospace,monospace;color:#f05138",
+);
 // Axis ticks and legend default to Chart.js' own sans-serif; match the page's mono.
 Chart.defaults.font.family = getComputedStyle(document.body).getPropertyValue("--mono").trim();
 // The webfont loads async; re-render once it's ready so canvases aren't stuck on the fallback.
