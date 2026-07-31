@@ -28,7 +28,7 @@ jobs:
 
       # All tooling (node, esbuild, linters, swift, python, mcm) comes from mise.toml.
       # mcm is a private cross-org release, so mise needs a token that can read it.
-      - uses: jdx/mise-action@v2
+      - uses: jdx/mise-action@v4
         env:
           GITHUB_TOKEN: ${{ secrets.MOBILE_CODE_METRICS_DASHBOARD }}
 

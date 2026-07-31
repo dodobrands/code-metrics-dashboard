@@ -27,7 +27,7 @@ jobs:
           exit 1
       # mcm (in mise.toml) is a private cross-org release — mise needs a token
       # that can read it, or the install step fails.
-      - uses: jdx/mise-action@v2
+      - uses: jdx/mise-action@v4
         env:
           GITHUB_TOKEN: ${{ secrets.MOBILE_CODE_METRICS_DASHBOARD }}
       - run: npm ci
