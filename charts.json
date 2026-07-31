@@ -7,5 +7,6 @@
   { "id": "concurrency-swift-version", "group": "Concurrency", "title": "Swift version adoption", "note": "share of targets by Swift language version", "kind": "versions", "series": ["SWIFT_VERSION"] },
   { "id": "concurrency-markers", "group": "Concurrency", "title": "Swift 6 concurrency markers", "kind": "line", "series": ["@unchecked Sendable", "nonisolated(unsafe)", "MainActor.run", "MainActor.assumeIsolated", "@preconcurrency", "Task\\b.*\\{.*@MainActor"] },
   { "id": "techdebt-hygiene", "group": "Tech debt", "title": "Debt & hygiene", "kind": "line", "series": ["// TODO:", "// FIXME:", "#warning(", "@available(*, deprecated", "periphery:ignore", "swiftlint:disable"] },
-  { "id": "techdebt-toggles", "group": "Tech debt", "title": "Feature toggles", "kind": "line", "series": ["Toggles"] }
+  { "id": "techdebt-toggles", "group": "Tech debt", "title": "Feature toggles", "kind": "line", "series": ["Toggles"] },
+  { "id": "techdebt-build-warnings", "group": "Tech debt", "title": "Build warnings by type", "note": "compiler warnings per type", "kind": "line", "seriesPrefix": "BuildWarnings:" }
 ]

@@ -79,7 +79,10 @@ const baseOptions = (scales, single, bounds) => ({ responsive: true, maintainAsp
 
 function lineChart(canvas, spec, byName, bounds) {
   const colors = palette();
-  const datasets = spec.series.filter((n) => byName.has(n)).map((n, i) => ({
+  // A chart without an explicit `series` list draws every series in its data
+  // file — used for dynamic sets like the per-type build warnings.
+  const names = spec.series ?? [...byName.keys()];
+  const datasets = names.filter((n) => byName.has(n)).map((n, i) => ({
     label: nameOf(n), data: byName.get(n).points.map(([x, y]) => ({ x, y })),
     borderColor: colors[i % colors.length], backgroundColor: colors[i % colors.length],
     borderWidth: 1.75, pointRadius: 0, pointHoverRadius: 3, tension: 0.12, fill: false,
@@ -194,7 +197,7 @@ async function main() {
   let group = null, section = null;
   specs.forEach((spec, i) => {
     const byName = new Map(datas[i].series.map((s) => [s.name, s]));
-    if (!spec.series.some((n) => byName.has(n))) return;
+    if (!(spec.series ?? [...byName.keys()]).some((n) => byName.has(n))) return;
     if (spec.group !== group) {
       group = spec.group;
       section = document.createElement("section");
