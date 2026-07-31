@@ -118,22 +118,25 @@ function lineChart(canvas, spec, byName, bounds) {
 // breakdowns (by module / by message) where 40+ overlapping lines are
 // unreadable and the shared-index tooltip covers the whole plot. A snapshot,
 // not a time series — so it isn't registered with the date-range picker.
-function barChart(canvas, spec, byName) {
+// Rank {label,value} rows desc, drop zeros, fold the tail past topN into "Other".
+function rankRows(items, topN) {
+  let rows = items.filter((r) => r.value > 0).sort((a, b) => b.value - a.value);
+  if (topN && rows.length > topN) {
+    const rest = rows.slice(topN).reduce((s, r) => s + r.value, 0);
+    rows = rows.slice(0, topN);
+    if (rest > 0) rows.push({ label: "Other", value: rest });
+  }
+  return rows;
+}
+
+// Draw ranked horizontal bars; returns the Chart so a toggle can destroy and
+// redraw it. Grows the card so every bar keeps a legible height.
+function drawBars(canvas, rows) {
   const colors = palette();
   const { muted } = ink();
   const grid = isDark() ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)";
-  const names = spec.series ?? [...byName.keys()];
-  let rows = names.filter((n) => byName.has(n))
-    .map((n) => { const p = byName.get(n).points; return { label: nameOf(n), value: p.length ? p[p.length - 1][1] : 0 }; })
-    .filter((r) => r.value > 0).sort((a, b) => b.value - a.value);
-  if (spec.topN && rows.length > spec.topN) {
-    const rest = rows.slice(spec.topN).reduce((s, r) => s + r.value, 0);
-    rows = rows.slice(0, spec.topN);
-    if (rest > 0) rows.push({ label: "Other", value: rest });
-  }
-  // Grow the card so every bar keeps a legible height.
   canvas.parentElement.style.height = `${Math.max(160, rows.length * 22 + 24)}px`;
-  new Chart(canvas, {
+  return new Chart(canvas, {
     type: "bar",
     data: { labels: rows.map((r) => r.label), datasets: [{ data: rows.map((r) => r.value), backgroundColor: colors[0], borderRadius: 3, barThickness: 12 }] },
     options: {
@@ -147,6 +150,45 @@ function barChart(canvas, spec, byName) {
       },
     },
   });
+}
+
+function barChart(canvas, spec, byName) {
+  const names = spec.series ?? [...byName.keys()];
+  const items = names.filter((n) => byName.has(n)).map((n) => {
+    const p = byName.get(n).points;
+    return { label: nameOf(n), value: p.length ? p[p.length - 1][1] : 0 };
+  });
+  drawBars(canvas, rankRows(items, spec.topN));
+}
+
+// A bar chart with a segmented control that switches between prefix groups
+// (e.g. deprecations by symbol / by module). The data file carries every
+// group's series under its full `Prefix:name`; split by the active group's
+// prefix and redraw on switch.
+function toggleBarChart(card, canvas, spec, byName) {
+  const ctrl = document.createElement("div");
+  ctrl.className = "chart-toggle";
+  let chart = null;
+  const render = (gi) => {
+    const g = spec.toggle[gi];
+    const items = [...byName.keys()].filter((n) => n.startsWith(g.seriesPrefix)).map((n) => {
+      const p = byName.get(n).points;
+      return { label: n.slice(g.seriesPrefix.length), value: p.length ? p[p.length - 1][1] : 0 };
+    });
+    chart?.destroy();
+    chart = drawBars(canvas, rankRows(items, g.topN));
+    for (const [i, b] of [...ctrl.children].entries()) b.setAttribute("aria-pressed", String(i === gi));
+  };
+  spec.toggle.forEach((g, gi) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "chart-toggle-btn";
+    b.textContent = g.label;
+    b.onclick = () => render(gi);
+    ctrl.appendChild(b);
+  });
+  card.querySelector("figcaption").appendChild(ctrl);
+  render(0);
 }
 
 // Stacked 100% area from a set of series (SwiftUI/UIKit) or a version histogram.
@@ -265,7 +307,7 @@ async function main() {
     const b = spec.selfBounds ? (seriesBounds(byName) || bounds) : bounds;
     if (spec.kind === "share") shareChart(canvas, spec, byName, b);
     else if (spec.kind === "versions") versionsChart(canvas, spec, byName, b);
-    else if (spec.kind === "bar") barChart(canvas, spec, byName);
+    else if (spec.kind === "bar") { if (spec.toggle) toggleBarChart(card, canvas, spec, byName); else barChart(canvas, spec, byName); }
     else lineChart(canvas, spec, byName, b);
   });
   rangePicker(bounds);
