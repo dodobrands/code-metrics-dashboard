@@ -24,6 +24,8 @@ if [ -z "${MCM_TOKEN:-}" ]; then
 fi
 
 echo "Fetching metrics from $MCM_URL …"
+# data/ holds only generated (gitignored) files, so it's absent on a fresh clone.
+mkdir -p data
 # The service 502s intermittently — retry on any transient error.
 curl -fsS --retry 5 --retry-all-errors --retry-delay 3 \
     -H "Authorization: Bearer $MCM_TOKEN" \

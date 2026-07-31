@@ -40,6 +40,7 @@ jobs:
           MCM_URL: ${{ secrets.MCM_URL }}
           MCM_TOKEN: ${{ secrets.MCM_READ_TOKEN }}
         run: |
+          mkdir -p data   # data/ holds only generated (gitignored) files, so it's absent on checkout
           mcm get --repo dodobrands/dodo-mobile-ios > data/raw.json
           swift run --package-path Tools/DashboardBuild build data/raw.json
           swift run --package-path Tools/DashboardBuild build-roadmap
