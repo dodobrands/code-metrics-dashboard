@@ -26,10 +26,13 @@ jobs:
           echo "::error::index.html has a filled roadmap region — commit the empty template (git checkout index.html)"
           exit 1
       # mcm (in mise.toml) is a private cross-org release — mise needs a token
-      # that can read it, or the install step fails.
-      - uses: jdx/mise-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.MOBILE_CODE_METRICS_DASHBOARD }}
+      # that can read it, or the install step fails. Pass it through the action's
+      # github_token input, not env: the action exports MISE_GITHUB_TOKEN from
+      # that input (defaulting to the repo-scoped github.token), and
+      # MISE_GITHUB_TOKEN outranks GITHUB_TOKEN in mise's token lookup.
+      - uses: jdx/mise-action@v4
+        with:
+          github_token: ${{ secrets.MOBILE_CODE_METRICS_DASHBOARD }}
       - run: npm ci
       - run: biome check .
       - run: html-validate index.html
