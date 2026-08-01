@@ -1,9 +1,11 @@
 {
   "name": "mobile-code-metrics-dashboard",
   "private": true,
+  "type": "module",
   "scripts": {
     "typography": "node scripts/typography.mjs",
-    "typography:fix": "node scripts/typography.mjs --fix"
+    "typography:fix": "node scripts/typography.mjs --fix",
+    "test": "node scripts/typo.test.mjs"
   },
   "dependencies": {
     "chart.js": "^4.5.1",
