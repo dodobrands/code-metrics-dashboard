@@ -4,6 +4,7 @@
 
 import Chart from "chart.js/auto";
 import zoomPlugin from "chartjs-plugin-zoom";
+import { fixTypos } from "typopo";
 import logo from "./logo.txt";
 import phrases from "./phrases.json";
 
@@ -65,6 +66,39 @@ function ink() {
   return { grid: s.getPropertyValue("--grid").trim(), muted: s.getPropertyValue("--muted").trim() };
 }
 const escapeHtml = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+// Typography — one pass over EVERY rendered text node, so the hero, group
+// headings and any future string get the same treatment as authored files (no
+// hand-placed &nbsp; anywhere). typopo does quotes/dashes/spacing (same lib and
+// locale as the build-time lint, and idempotent, so already-typographed source
+// is untouched). typopo does NOT glue prepositions in en-us, so the widow rule
+// below does: a non-breaking space after short function words and between a word
+// and a version number, so a line never ends on a preposition ("… targets on"
+// / "Swift 6").
+const WIDOW = /\b(a|an|and|as|at|but|by|for|from|in|into|nor|of|off|on|onto|or|per|the|to|up|via|vs|with)\b(\s+)(?=\S)/gi;
+const preventWidows = (t) =>
+  t.replace(WIDOW, (_m, w) => `${w}\u00A0`).replace(/\b([A-Za-z]+)\s+(\d+)\b/g, "$1\u00A0$2");
+// The single text transform: typopo, then widow prevention. Used both by the
+// DOM pass and for strings set after that pass runs (the easter-egg bubble).
+// Edge whitespace is preserved and only the core is typographed — a text node
+// after an inline tag (e.g. " of 194…" after </b>) keeps its leading space, so
+// words don't glue across the tag. (Same guard as scripts/typography.mjs.)
+const typo = (s) => {
+  const [, lead, core, trail] = s.match(/^(\s*)([\s\S]*?)(\s*)$/s);
+  return core ? lead + preventWidows(fixTypos(core, "en-us")) + trail : s;
+};
+const typographize = (root) => {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode: (n) =>
+      n.nodeValue.trim() && !n.parentElement?.closest("script,style,[data-notypo]")
+        ? NodeFilter.FILTER_ACCEPT
+        : NodeFilter.FILTER_REJECT,
+  });
+  for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+    const next = typo(n.nodeValue);
+    if (next !== n.nodeValue) n.nodeValue = next;
+  }
+};
 function hexA(hex, a) {
   const n = parseInt(hex.slice(1), 16);
   return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
@@ -326,7 +360,7 @@ function wireDodo() {
     let i = Math.floor(Math.random() * phrases.length);
     if (phrases.length > 1 && i === last) i = (i + 1) % phrases.length; // no repeat in a row
     last = i;
-    bubble.textContent = phrases[i];
+    bubble.textContent = typo(phrases[i]);
     bubble.classList.remove("show");
     void bubble.offsetWidth; // reflow so re-adding replays the pop on every tap
     bubble.classList.add("show");
@@ -337,4 +371,8 @@ function wireDodo() {
 
 wireRoadmap();
 wireDodo();
-main().catch((e) => { document.getElementById("app").textContent = `Failed to load metrics: ${e}`; });
+main()
+  .catch((e) => { document.getElementById("app").textContent = `Failed to load metrics: ${e}`; })
+  // After everything is rendered (hero, sections, and the static roadmap already
+  // in the DOM), run typography once over the whole page.
+  .finally(() => typographize(document.body));
