@@ -28,6 +28,7 @@ async function targets() {
   const list = files.map((f) => ({ path: path.join(dir, f), kind: "roadmap" }));
   list.push({ path: path.join(ROOT, "index.html"), kind: "html" });
   list.push({ path: path.join(ROOT, "phrases.json"), kind: "phrases" });
+  list.push({ path: path.join(ROOT, "charts.json"), kind: "charts" });
   return list;
 }
 
@@ -36,6 +37,16 @@ function fixed(kind, raw) {
   if (kind === "phrases") {
     const arr = JSON.parse(raw);
     return `${JSON.stringify(arr.map((s) => fixTypos(s, LOCALE)), null, 2)}\n`;
+  }
+  if (kind === "charts") {
+    // Chart titles and notes are authored prose; series names are code and stay
+    // verbatim (they aren't touched here).
+    const arr = JSON.parse(raw);
+    for (const c of arr) {
+      if (c.title) c.title = fixTypos(c.title, LOCALE);
+      if (c.note) c.note = fixTypos(c.note, LOCALE);
+    }
+    return `${JSON.stringify(arr, null, 2)}\n`;
   }
   const json = JSON.parse(raw);
   json.title = fixTypos(json.title, LOCALE);
