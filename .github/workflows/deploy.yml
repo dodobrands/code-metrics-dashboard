@@ -28,9 +28,12 @@ jobs:
 
       # All tooling (node, esbuild, linters, swift, python, mcm) comes from mise.toml.
       # mcm is a private cross-org release, so mise needs a token that can read it.
+      # Pass it through the action's github_token input, not env: the action exports
+      # MISE_GITHUB_TOKEN from that input (defaulting to the repo-scoped
+      # github.token), and MISE_GITHUB_TOKEN outranks GITHUB_TOKEN in mise.
       - uses: jdx/mise-action@v4
-        env:
-          GITHUB_TOKEN: ${{ secrets.MOBILE_CODE_METRICS_DASHBOARD }}
+        with:
+          github_token: ${{ secrets.MOBILE_CODE_METRICS_DASHBOARD }}
 
       - run: npm ci
       - run: bash scripts/build.sh
