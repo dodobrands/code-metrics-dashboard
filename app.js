@@ -4,9 +4,9 @@
 
 import Chart from "chart.js/auto";
 import zoomPlugin from "chartjs-plugin-zoom";
-import { fixTypos } from "typopo";
 import logo from "./logo.txt";
 import phrases from "./phrases.json";
+import { typo, typographize } from "./typo.js";
 
 Chart.register(zoomPlugin);
 
@@ -67,38 +67,6 @@ function ink() {
 }
 const escapeHtml = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
-// Typography — one pass over EVERY rendered text node, so the hero, group
-// headings and any future string get the same treatment as authored files (no
-// hand-placed &nbsp; anywhere). typopo does quotes/dashes/spacing (same lib and
-// locale as the build-time lint, and idempotent, so already-typographed source
-// is untouched). typopo does NOT glue prepositions in en-us, so the widow rule
-// below does: a non-breaking space after short function words and between a word
-// and a version number, so a line never ends on a preposition ("… targets on"
-// / "Swift 6").
-const WIDOW = /\b(a|an|and|as|at|but|by|for|from|in|into|nor|of|off|on|onto|or|per|the|to|up|via|vs|with)\b(\s+)(?=\S)/gi;
-const preventWidows = (t) =>
-  t.replace(WIDOW, (_m, w) => `${w}\u00A0`).replace(/\b([A-Za-z]+)\s+(\d+)\b/g, "$1\u00A0$2");
-// The single text transform: typopo, then widow prevention. Used both by the
-// DOM pass and for strings set after that pass runs (the easter-egg bubble).
-// Edge whitespace is preserved and only the core is typographed — a text node
-// after an inline tag (e.g. " of 194…" after </b>) keeps its leading space, so
-// words don't glue across the tag. (Same guard as scripts/typography.mjs.)
-const typo = (s) => {
-  const [, lead, core, trail] = s.match(/^(\s*)([\s\S]*?)(\s*)$/s);
-  return core ? lead + preventWidows(fixTypos(core, "en-us")) + trail : s;
-};
-const typographize = (root) => {
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
-    acceptNode: (n) =>
-      n.nodeValue.trim() && !n.parentElement?.closest("script,style,[data-notypo]")
-        ? NodeFilter.FILTER_ACCEPT
-        : NodeFilter.FILTER_REJECT,
-  });
-  for (let n = walker.nextNode(); n; n = walker.nextNode()) {
-    const next = typo(n.nodeValue);
-    if (next !== n.nodeValue) n.nodeValue = next;
-  }
-};
 function hexA(hex, a) {
   const n = parseInt(hex.slice(1), 16);
   return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
@@ -305,7 +273,9 @@ async function main() {
     fetch("data/meta.json", { cache: "no-store" }).then((r) => r.json()),
   ]);
   if (meta.repo) document.getElementById("repo").textContent = meta.repo;
-  document.getElementById("hero").innerHTML = heroThesis(meta);
+  const hero = document.getElementById("hero");
+  hero.innerHTML = heroThesis(meta);
+  typographize(hero); // settle the hero now, before the next await paints it
   const bounds = meta.bounds;
 
   // Each chart's data lives in its own file — fetch them all in parallel.
@@ -334,6 +304,9 @@ async function main() {
     else if (spec.kind === "bar") { if (spec.toggle) toggleBarChart(card, canvas, spec, byName); else barChart(canvas, spec, byName); }
     else lineChart(canvas, spec, byName, b);
   });
+  // Typography the sections in the same synchronous task as the render, so the
+  // text is final before paint — no reflow once the charts come in.
+  typographize(app);
   rangePicker(bounds);
 }
 
@@ -371,8 +344,8 @@ function wireDodo() {
 
 wireRoadmap();
 wireDodo();
-main()
-  .catch((e) => { document.getElementById("app").textContent = `Failed to load metrics: ${e}`; })
-  // After everything is rendered (hero, sections, and the static roadmap already
-  // in the DOM), run typography once over the whole page.
-  .finally(() => typographize(document.body));
+// The static content (roadmap, header) is in the DOM now — typography it before
+// the async render, so it doesn't reflow when the charts arrive. Hero and
+// sections are typographed inside main() at insertion time.
+typographize(document.body);
+main().catch((e) => { document.getElementById("app").textContent = `Failed to load metrics: ${e}`; });
