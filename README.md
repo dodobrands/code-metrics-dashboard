@@ -4,7 +4,7 @@ Public engineering page for the Dodo Pizza iOS app: beta (TestFlight), open sour
 tech radar, roadmap, and a live view of the `dodobrands/dodo-mobile-ios` codebase's
 modernization metrics.
 
-**Live: https://dodobrands.github.io/mobile-code-metrics-dashboard/**
+**Live: https://dodobrands.github.io/code-metrics-dashboard/**
 
 ## What it is
 
@@ -19,11 +19,11 @@ A self-contained static site — one HTML page hydrated by a single bundled scri
 
 ## Data pipeline
 
-Metrics come from the `mobile-code-metrics` service via its `mcm` CLI. Data is **never
+Metrics come from the `code-metrics` service via its `codemetrics` CLI. Data is **never
 committed** — it is generated at publish time and injected into the Pages artifact only.
 
 ```
-mcm get --repo dodobrands/dodo-mobile-ios                          # full JSON dump  → data/raw.json
+codemetrics get --repo dodobrands/dodo-mobile-ios                          # full JSON dump  → data/raw.json
 swift run --package-path Tools/DashboardBuild build data/raw.json  # → data/meta.json + data/charts/<id>.json
 ```
 
@@ -44,9 +44,9 @@ swift run --package-path Tools/DashboardBuild build data/raw.json  # → data/me
 tools via **mise**, builds `bundle.js` (`npm ci` + esbuild), fetches + builds the data, and
 deploys to GitHub Pages.
 
-It needs the secrets `MCM_URL` and `MCM_READ_TOKEN` (to fetch metrics) plus
-`MOBILE_CODE_METRICS_DASHBOARD` (a token that can read the private
-`dodo-ai-platform/mobile-code-metrics` release, which mise uses to install `mcm`).
+It needs the secrets `CODEMETRICS_URL` and `CODEMETRICS_READ_TOKEN` (to fetch metrics) plus
+`CODE_METRICS_DASHBOARD` (a token that can read the private
+`dodo-ai-platform/code-metrics` release, which mise uses to install `codemetrics`).
 
 ## Local development
 
@@ -58,7 +58,7 @@ bash scripts/preview.sh          # → http://localhost:8000  (PORT overrides)
 ```
 
 Credentials come from the environment, or 1Password (vault Mobile) as a
-fallback: `MCM_URL` (defaults to the prod service) and `MCM_TOKEN` (a read
+fallback: `CODEMETRICS_URL` (defaults to the prod service) and `CODEMETRICS_TOKEN` (a read
 token; read from `op` if unset).
 
 To build from a saved snapshot instead of the live service:
@@ -75,7 +75,7 @@ open http://localhost:8099
 Nothing is vendored. Every dependency comes from one of three places:
 
 - **mise** (`mise.toml`, pinned by `mise.lock`) — every CLI tool: Node, Swift, esbuild, Biome,
-  html-validate, actionlint, Python, and `mcm` (the metrics fetcher). The full set
+  html-validate, actionlint, Python, and `codemetrics` (the metrics fetcher). The full set
   installs in every environment — local, lint CI, deploy — with no per-environment scoping,
   because mise caches installs so reinstalling everything is cheap. Tools are always `latest`
   in `mise.toml`; `mise.lock` pins the exact versions. Bump with `mise up`.
@@ -84,14 +84,14 @@ Nothing is vendored. Every dependency comes from one of three places:
   Bump with `npm update`.
 - **Google Fonts** — the Martian Mono webfont, via a `<link>` in `index.html`.
 
-`mcm` is a private cross-org release, so mise needs a GitHub token that can read it (CI passes
-the `MOBILE_CODE_METRICS_DASHBOARD` secret). Without the token mise errors on that one tool and
+`codemetrics` is a private cross-org release, so mise needs a GitHub token that can read it (CI passes
+the `CODE_METRICS_DASHBOARD` secret). Without the token mise errors on that one tool and
 installs the rest — fine for any local work that doesn't fetch metrics.
 
 ## Tooling & contributing
 
 - Install everything with `mise install`, and the libraries with `npm ci`. Once mise is
-  installed, call any tool directly — `biome`, `esbuild`, `swift`, `mcm` — with no `mise exec`
+  installed, call any tool directly — `biome`, `esbuild`, `swift`, `codemetrics` — with no `mise exec`
   prefix; mise puts them on `PATH`. Build the bundle: `bash scripts/build.sh`.
 - Lint by running the linters directly (no `mise run` task): `biome check .`,
   `html-validate index.html`, `actionlint`, `node scripts/typography.mjs`,

@@ -1,5 +1,5 @@
 {
-  "name": "mobile-code-metrics-dashboard",
+  "name": "code-metrics-dashboard",
   "private": true,
   "type": "module",
   "scripts": {
