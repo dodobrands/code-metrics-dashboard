@@ -1,6 +1,6 @@
 import Foundation
 
-// Port of data/build.py. Reads an `mcm get` JSON dump (arg or stdin) plus
+// Port of data/build.py. Reads an `codemetrics get` JSON dump (arg or stdin) plus
 // charts.json, writes data/meta.json and data/charts/<id>.json (each chart file
 // holds only the series it draws), and inlines the "updated" date into
 // index.html. Every number in the output is an integer, so values serialize as

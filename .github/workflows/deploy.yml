@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   deploy:
-    # Needs secrets: MOBILE_CODE_METRICS_DASHBOARD (PAT, read private mcm release), MCM_URL, MCM_READ_TOKEN.
+    # Needs secrets: CODE_METRICS_DASHBOARD (PAT, read private codemetrics release), CODEMETRICS_URL, CODEMETRICS_READ_TOKEN.
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -26,31 +26,31 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # All tooling (node, esbuild, linters, swift, python, mcm) comes from mise.toml.
-      # mcm is a private cross-org release, so mise needs a token that can read it.
+      # All tooling (node, esbuild, linters, swift, python, codemetrics) comes from mise.toml.
+      # codemetrics is a private cross-org release, so mise needs a token that can read it.
       # Pass it through the action's github_token input, not env: the action exports
       # MISE_GITHUB_TOKEN from that input (defaulting to the repo-scoped
       # github.token), and MISE_GITHUB_TOKEN outranks GITHUB_TOKEN in mise.
       - uses: jdx/mise-action@v4
         with:
-          github_token: ${{ secrets.MOBILE_CODE_METRICS_DASHBOARD }}
+          github_token: ${{ secrets.CODE_METRICS_DASHBOARD }}
 
       - run: npm ci
       - run: bash scripts/build.sh
 
       - name: Fetch + build metrics
         env:
-          MCM_URL: ${{ secrets.MCM_URL }}
-          MCM_TOKEN: ${{ secrets.MCM_READ_TOKEN }}
+          CODEMETRICS_URL: ${{ secrets.CODEMETRICS_URL }}
+          CODEMETRICS_TOKEN: ${{ secrets.CODEMETRICS_READ_TOKEN }}
           # Distributed tracing: ship the CLI's client spans to alloy-frontend, so a
-          # dashboard build traces the `mcm get` end to end (CLI -> mobile-code-metrics).
+          # dashboard build traces the `codemetrics get` end to end (CLI -> code-metrics).
           OTEL_EXPORTER_OTLP_ENDPOINT: ${{ vars.ALLOY_OTLP_ENDPOINT }}
           OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
           OTEL_EXPORTER_OTLP_HEADERS: "Authorization=Bearer ${{ secrets.ALLOY_OTLP_TOKEN }}"
-          OTEL_SERVICE_NAME: mcm
+          OTEL_SERVICE_NAME: codemetrics
         run: |
           mkdir -p data   # data/ holds only generated (gitignored) files, so it's absent on checkout
-          mcm get --repo dodobrands/dodo-mobile-ios > data/raw.json
+          codemetrics get --repo dodobrands/dodo-mobile-ios > data/raw.json
           swift run --package-path Tools/DashboardBuild build data/raw.json
           swift run --package-path Tools/DashboardBuild build-roadmap
           rm -f data/raw.json

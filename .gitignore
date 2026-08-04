@@ -1,4 +1,4 @@
-# Metrics data is never committed — generated at publish time (mcm get → build.py)
+# Metrics data is never committed — generated at publish time (codemetrics get → build.py)
 # and injected into the Pages artifact only (see .github/workflows/deploy.yml).
 raw.json
 data/raw.json
