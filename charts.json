@@ -104,6 +104,16 @@
     ]
   },
   {
+    "id": "warnings-total",
+    "group": "Warnings",
+    "title": "Warnings—total",
+    "kind": "line",
+    "series": [
+      "OtherWarnings"
+    ],
+    "selfBounds": true
+  },
+  {
     "id": "warnings-deprecations-total",
     "group": "Warnings",
     "title": "Deprecations—total",
@@ -132,10 +142,21 @@
     ]
   },
   {
-    "id": "warnings-other-by-message",
+    "id": "warnings-breakdown",
     "group": "Warnings",
-    "title": "Other warnings by message",
+    "title": "Warnings breakdown",
     "kind": "bar",
-    "seriesPrefix": "WarningBySymbol:"
+    "toggle": [
+      {
+        "label": "By symbol",
+        "seriesPrefix": "WarningBySymbol:",
+        "topN": 15
+      },
+      {
+        "label": "By module",
+        "seriesPrefix": "WarningByModule:",
+        "topN": 15
+      }
+    ]
   }
 ]

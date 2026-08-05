@@ -302,8 +302,9 @@ func canonicalWarningType(_ name: String) -> String {
 }
 
 /// Slice the rich BuildWarnings commits into count metrics the charts draw:
-/// `BuildWarnings:<type>` (per-type totals), `DeprecationBySymbol:<symbol>`,
-/// `DeprecationByModule:<module>`, `WarningBySymbol:<symbol>`. Every metric is
+/// `BuildWarnings:<type>` (per-type totals), `OtherWarnings` (everything except
+/// deprecations), `DeprecationBySymbol:<symbol>`, `DeprecationByModule:<module>`,
+/// `WarningBySymbol:<symbol>`, `WarningByModule:<module>`. Every metric is
 /// 0-filled across all commits so the total line stays continuous.
 func deriveBuildWarnings(_ commits: [[String: Any]]) -> [String: Metric] {
     var perCommit: [(ts: Int64, counts: [String: Int])] = []
@@ -323,7 +324,12 @@ func deriveBuildWarnings(_ commits: [[String: Any]]) -> [String: Metric] {
                     bump("DeprecationBySymbol:\(warningSymbol(message))")
                     bump("DeprecationByModule:\(warningModule(file))")
                 } else {
+                    // Deprecations are counted out — they carry their own total
+                    // and breakdown, and they dwarf the rest often enough that a
+                    // combined line would hide what the others are doing.
+                    bump("OtherWarnings")
                     bump("WarningBySymbol:\(warningSymbol(message))")
+                    bump("WarningByModule:\(warningModule(file))")
                 }
             }
         }
