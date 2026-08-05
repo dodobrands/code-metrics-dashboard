@@ -292,6 +292,15 @@ func warningModule(_ file: String) -> String {
     return String(file.split(separator: "/").first ?? "unknown")
 }
 
+/// The stored history carries this category under two names: commits up to
+/// 2025-09-22 use `Deprecation`, later ones `DeprecatedDeclaration`. They mean
+/// the same thing, so they fold into one series — read raw, the deprecations
+/// chart covers only the later half, and the earlier issues land in the
+/// other-warnings bucket through the `else` below.
+func canonicalWarningType(_ name: String) -> String {
+    name == "Deprecation" ? "DeprecatedDeclaration" : name
+}
+
 /// Slice the rich BuildWarnings commits into count metrics the charts draw:
 /// `BuildWarnings:<type>` (per-type totals), `DeprecationBySymbol:<symbol>`,
 /// `DeprecationByModule:<module>`, `WarningBySymbol:<symbol>`. Every metric is
@@ -305,7 +314,7 @@ func deriveBuildWarnings(_ commits: [[String: Any]]) -> [String: Metric] {
         func bump(_ name: String) { counts[name, default: 0] += 1; names.insert(name) }
         let value = c["value"] as? [String: Any] ?? [:]
         for group in (value["types"] as? [[String: Any]] ?? []) {
-            let typeName = group["name"] as? String ?? ""
+            let typeName = canonicalWarningType(group["name"] as? String ?? "")
             for issue in (group["issues"] as? [[String: Any]] ?? []) {
                 let message = issue["message"] as? String ?? ""
                 let file = issue["file"] as? String ?? ""
