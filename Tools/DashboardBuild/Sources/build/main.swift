@@ -187,6 +187,11 @@ func scalar(_ value: Any) -> (String, PointValue)? {
         if t == "d" || t == "f" { return ("count", .double(num.doubleValue)) }
         return ("count", .int(num.int64Value))
     }
+    // One metric carries both shapes over time: type metrics store the list of
+    // found types, and commits collected before that switch store a bare count.
+    if let list = value as? [Any] {
+        return ("count", .int(Int64(list.count)))
+    }
     if let dict = value as? [String: Any] {
         let count = dict.values.reduce(into: Int64(0)) { acc, v in if !(v is NSNull) { acc += 1 } }
         return ("adoption", .int(count))
