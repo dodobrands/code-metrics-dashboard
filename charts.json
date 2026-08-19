@@ -60,7 +60,7 @@
     "id": "concurrency-swift-version",
     "group": "Concurrency",
     "title": "Swift version adoption",
-    "note": "share of targets by Swift language version",
+    "note": "share of modules by Swift language version",
     "kind": "versions",
     "series": [
       "SWIFT_VERSION"
