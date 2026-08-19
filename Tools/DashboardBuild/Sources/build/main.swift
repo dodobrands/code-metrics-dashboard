@@ -187,11 +187,53 @@ func scalar(_ value: Any) -> (String, PointValue)? {
         if t == "d" || t == "f" { return ("count", .double(num.doubleValue)) }
         return ("count", .int(num.int64Value))
     }
+    // One metric carries several shapes over time. Type metrics store the list of
+    // found types (a bare count before that switch). Build settings store a record
+    // per target, where a null value means the setting could not be read — those
+    // records are present but do not count as adoption.
+    if let records = value as? [[String: Any]], records.contains(where: { $0["value"] != nil }) {
+        let count = records.reduce(into: Int64(0)) { acc, r in if !(r["value"] is NSNull) { acc += 1 } }
+        return ("adoption", .int(count))
+    }
+    if let list = value as? [Any] {
+        return ("count", .int(Int64(list.count)))
+    }
     if let dict = value as? [String: Any] {
         let count = dict.values.reduce(into: Int64(0)) { acc, v in if !(v is NSNull) { acc += 1 } }
         return ("adoption", .int(count))
     }
     return nil
+}
+
+/// Language version per module, folded from the per-target records.
+///
+/// A module is a project — `Modules/Cart/Cart.xcodeproj` — and it ships several
+/// targets: Cart, CartUI, CartTests. It counts as being on a version only once all
+/// of them are, so the lowest value in the group wins and one target left behind
+/// keeps the whole module out of the Swift 6 bucket. Targets whose setting could not
+/// be read are skipped; a project with nothing readable does not appear.
+func moduleVersions(_ records: [[String: Any]]) -> [String: Any] {
+    var versions: [String: Any] = [:]
+    for record in records {
+        guard let project = record["project"] as? String,
+              let value = record["value"], !(value is NSNull) else { continue }
+        let module = (((project as NSString).lastPathComponent) as NSString).deletingPathExtension
+        if let seen = versions[module], versionLess(seen, value) { continue }
+        versions[module] = value
+    }
+    return versions
+}
+
+/// Numeric comparison of two settings values: `5.10` sorts below `6`.
+func versionLess(_ lhs: Any, _ rhs: Any) -> Bool {
+    let left = String(describing: lhs).split(separator: ".").map { Int($0) ?? 0 }
+    let right = String(describing: rhs).split(separator: ".").map { Int($0) ?? 0 }
+    for index in 0 ..< max(left.count, right.count) {
+        let a = index < left.count ? left[index] : 0
+        let b = index < right.count ? right[index] : 0
+        if a != b { return a < b }
+    }
+    return false
 }
 
 func metricPoints(_ m: [String: Any]) -> (String, [Point]) {
@@ -200,10 +242,19 @@ func metricPoints(_ m: [String: Any]) -> (String, [Point]) {
     if name == "SWIFT_VERSION" {
         var points: [Point] = []
         for c in commits {
-            guard let dict = c["value"] as? [String: Any] else { continue }
             var counts: [String: Int] = [:]
-            for v in dict.values where !(v is NSNull) {
-                counts[major(v), default: 0] += 1
+            if let records = c["value"] as? [[String: Any]] {
+                for (_, version) in moduleVersions(records) {
+                    counts[major(version), default: 0] += 1
+                }
+            } else if let dict = c["value"] as? [String: Any] {
+                // Shape before the service started reporting the declaring project:
+                // one entry per target, so these points count targets, not modules.
+                for v in dict.values where !(v is NSNull) {
+                    counts[major(v), default: 0] += 1
+                }
+            } else {
+                continue
             }
             if !counts.isEmpty {
                 let hist = counts.sorted { $0.key < $1.key }.map { ($0.key, $0.value) }

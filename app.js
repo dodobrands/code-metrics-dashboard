@@ -230,7 +230,7 @@ function versionsChart(canvas, spec, byName, bounds) {
 
 function heroThesis(meta) {
   const h = meta.hero || {};
-  return h.swift6Total ? `<span class="hero-stat"><b>${h.swift6Pct}%</b> of ${h.swift6Total} targets on Swift 6</span>` : "";
+  return h.swift6Total ? `<span class="hero-stat"><b>${h.swift6Pct}%</b> of ${h.swift6Total} modules on Swift 6</span>` : "";
 }
 
 // --- date-range picker --------------------------------------------------------
