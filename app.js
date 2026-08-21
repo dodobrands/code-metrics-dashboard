@@ -35,6 +35,14 @@ const PALETTE = {
 const NAMES = {
   "Task\\b.*\\{.*@MainActor": "Task { @MainActor }",
   "@available(*, deprecated": "@available deprecated",
+  // Snapshot coverage ships one pair per pool; the pool is the segmented control's
+  // job to say, so the legend only names the two halves.
+  "Snapshot:All:Covered": "Covered",
+  "Snapshot:All:Bare": "Not covered",
+  "Snapshot:SwiftUI:Covered": "Covered",
+  "Snapshot:SwiftUI:Bare": "Not covered",
+  "Snapshot:UIKit:Covered": "Covered",
+  "Snapshot:UIKit:Bare": "Not covered",
 };
 const nameOf = (k) => NAMES[k] || k;
 
@@ -47,6 +55,7 @@ function mount(canvas, config) {
   canvas.title = "scroll to zoom · shift-drag to pan · double-click to reset";
   canvas.ondblclick = () => chart.resetZoom();
   charts.push(chart);
+  return chart;
 }
 
 // Min/max timestamp across a chart's own series — for charts that scale to
@@ -183,6 +192,39 @@ function toggleBarChart(card, canvas, spec, byName) {
   render(0);
 }
 
+// A share chart behind the same segmented control the bar charts use. Each group
+// is a series prefix holding one covered/uncovered pair — snapshot coverage for
+// every view, then for SwiftUI and UIKit apart. Switching replaces the chart, so
+// the old one leaves the registry the date picker retargets.
+function toggleShareChart(card, canvas, spec, byName, bounds) {
+  const ctrl = document.createElement("div");
+  ctrl.className = "chart-toggle";
+  let current = null;
+  const render = (gi) => {
+    const g = spec.toggle[gi];
+    const names = [...byName.keys()].filter((n) => n.startsWith(g.seriesPrefix));
+    const covered = names.find((n) => n.endsWith(":Covered"));
+    const bare = names.find((n) => n !== covered);
+    if (!covered || !bare) return;
+    if (current) {
+      charts.splice(charts.indexOf(current), 1);
+      current.destroy();
+    }
+    current = shareChart(canvas, { ...spec, series: [covered, bare] }, byName, bounds);
+    for (const [i, b] of [...ctrl.children].entries()) b.setAttribute("aria-pressed", String(i === gi));
+  };
+  spec.toggle.forEach((g, gi) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "chart-toggle-btn";
+    b.textContent = g.label;
+    b.onclick = () => render(gi);
+    ctrl.appendChild(b);
+  });
+  card.querySelector("figcaption").appendChild(ctrl);
+  render(0);
+}
+
 // Stacked 100% area from a set of series (SwiftUI/UIKit) or a version histogram.
 function stack100(canvas, datasets, bounds) {
   const scales = commonScales(bounds);
@@ -190,7 +232,7 @@ function stack100(canvas, datasets, bounds) {
   const opts = baseOptions(scales, false, bounds);
   opts.plugins.tooltip = tooltipConfig((y) => `${y.toFixed(1)}%`);
   opts.plugins.tooltip.filter = (item) => item.parsed.y > 0; // hide 0% rows
-  mount(canvas, { type: "line", data: { datasets }, options: opts });
+  return mount(canvas, { type: "line", data: { datasets }, options: opts });
 }
 
 function shareChart(canvas, spec, byName, bounds) {
@@ -203,7 +245,7 @@ function shareChart(canvas, spec, byName, bounds) {
     const sum = ma.get(t) + mb.get(t), share = sum > 0 ? (ma.get(t) / sum) * 100 : 0;
     pa.push({ x: t, y: share }); pb.push({ x: t, y: 100 - share });
   }
-  stack100(canvas, [
+  return stack100(canvas, [
     { label: nameOf(a), data: pa, borderColor: colors[0], backgroundColor: hexA(colors[0], 0.78), borderWidth: 0, pointRadius: 0, fill: "origin", tension: 0 },
     { label: nameOf(b), data: pb, borderColor: colors[1], backgroundColor: hexA(colors[1], 0.78), borderWidth: 0, pointRadius: 0, fill: "-1", tension: 0 },
   ], bounds);
@@ -299,7 +341,7 @@ async function main() {
     section.appendChild(card);
     const canvas = card.querySelector("canvas");
     const b = spec.selfBounds ? (seriesBounds(byName) || bounds) : bounds;
-    if (spec.kind === "share") shareChart(canvas, spec, byName, b);
+    if (spec.kind === "share") { if (spec.toggle) toggleShareChart(card, canvas, spec, byName, b); else shareChart(canvas, spec, byName, b); }
     else if (spec.kind === "versions") versionsChart(canvas, spec, byName, b);
     else if (spec.kind === "bar") { if (spec.toggle) toggleBarChart(card, canvas, spec, byName); else barChart(canvas, spec, byName); }
     else lineChart(canvas, spec, byName, b);

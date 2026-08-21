@@ -357,6 +357,48 @@ func canonicalWarningType(_ name: String) -> String {
 /// deprecations), `DeprecationBySymbol:<symbol>`, `DeprecationByModule:<module>`,
 /// `WarningBySymbol:<symbol>`, `WarningByModule:<module>`. Every metric is
 /// 0-filled across all commits so the total line stays continuous.
+/// Snapshot coverage, split three ways: every view, then SwiftUI and UIKit apart.
+///
+/// The metric stores a record per view — its name, its file, the base type it comes
+/// from, and whether a snapshot test covers it. Coverage is attributed by file:
+/// Prefire generates one test class per source file, so every view declared in a
+/// covered file counts as covered.
+///
+/// Each pair goes out under its own prefix so the chart's segmented control can
+/// switch between them, and as counts rather than a ratio so the pool's own growth
+/// stays visible next to the share.
+func deriveSnapshotCoverage(_ commits: [[String: Any]]) -> [String: Metric] {
+    let pools: [(prefix: String, kinds: Set<String>)] = [
+        ("Snapshot:All:", ["View", "UIView", "UIViewController"]),
+        ("Snapshot:SwiftUI:", ["View"]),
+        ("Snapshot:UIKit:", ["UIView", "UIViewController"]),
+    ]
+    var points: [String: [Point]] = [:]
+    for c in commits {
+        guard let views = c["value"] as? [[String: Any]], !views.isEmpty else { continue }
+        let ts = toMs(c["timestamp"] as? String ?? "")
+        for pool in pools {
+            // Records written before the base type was recorded carry no kind. They
+            // still count in the whole-repository pool, where no kind is needed, and
+            // stay out of the split ones rather than landing in the wrong half.
+            let inPool = views.filter { view in
+                guard let kind = view["kind"] as? String else { return pool.kinds.count == 3 }
+                return pool.kinds.contains(kind)
+            }
+            guard !inPool.isEmpty else { continue }
+            let covered = inPool.reduce(into: Int64(0)) { acc, view in
+                if (view["hasSnapshot"] as? Bool) == true { acc += 1 }
+            }
+            points[pool.prefix + "Covered", default: []].append(Point(ts: ts, value: .int(covered)))
+            points[pool.prefix + "Bare", default: []]
+                .append(Point(ts: ts, value: .int(Int64(inPool.count) - covered)))
+        }
+    }
+    return points.reduce(into: [String: Metric]()) { out, pair in
+        out[pair.key] = Metric(name: pair.key, kind: "count", points: pair.value.sorted { $0.ts < $1.ts })
+    }
+}
+
 func deriveBuildWarnings(_ commits: [[String: Any]]) -> [String: Metric] {
     var perCommit: [(ts: Int64, counts: [String: Int])] = []
     var names = Set<String>()
@@ -419,6 +461,12 @@ for m in (doc["metrics"] as? [[String: Any]] ?? []) {
     let name = m["name"] as? String ?? ""
     if name == "BuildWarnings" {
         for (n, metric) in deriveBuildWarnings(m["commits"] as? [[String: Any]] ?? []) {
+            metrics[n] = metric
+        }
+        continue
+    }
+    if name == "SnapshotCoverage" {
+        for (n, metric) in deriveSnapshotCoverage(m["commits"] as? [[String: Any]] ?? []) {
             metrics[n] = metric
         }
         continue

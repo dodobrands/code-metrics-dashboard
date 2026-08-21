@@ -35,7 +35,7 @@
   {
     "id": "tests-imports",
     "group": "Tests",
-    "title": "Frameworks—imports",
+    "title": "Frameworks\u2014imports",
     "kind": "line",
     "series": [
       "import Testing",
@@ -49,11 +49,36 @@
   {
     "id": "tests-base-classes",
     "group": "Tests",
-    "title": "Frameworks—base classes",
+    "title": "Frameworks\u2014base classes",
     "kind": "line",
     "series": [
       "XCTestCase",
       "QuickSpec"
+    ]
+  },
+  {
+    "id": "tests-snapshot-coverage",
+    "group": "Tests",
+    "title": "Snapshot coverage",
+    "note": "views a snapshot test covers, attributed by file",
+    "kind": "share",
+    "series": [
+      "Snapshot:All:Covered",
+      "Snapshot:All:Bare"
+    ],
+    "toggle": [
+      {
+        "label": "All",
+        "seriesPrefix": "Snapshot:All:"
+      },
+      {
+        "label": "SwiftUI",
+        "seriesPrefix": "Snapshot:SwiftUI:"
+      },
+      {
+        "label": "UIKit",
+        "seriesPrefix": "Snapshot:UIKit:"
+      }
     ]
   },
   {
@@ -69,7 +94,7 @@
   {
     "id": "concurrency-markers",
     "group": "Concurrency",
-    "title": "Swift 6 concurrency markers",
+    "title": "Swift 6\u00a0concurrency markers",
     "kind": "line",
     "series": [
       "@unchecked Sendable",
@@ -83,7 +108,7 @@
   {
     "id": "techdebt-hygiene",
     "group": "Tech debt",
-    "title": "Debt & hygiene",
+    "title": "Debt &\u00a0hygiene",
     "kind": "line",
     "series": [
       "// TODO:",
@@ -106,7 +131,7 @@
   {
     "id": "warnings-total",
     "group": "Warnings",
-    "title": "Warnings—total (excl. deprecations)",
+    "title": "Warnings\u2014total (excl. deprecations)",
     "kind": "line",
     "series": [
       "OtherWarnings"
@@ -134,7 +159,7 @@
   {
     "id": "warnings-deprecations-total",
     "group": "Warnings",
-    "title": "Deprecations—total",
+    "title": "Deprecations\u2014total",
     "kind": "line",
     "series": [
       "BuildWarnings:DeprecatedDeclaration"
