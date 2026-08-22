@@ -3,12 +3,13 @@
     "id": "ui-swiftui-uikit",
     "group": "UI",
     "title": "SwiftUI vs UIKit",
-    "note": "share of view types",
-    "kind": "share",
+    "note": "share of view types—overall, then per module",
+    "kind": "migration",
     "series": [
       "SwiftUI",
       "UIKit"
-    ]
+    ],
+    "moduleSeriesPrefix": "Migration:ByModule:"
   },
   {
     "id": "ui-components",
@@ -35,7 +36,7 @@
   {
     "id": "tests-imports",
     "group": "Tests",
-    "title": "Frameworks\u2014imports",
+    "title": "Frameworks—imports",
     "kind": "line",
     "series": [
       "import Testing",
@@ -49,7 +50,7 @@
   {
     "id": "tests-base-classes",
     "group": "Tests",
-    "title": "Frameworks\u2014base classes",
+    "title": "Frameworks—base classes",
     "kind": "line",
     "series": [
       "XCTestCase",
@@ -60,8 +61,8 @@
     "id": "tests-snapshot-coverage",
     "group": "Tests",
     "title": "Snapshot coverage",
-    "note": "views a snapshot test covers, attributed by file",
-    "kind": "share",
+    "note": "views a snapshot test covers, attributed by file—overall, then per module",
+    "kind": "coverage",
     "series": [
       "Snapshot:All:Covered",
       "Snapshot:All:Bare"
@@ -94,7 +95,7 @@
   {
     "id": "concurrency-markers",
     "group": "Concurrency",
-    "title": "Swift 6\u00a0concurrency markers",
+    "title": "Swift 6 concurrency markers",
     "kind": "line",
     "series": [
       "@unchecked Sendable",
@@ -108,7 +109,7 @@
   {
     "id": "techdebt-hygiene",
     "group": "Tech debt",
-    "title": "Debt &\u00a0hygiene",
+    "title": "Debt & hygiene",
     "kind": "line",
     "series": [
       "// TODO:",
@@ -131,7 +132,7 @@
   {
     "id": "warnings-total",
     "group": "Warnings",
-    "title": "Warnings\u2014total (excl. deprecations)",
+    "title": "Warnings—total (excl. deprecations)",
     "kind": "line",
     "series": [
       "OtherWarnings"
@@ -159,7 +160,7 @@
   {
     "id": "warnings-deprecations-total",
     "group": "Warnings",
-    "title": "Deprecations\u2014total",
+    "title": "Deprecations—total",
     "kind": "line",
     "series": [
       "BuildWarnings:DeprecatedDeclaration"
