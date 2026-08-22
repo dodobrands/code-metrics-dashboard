@@ -312,8 +312,14 @@ func resolveSeries(_ chart: [String: Any], _ metricNames: [String]) -> [(String,
         return metricNames.sorted().filter { $0.hasPrefix(prefix) }
             .map { ($0, String($0.dropFirst(prefix.count))) }
     }
+    // A chart can also carry a grid of per-module series beside its headline pair;
+    // both go in the same file, and the client tells them apart by the prefix.
     let series = chart["series"] as? [String] ?? []
-    return series.map { ($0, $0) }
+    var out = series.map { ($0, $0) }
+    if let prefix = chart["moduleSeriesPrefix"] as? String {
+        out += metricNames.sorted().filter { $0.hasPrefix(prefix) }.map { ($0, $0) }
+    }
+    return out
 }
 
 // MARK: - BuildWarnings: derive the drawn families from the rich value
@@ -357,6 +363,138 @@ func canonicalWarningType(_ name: String) -> String {
 /// deprecations), `DeprecationBySymbol:<symbol>`, `DeprecationByModule:<module>`,
 /// `WarningBySymbol:<symbol>`, `WarningByModule:<module>`. Every metric is
 /// 0-filled across all commits so the total line stays continuous.
+/// Snapshot coverage, split three ways: every view, then SwiftUI and UIKit apart.
+///
+/// The metric stores a record per view — its name, its file, the base type it comes
+/// from, and whether a snapshot test covers it. Coverage is attributed by file:
+/// Prefire generates one test class per source file, so every view declared in a
+/// covered file counts as covered.
+///
+/// Each pair goes out under its own prefix so the chart's segmented control can
+/// switch between them, and as counts rather than a ratio so the pool's own growth
+/// stays visible next to the share.
+/// The module a repository-relative path belongs to: `Modules/Cart/…` is Cart,
+/// anything under `App/` is the monolith, and a stray path answers with its own
+/// first component rather than being dropped.
+///
+/// `DodoPizza/Cart/…` is Cart too: until #13144 moved the repository to a single
+/// root in July 2026, every module lived under that directory. Without this the
+/// whole history before the move collapses into one module named after it.
+func moduleOf(_ path: String) -> String {
+    let parts = path.split(separator: "/")
+    guard let first = parts.first else { return "—" }
+    if first == "App" { return "App" }
+    if first == "Modules", parts.count > 1 { return String(parts[1]) }
+    if first == "DodoPizza", parts.count > 1 {
+        // The app target sat one level deeper under the same name, the way it now
+        // sits under App/ — without this the monolith's history reads as a module
+        // called DodoPizza that no longer exists, and App begins on moving day.
+        return parts[1].hasPrefix("DodoPizza") ? "App" : String(parts[1])
+    }
+    return String(first)
+}
+
+/// At most `limit` points, evenly spaced, always keeping the last one.
+///
+/// A sparkline is 150 pixels wide; carrying two thousand points to draw it would
+/// spend bandwidth on pixels that do not exist.
+func thinned(_ points: [Point], to limit: Int) -> [Point] {
+    guard points.count > limit else { return points }
+    let step = Double(points.count - 1) / Double(limit - 1)
+    var out = (0 ..< limit - 1).map { points[Int((Double($0) * step).rounded())] }
+    out.append(points[points.count - 1])
+    return out
+}
+
+func deriveSnapshotCoverage(_ commits: [[String: Any]]) -> [String: Metric] {
+    let pools: [(prefix: String, kinds: Set<String>)] = [
+        ("Snapshot:All:", ["View", "UIView", "UIViewController"]),
+        ("Snapshot:SwiftUI:", ["View"]),
+        ("Snapshot:UIKit:", ["UIView", "UIViewController"]),
+    ]
+    var points: [String: [Point]] = [:]
+    for c in commits {
+        guard let views = c["value"] as? [[String: Any]], !views.isEmpty else { continue }
+        let ts = toMs(c["timestamp"] as? String ?? "")
+        for pool in pools {
+            // Records written before the base type was recorded carry no kind. They
+            // still count in the whole-repository pool, where no kind is needed, and
+            // stay out of the split ones rather than landing in the wrong half.
+            let inPool = views.filter { view in
+                guard let kind = view["kind"] as? String else { return pool.kinds.count == 3 }
+                return pool.kinds.contains(kind)
+            }
+            guard !inPool.isEmpty else { continue }
+            let covered = inPool.reduce(into: Int64(0)) { acc, view in
+                if (view["hasSnapshot"] as? Bool) == true { acc += 1 }
+            }
+            points[pool.prefix + "Covered", default: []].append(Point(ts: ts, value: .int(covered)))
+            points[pool.prefix + "Bare", default: []]
+                .append(Point(ts: ts, value: .int(Int64(inPool.count) - covered)))
+        }
+    }
+    // How far along each module is, since the whole-repository share says nothing
+    // about where to go next. Split the same three ways as the share above, so the
+    // question "which modules are behind on SwiftUI" has an answer too. Each module
+    // gets its own line over time — a grid of sparklines reads as one picture where
+    // forty ranked bars read as a scroll.
+    for c in commits {
+        guard let views = c["value"] as? [[String: Any]], !views.isEmpty else { continue }
+        let ts = toMs(c["timestamp"] as? String ?? "")
+        for pool in pools {
+            var total: [String: Int] = [:]
+            var covered: [String: Int] = [:]
+            for view in views {
+                if let kind = view["kind"] as? String {
+                    guard pool.kinds.contains(kind) else { continue }
+                } else if pool.kinds.count < 3 {
+                    continue
+                }
+                let module = moduleOf(view["path"] as? String ?? "")
+                total[module, default: 0] += 1
+                if (view["hasSnapshot"] as? Bool) == true { covered[module, default: 0] += 1 }
+            }
+            for (module, count) in total {
+                let share = Double(covered[module] ?? 0) / Double(count) * 1000
+                points[pool.prefix + "ByModule:" + module, default: []]
+                    .append(Point(ts: ts, value: .double(share.rounded() / 10)))
+            }
+        }
+    }
+
+    // Only modules the repository still has. History remembers ones long deleted,
+    // and a grid cell reading a flat zero for a module nobody can open is noise.
+    let alive = Set(
+        (commits.last(where: { ($0["value"] as? [[String: Any]])?.isEmpty == false })?["value"]
+            as? [[String: Any]] ?? [])
+            .map { moduleOf($0["path"] as? String ?? "") }
+    )
+
+    var out: [String: Metric] = [:]
+    for (name, unsorted) in points {
+        if let range = name.range(of: ":ByModule:"), !alive.contains(String(name[range.upperBound...])) {
+            continue
+        }
+        let sorted = unsorted.sorted { $0.ts < $1.ts }
+        out[name] = Metric(
+            name: name,
+            kind: "count",
+            points: name.contains(":ByModule:") ? thinned(sorted, to: 60) : sorted
+        )
+    }
+
+    // Every module that has an interface at all gets a series in all three pools,
+    // empty where it has no views of that kind. The grid then holds the same cells
+    // whichever pool is showing, instead of reflowing under the reader's cursor.
+    for module in alive {
+        for pool in pools where out[pool.prefix + "ByModule:" + module] == nil {
+            out[pool.prefix + "ByModule:" + module] =
+                Metric(name: pool.prefix + "ByModule:" + module, kind: "count", points: [])
+        }
+    }
+    return out
+}
+
 func deriveBuildWarnings(_ commits: [[String: Any]]) -> [String: Metric] {
     var perCommit: [(ts: Int64, counts: [String: Int])] = []
     var names = Set<String>()
@@ -395,6 +533,61 @@ func deriveBuildWarnings(_ commits: [[String: Any]]) -> [String: Metric] {
     return out
 }
 
+/// SwiftUI against UIKit per module, over time.
+///
+/// The type metrics carry the list of types they found with the file each lives in,
+/// so the same lists that make the repository-wide share also make it per module —
+/// no second collection, no join against anything else.
+///
+/// Counts rather than a ratio: a module that grew from four views to forty while
+/// holding the same share did something a percentage cannot say.
+func deriveMigrationByModule(swiftUI: [[String: Any]], uiKit: [[[String: Any]]]) -> [String: Metric] {
+    var points: [String: [Point]] = [:]
+
+    func fold(_ commits: [[String: Any]], suffix: String) {
+        for c in commits {
+            guard let types = c["value"] as? [[String: Any]], !types.isEmpty else { continue }
+            let ts = toMs(c["timestamp"] as? String ?? "")
+            var perModule: [String: Int64] = [:]
+            for type in types {
+                perModule[moduleOf(type["path"] as? String ?? ""), default: 0] += 1
+            }
+            for (module, count) in perModule {
+                let key = "Migration:ByModule:" + module + ":" + suffix
+                if let index = points[key]?.lastIndex(where: { $0.ts == ts }) {
+                    if case let .int(existing) = points[key]![index].value {
+                        points[key]![index] = Point(ts: ts, value: .int(existing + count))
+                    }
+                } else {
+                    points[key, default: []].append(Point(ts: ts, value: .int(count)))
+                }
+            }
+        }
+    }
+
+    fold(swiftUI, suffix: "SwiftUI")
+    for commits in uiKit { fold(commits, suffix: "UIKit") }
+
+    // Modules the repository still has, and both halves present for each: a cell
+    // stacks two series, and one of them missing would draw a full bar of the other.
+    let alive = Set(
+        (swiftUI.last?["value"] as? [[String: Any]] ?? []).map { moduleOf($0["path"] as? String ?? "") }
+    ).union(
+        Set((uiKit.compactMap { $0.last }.flatMap { ($0["value"] as? [[String: Any]]) ?? [] })
+            .map { moduleOf($0["path"] as? String ?? "") })
+    )
+
+    var out: [String: Metric] = [:]
+    for module in alive {
+        for suffix in ["SwiftUI", "UIKit"] {
+            let key = "Migration:ByModule:" + module + ":" + suffix
+            let sorted = (points[key] ?? []).sorted { $0.ts < $1.ts }
+            out[key] = Metric(name: key, kind: "count", points: thinned(sorted, to: 60))
+        }
+    }
+    return out
+}
+
 // MARK: - main
 
 let root = FileManager.default.currentDirectoryPath
@@ -423,6 +616,12 @@ for m in (doc["metrics"] as? [[String: Any]] ?? []) {
         }
         continue
     }
+    if name == "SnapshotCoverage" {
+        for (n, metric) in deriveSnapshotCoverage(m["commits"] as? [[String: Any]] ?? []) {
+            metrics[n] = metric
+        }
+        continue
+    }
     let (kind, points) = metricPoints(m)
     if !points.isEmpty, !name.isEmpty {
         metrics[name] = Metric(name: name, kind: kind, points: points)
@@ -443,6 +642,19 @@ for m in (doc["metrics"] as? [[String: Any]] ?? []) {
 
 if let view = metrics["View"] {
     metrics["SwiftUI"] = Metric(name: "SwiftUI", kind: "count", points: view.points)
+}
+
+// The same type lists, folded per module, so the migration chart can show each
+// module's own SwiftUI-to-UIKit balance under the repository's.
+let typeCommits = { (name: String) -> [[String: Any]] in
+    (doc["metrics"] as? [[String: Any]] ?? [])
+        .first { ($0["name"] as? String) == name }?["commits"] as? [[String: Any]] ?? []
+}
+for (name, metric) in deriveMigrationByModule(
+    swiftUI: typeCommits("View"),
+    uiKit: [typeCommits("UIView"), typeCommits("UIViewController")]
+) {
+    metrics[name] = metric
 }
 let uikit = summed(["UIView", "UIViewController"])
 if !uikit.isEmpty {

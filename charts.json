@@ -3,12 +3,13 @@
     "id": "ui-swiftui-uikit",
     "group": "UI",
     "title": "SwiftUI vs UIKit",
-    "note": "share of view types",
-    "kind": "share",
+    "note": "share of view types—overall, then per module",
+    "kind": "migration",
     "series": [
       "SwiftUI",
       "UIKit"
-    ]
+    ],
+    "moduleSeriesPrefix": "Migration:ByModule:"
   },
   {
     "id": "ui-components",
@@ -54,6 +55,31 @@
     "series": [
       "XCTestCase",
       "QuickSpec"
+    ]
+  },
+  {
+    "id": "tests-snapshot-coverage",
+    "group": "Tests",
+    "title": "Snapshot coverage",
+    "note": "views a snapshot test covers, attributed by file—overall, then per module",
+    "kind": "coverage",
+    "series": [
+      "Snapshot:All:Covered",
+      "Snapshot:All:Bare"
+    ],
+    "toggle": [
+      {
+        "label": "All",
+        "seriesPrefix": "Snapshot:All:"
+      },
+      {
+        "label": "SwiftUI",
+        "seriesPrefix": "Snapshot:SwiftUI:"
+      },
+      {
+        "label": "UIKit",
+        "seriesPrefix": "Snapshot:UIKit:"
+      }
     ]
   },
   {

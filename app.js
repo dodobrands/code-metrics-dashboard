@@ -35,18 +35,76 @@ const PALETTE = {
 const NAMES = {
   "Task\\b.*\\{.*@MainActor": "Task { @MainActor }",
   "@available(*, deprecated": "@available deprecated",
+  // Snapshot coverage ships one pair per pool; the pool is the segmented control's
+  // job to say, so the legend only names the two halves.
+  "Snapshot:All:Covered": "Covered",
+  "Snapshot:All:Bare": "Not covered",
+  "Snapshot:SwiftUI:Covered": "Covered",
+  "Snapshot:SwiftUI:Bare": "Not covered",
+  "Snapshot:UIKit:Covered": "Covered",
+  "Snapshot:UIKit:Bare": "Not covered",
 };
 const nameOf = (k) => NAMES[k] || k;
 
 // Every mounted chart, so the date-range picker can retarget all their x-axes.
 const charts = [];
+// Every mounted chart, reachable from the console: the bundle keeps Chart itself
+// private, so without this a rendering question can only be answered by squinting.
+window.dashboardCharts = charts;
+// The range selector rewrites every mounted chart, but a folded module grid has no
+// charts yet: opening it later would build cells on the full history while the card
+// above them shows a week. The chosen window is kept here so a late chart is born
+// with it.
+let axisWindow = null;
 
 // Create a chart and wire double-click to reset any zoom/pan on it.
+// Chart.js paints into a canvas, so a pinch magnifies pixels that are already on
+// screen: Safari scales the visual viewport without firing a resize on the element,
+// and the chart never learns it should repaint. Feeding the pinch factor back in as
+// the device pixel ratio is what makes the lines sharp at the size actually being
+// looked at.
+//
+// Only charts on screen are repainted, and the factor is capped: the backing buffer
+// grows with the square of the ratio, so repainting every card at a triple pinch
+// would cost hundreds of megabytes for the ones nobody is looking at.
+const onScreen = new Set();
+const watcher = new IntersectionObserver((entries) => {
+  for (const entry of entries) {
+    if (!entry.target.isConnected) {
+      watcher.unobserve(entry.target);
+      continue;
+    }
+    const chart = charts.find((c) => c.canvas === entry.target);
+    if (!chart) continue;
+    if (entry.isIntersecting) {
+      onScreen.add(chart);
+      sharpen(chart);
+    } else {
+      onScreen.delete(chart);
+    }
+  }
+});
+
+function sharpen(chart) {
+  const pinch = Math.min(window.visualViewport?.scale ?? 1, 3);
+  const ratio = (window.devicePixelRatio || 1) * pinch;
+  if (chart.options.devicePixelRatio === ratio) return;
+  chart.options.devicePixelRatio = ratio;
+  chart.resize();
+}
+
+window.visualViewport?.addEventListener("resize", () => {
+  for (const chart of onScreen) sharpen(chart);
+});
+
 function mount(canvas, config) {
+  if (axisWindow) Object.assign(config.options.scales.x, axisWindow);
   const chart = new Chart(canvas, config);
+  watcher.observe(canvas);
   canvas.title = "scroll to zoom · shift-drag to pan · double-click to reset";
   canvas.ondblclick = () => chart.resetZoom();
   charts.push(chart);
+  return chart;
 }
 
 // Min/max timestamp across a chart's own series — for charts that scale to
@@ -111,6 +169,14 @@ function lineChart(canvas, spec, byName, bounds) {
 // unreadable and the shared-index tooltip covers the whole plot. A snapshot,
 // not a time series — so it isn't registered with the date-range picker.
 // Rank {label,value} rows desc, drop zeros, fold the tail past topN into "Other".
+// Shares never fold the way counts do: summing percentages into an "Other" row
+// would be a number that means nothing, and a module sitting at 0% is the whole
+// point of looking, so zeros stay. Best first, like every other ranked list here.
+function rankShares(items, topN) {
+  const rows = items.sort((a, b) => b.value - a.value);
+  return topN ? rows.slice(0, topN) : rows;
+}
+
 function rankRows(items, topN) {
   let rows = items.filter((r) => r.value > 0).sort((a, b) => b.value - a.value);
   if (topN && rows.length > topN) {
@@ -123,7 +189,7 @@ function rankRows(items, topN) {
 
 // Draw ranked horizontal bars; returns the Chart so a toggle can destroy and
 // redraw it. Grows the card so every bar keeps a legible height.
-function drawBars(canvas, rows) {
+function drawBars(canvas, rows, percent = false) {
   const colors = palette();
   const { muted } = ink();
   const grid = isDark() ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)";
@@ -135,10 +201,10 @@ function drawBars(canvas, rows) {
       responsive: true, maintainAspectRatio: false, animation: false, indexAxis: "y",
       // Long labels (a few method signatures) truncate with an ellipsis; the
       // untruncated label is the tooltip title.
-      plugins: { legend: { display: false }, tooltip: { callbacks: { title: (items) => items[0].label, label: (i) => ` ${i.parsed.x}` } } },
+      plugins: { legend: { display: false }, tooltip: { callbacks: { title: (items) => items[0].label, label: (i) => ` ${i.parsed.x}${percent ? "%" : ""}` } } },
       scales: {
-        x: { beginAtZero: true, grid: { color: grid, drawTicks: false }, border: { display: false }, ticks: { color: muted, font: { size: 11 }, precision: 0 } },
-        y: { grid: { display: false }, border: { display: false }, ticks: { color: muted, font: { size: 11 }, autoSkip: false, callback(v) { const l = this.getLabelForValue(v); return l.length > 28 ? l.slice(0, 27) + "…" : l; } } },
+        x: { beginAtZero: true, max: percent ? 100 : undefined, grid: { color: grid, drawTicks: false }, border: { display: false }, ticks: { color: muted, font: { size: 11 }, precision: 0, callback: (v) => (percent ? `${v}%` : v) } },
+        y: { grid: { display: false }, border: { display: false }, ticks: { color: muted, font: { size: 11 }, autoSkip: false, callback(v) { const l = this.getLabelForValue(v); return l.length > 28 ? `${l.slice(0, 27)}…` : l; } } },
       },
     },
   });
@@ -168,7 +234,275 @@ function toggleBarChart(card, canvas, spec, byName) {
       return { label: n.slice(g.seriesPrefix.length), value: p.length ? p[p.length - 1][1] : 0 };
     });
     chart?.destroy();
-    chart = drawBars(canvas, rankRows(items, g.topN));
+    chart = spec.percent
+      ? drawBars(canvas, rankShares(items, g.topN), true)
+      : drawBars(canvas, rankRows(items, g.topN));
+    for (const [i, b] of [...ctrl.children].entries()) b.setAttribute("aria-pressed", String(i === gi));
+  };
+  spec.toggle.forEach((g, gi) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "chart-toggle-btn";
+    b.textContent = g.label;
+    b.onclick = () => render(gi);
+    ctrl.appendChild(b);
+  });
+  card.querySelector("figcaption").appendChild(ctrl);
+  render(0);
+}
+
+// The per-module grid is folded away: forty-two cells are a detail you open when
+// the headline raises a question, not something to scroll past every visit. The
+// cells are built on first open — Chart.js cannot size a canvas inside a closed
+// <details>, and an unopened grid costs nothing this way.
+function moduleDisclosure(canvas, count, paint) {
+  const details = document.createElement("details");
+  details.className = "modules";
+  const summary = document.createElement("summary");
+  summary.textContent = `By module · ${count}`;
+  const grid = document.createElement("div");
+  grid.className = "canvas-wrap sparks";
+  details.append(summary, grid);
+  canvas.parentElement.after(details);
+
+  let stale = true;
+  details.addEventListener("toggle", () => {
+    if (details.open && stale) {
+      paint(grid);
+      stale = false;
+    }
+  });
+  return { grid, invalidate: () => { stale = true; if (details.open) { paint(grid); stale = false; } } };
+}
+
+// The migration chart with the same grid underneath: the repository's SwiftUI/UIKit
+// balance on top, then each module's own. Cells stack the two frameworks rather
+// than drawing one line, so a module reads the way the headline does.
+function migrationChart(_card, canvas, spec, byName, bounds) {
+  const prefix = spec.moduleSeriesPrefix;
+  const modules = [...new Set(
+    [...byName.keys()]
+      .filter((n) => n.startsWith(prefix) && n.endsWith(":SwiftUI"))
+      .map((n) => n.slice(prefix.length, -":SwiftUI".length)),
+  )].sort((a, b) => a.localeCompare(b));
+
+  shareChart(canvas, spec, byName, bounds);
+  moduleDisclosure(canvas, modules.length, (grid) => paintModules(grid));
+
+  function paintModules(grid) {
+    grid.textContent = "";
+    for (const module of modules) {
+    const sui = byName.get(`${prefix}${module}:SwiftUI`)?.points ?? [];
+    const uik = byName.get(`${prefix}${module}:UIKit`)?.points ?? [];
+    const total = tail(sui) + tail(uik);
+    const cell = document.createElement("figure");
+    cell.className = total ? "spark" : "spark bare";
+    const value = total
+      ? `<b style="color:${shareColour((tail(sui) / total) * 100)}">${Math.round((tail(sui) / total) * 100)}%</b>`
+      : '<b class="none">—</b>';
+    cell.innerHTML = `<figcaption>${escapeHtml(module)}</figcaption><div class="spark-row"><div class="spark-canvas">${total ? "<canvas></canvas>" : '<p class="none">no views</p>'}</div>${value}</div>`;
+      grid.appendChild(cell);
+      if (total) miniStack(cell.querySelector("canvas"), sui, uik, bounds);
+    }
+  }
+}
+
+const tail = (points) => (points.length ? points[points.length - 1][1] : 0);
+
+// A cell-sized version of the 100% stack: two areas, no axes, no interaction.
+//
+// The two series are sampled independently, so their timestamps rarely coincide —
+// intersecting them would leave a module with one or two points, and a module with
+// no SwiftUI at all with none. Walk the union instead, carrying the last known
+// count on each side, which is what the series means between samples anyway.
+function miniStack(canvas, swiftUI, uiKit, bounds) {
+  const sui = new Map(swiftUI), uik = new Map(uiKit);
+  const stamps = [...new Set([...sui.keys(), ...uik.keys()])].sort((a, b) => a - b);
+  let lastSui = 0, lastUik = 0;
+  const shares = [];
+  for (const ts of stamps) {
+    lastSui = sui.get(ts) ?? lastSui;
+    lastUik = uik.get(ts) ?? lastUik;
+    const sum = lastSui + lastUik;
+    if (sum > 0) shares.push({ x: ts, y: (lastSui / sum) * 100 });
+  }
+  const colours = palette();
+  return mount(canvas, {
+    type: "line",
+    data: {
+      datasets: [
+        { data: shares, borderColor: colours[0], backgroundColor: hexA(colours[0], 0.75), borderWidth: 0, pointBackgroundColor: colours[0], pointRadius: dotIfCramped(shares.map((p) => [p.x]), 0), fill: "origin", tension: 0 },
+        { data: shares.map((p) => ({ x: p.x, y: 100 - p.y })), borderColor: colours[1], backgroundColor: hexA(colours[1], 0.75), borderWidth: 0, pointRadius: 0, fill: "-1", tension: 0 },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: false, normalized: true, events: [],
+      plugins: { legend: { display: false }, tooltip: { enabled: false }, zoom: undefined },
+      scales: {
+        x: { type: "linear", display: false, min: bounds.min, max: bounds.max },
+        y: { display: false, stacked: true, min: 0, max: 100 },
+      },
+    },
+  });
+}
+
+// Snapshot coverage in one card: the repository's share on top, every module's own
+// line underneath, one segmented control driving both. Split apart they answered
+// the same question twice — how covered are we, and covered where.
+function coverageChart(card, canvas, spec, byName, bounds) {
+  // Alphabetical, and the same in every pool: a module keeps its place when the
+  // reader switches frameworks, and a name can be found without reading the whole
+  // grid. Ranking by coverage would reshuffle the cells three different ways and
+  // answer a question the sparklines already show by shape.
+  const canonical = `${spec.toggle[0].seriesPrefix}ByModule:`;
+  const order = [...byName.keys()]
+    .filter((n) => n.startsWith(canonical))
+    .map((n) => n.slice(canonical.length))
+    .sort((a, b) => a.localeCompare(b));
+
+  let share = null;
+  let current = spec.toggle[0].seriesPrefix;
+  const mounted = [];
+  const modules = moduleDisclosure(canvas, order.length, (grid) => paintModules(grid));
+
+  const render = (prefix) => {
+    if (share) {
+      charts.splice(charts.indexOf(share), 1);
+      share.destroy();
+    }
+    for (const chart of mounted.splice(0)) {
+      charts.splice(charts.indexOf(chart), 1);
+      chart.destroy();
+    }
+    share = shareChart(canvas, { ...spec, series: [`${prefix}Covered`, `${prefix}Bare`] }, byName, bounds);
+
+    current = prefix;
+    modules.invalidate();
+  };
+
+  function paintModules(grid) {
+    const prefix = current;
+    grid.textContent = "";
+    for (const module of order) {
+      const series = byName.get(`${prefix}ByModule:${module}`);
+      const points = series?.points ?? [];
+      const cell = document.createElement("figure");
+      cell.className = points.length ? "spark" : "spark bare";
+      // The number sits at the end of the line rather than up in the caption: the
+      // eye follows the curve and finds the value where the curve stops.
+      const value = points.length
+        ? `<b style="color:${shareColour(last(series))}">${last(series).toFixed(0)}%</b>`
+        : '<b class="none">—</b>';
+      cell.innerHTML = `<figcaption>${escapeHtml(module)}</figcaption><div class="spark-row"><div class="spark-canvas">${points.length ? "<canvas></canvas>" : '<p class="none">no views</p>'}</div>${value}</div>`;
+      grid.appendChild(cell);
+      if (points.length) mounted.push(sparkline(cell.querySelector("canvas"), points, bounds));
+    }
+  }
+
+  const ctrl = document.createElement("div");
+  ctrl.className = "chart-toggle";
+  spec.toggle.forEach((g, gi) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "chart-toggle-btn";
+    button.textContent = g.label;
+    button.onclick = () => {
+      render(g.seriesPrefix);
+      for (const [i, other] of [...ctrl.children].entries()) other.setAttribute("aria-pressed", String(i === gi));
+    };
+    ctrl.appendChild(button);
+  });
+  card.querySelector("figcaption").appendChild(ctrl);
+  ctrl.children[0].click();
+}
+
+const last = (series) => (series.points.length ? series.points[series.points.length - 1][1] : 0);
+
+// Whether a cell got drawn is a question for Chart.js, not for a rule of thumb: its
+// own x-scale converts the module's first and last commit into pixel positions, and
+// under two pixels apart the line has nowhere to go. A module that young has no
+// shape to show anyway, so it falls back to dots at its values — on the same shared
+// axis, where their position still says "this only just appeared".
+//
+// It has to be a scriptable option rather than a one-off measurement or a plugin
+// that writes a number: the range selector rewrites the axis under a live chart, a
+// week-wide axis gives the same module all the room it needs, and the dots have to
+// go away again. Chart.js caches element options it considers static and reuses them
+// across updates — a function is what makes it ask every time.
+const dotIfCramped = (points, radius) => {
+  const stamps = points.map(([x]) => x);
+  const lo = Math.min(...stamps), hi = Math.max(...stamps);
+  return (ctx) => {
+    const scale = ctx.chart.scales.x;
+    if (scale?.width && scale.getPixelForValue(hi) - scale.getPixelForValue(lo) < 2) return 2.5;
+    return typeof radius === "function" ? radius(ctx) : radius;
+  };
+};
+
+// One sparkline: the line, its endpoint, and nothing else. The y-axis is pinned to
+// 0–100 so cells are comparable at a glance rather than each scaling to itself.
+function sparkline(canvas, points, bounds) {
+  const value = points.length ? points[points.length - 1][1] : 0;
+  const colour = shareColour(value);
+  return mount(canvas, {
+    type: "line",
+    data: {
+      datasets: [{
+        data: points.map(([x, y]) => ({ x, y })),
+        borderColor: colour, borderWidth: 1.75, tension: 0.25,
+        pointRadius: dotIfCramped(points, (c) => (c.dataIndex === points.length - 1 ? 2.5 : 0)),
+        pointBackgroundColor: colour, fill: "origin",
+        backgroundColor: hexA(colour, 0.12),
+      }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: false, normalized: true,
+      // No legend, no tooltip, no zoom: the cell says the module and its number in
+      // the caption, and the line says the shape. Anything else is a second reading
+      // of what is already on screen, forty times over.
+      events: [],
+      plugins: { legend: { display: false }, tooltip: { enabled: false }, zoom: undefined },
+      scales: {
+        x: { type: "linear", display: false, min: bounds.min, max: bounds.max },
+        y: { display: false, min: 0, max: 100 },
+      },
+    },
+  });
+}
+
+// Coverage colour ramp: brick at nothing, sand mid-way, green at covered.
+function shareColour(percent) {
+  const stops = [[0, [176, 74, 52]], [50, [198, 155, 74]], [100, [74, 148, 106]]];
+  for (let i = 0; i < stops.length - 1; i++) {
+    const [a, ca] = stops[i], [b, cb] = stops[i + 1];
+    if (percent <= b) {
+      const t = b > a ? (percent - a) / (b - a) : 0;
+      const c = ca.map((v, j) => Math.round(v + (cb[j] - v) * t));
+      return `#${c.map((v) => v.toString(16).padStart(2, "0")).join("")}`;
+    }
+  }
+  return "#4a946a";
+}
+
+// A share chart behind the same segmented control the bar charts use. Each group
+// is a series prefix holding one covered/uncovered pair — snapshot coverage for
+// every view, then for SwiftUI and UIKit apart. Switching replaces the chart, so
+// the old one leaves the registry the date picker retargets.
+function toggleShareChart(card, canvas, spec, byName, bounds) {
+  const ctrl = document.createElement("div");
+  ctrl.className = "chart-toggle";
+  let current = null;
+  const render = (gi) => {
+    const g = spec.toggle[gi];
+    const names = [...byName.keys()].filter((n) => n.startsWith(g.seriesPrefix));
+    const covered = names.find((n) => n.endsWith(":Covered"));
+    const bare = names.find((n) => n !== covered);
+    if (!covered || !bare) return;
+    if (current) {
+      charts.splice(charts.indexOf(current), 1);
+      current.destroy();
+    }
+    current = shareChart(canvas, { ...spec, series: [covered, bare] }, byName, bounds);
     for (const [i, b] of [...ctrl.children].entries()) b.setAttribute("aria-pressed", String(i === gi));
   };
   spec.toggle.forEach((g, gi) => {
@@ -190,7 +524,7 @@ function stack100(canvas, datasets, bounds) {
   const opts = baseOptions(scales, false, bounds);
   opts.plugins.tooltip = tooltipConfig((y) => `${y.toFixed(1)}%`);
   opts.plugins.tooltip.filter = (item) => item.parsed.y > 0; // hide 0% rows
-  mount(canvas, { type: "line", data: { datasets }, options: opts });
+  return mount(canvas, { type: "line", data: { datasets }, options: opts });
 }
 
 function shareChart(canvas, spec, byName, bounds) {
@@ -203,7 +537,7 @@ function shareChart(canvas, spec, byName, bounds) {
     const sum = ma.get(t) + mb.get(t), share = sum > 0 ? (ma.get(t) / sum) * 100 : 0;
     pa.push({ x: t, y: share }); pb.push({ x: t, y: 100 - share });
   }
-  stack100(canvas, [
+  return stack100(canvas, [
     { label: nameOf(a), data: pa, borderColor: colors[0], backgroundColor: hexA(colors[0], 0.78), borderWidth: 0, pointRadius: 0, fill: "origin", tension: 0 },
     { label: nameOf(b), data: pb, borderColor: colors[1], backgroundColor: hexA(colors[1], 0.78), borderWidth: 0, pointRadius: 0, fill: "-1", tension: 0 },
   ], bounds);
@@ -257,6 +591,7 @@ function rangePicker(bounds) {
   sel.onchange = () => {
     const r = RANGES[sel.selectedIndex];
     const min = r.ms == null ? bounds.min : Math.max(bounds.min, bounds.max - r.ms);
+    axisWindow = { min, max: bounds.max };
     for (const c of charts) {
       c.options.scales.x.min = min;
       c.options.scales.x.max = bounds.max;
@@ -299,8 +634,10 @@ async function main() {
     section.appendChild(card);
     const canvas = card.querySelector("canvas");
     const b = spec.selfBounds ? (seriesBounds(byName) || bounds) : bounds;
-    if (spec.kind === "share") shareChart(canvas, spec, byName, b);
+    if (spec.kind === "share") { if (spec.toggle) toggleShareChart(card, canvas, spec, byName, b); else shareChart(canvas, spec, byName, b); }
     else if (spec.kind === "versions") versionsChart(canvas, spec, byName, b);
+    else if (spec.kind === "coverage") coverageChart(card, canvas, spec, byName, b);
+    else if (spec.kind === "migration") migrationChart(card, canvas, spec, byName, b);
     else if (spec.kind === "bar") { if (spec.toggle) toggleBarChart(card, canvas, spec, byName); else barChart(canvas, spec, byName); }
     else lineChart(canvas, spec, byName, b);
   });
