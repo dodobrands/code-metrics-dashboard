@@ -35,7 +35,7 @@ jobs:
       - run: npm ci
       - run: biome check .
       - run: node scripts/render-pages.mjs
-      - run: html-validate index.html */index.html
+      - run: html-validate index.html ./*/index.html
       - run: actionlint
       - run: node scripts/typography.mjs
       - run: node scripts/latin-only.mjs
