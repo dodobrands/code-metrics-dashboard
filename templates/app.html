@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{title}}</title>
+  <meta name="description" content="{{description}}">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="{{ogTitle}}">
+  <meta property="og:description" content="{{ogDescription}}">
+  <meta property="og:url" content="{{site}}{{dir}}/">
+  <meta property="og:image" content="{{site}}{{dir}}/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ogTitle}}">
+  <meta name="twitter:description" content="{{ogDescription}}">
+  <meta name="twitter:image" content="{{site}}{{dir}}/og.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@100..800&display=swap">
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+  <div id="controls">{{nav}}<label>range <select id="rangepick"></select></label></div>
+
+  <header>
+    <div class="wrap">
+      <p class="eyebrow">{{eyebrow}}</p>
+      <h1>{{heading}}</h1>
+      <p class="meta">{{lede}} <code id="repo">{{repo}}</code> codebase</p>
+      <p class="meta updated">Updated <b id="updated">—</b></p>
+    </div>
+  </header>
+
+  <main class="wrap flow">
+<!--if:roadmap-->
+    <section id="roadmap">
+      <div class="section-head"><h2>Roadmap</h2></div>
+      <div class="board" id="board"><!--roadmap:board:start--><!--roadmap:board:end--></div>
+    </section>
+<!--endif:roadmap-->
+
+    <section id="hero"></section>
+
+    <section id="app">Loading…</section>
+
+{{sections}}
+  </main>
+
+  <footer class="egg">
+    <div class="egg-dodo-wrap">
+      <div id="dodo-bubble" class="egg-bubble" role="status"></div>
+      <button id="dodo-egg" class="egg-dodo" type="button" aria-label="Dodo">🦤</button>
+    </div>
+  </footer>
+
+<!--if:roadmap-->
+  <!--roadmap:dialogs:start--><!--roadmap:dialogs:end-->
+<!--endif:roadmap-->
+
+  <script src="../bundle.js"></script>
+</body>
+</html>

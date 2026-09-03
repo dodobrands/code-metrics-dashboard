@@ -1,9 +1,10 @@
-# Metrics data is never committed — generated at publish time (codemetrics get → build.py)
-# and injected into the Pages artifact only (see .github/workflows/deploy.yml).
+# Pages are stamped from templates/ per app in apps.json at build time; metrics data
+# and share cards are generated then too. None of it is committed — it lives only in
+# the Pages artifact (see .github/workflows/deploy.yml and scripts/build-apps.sh).
+/index.html
+/*/index.html
+**/data/
 raw.json
-data/raw.json
-data/meta.json
-data/charts/
 node_modules/
 bundle.js
 og.png

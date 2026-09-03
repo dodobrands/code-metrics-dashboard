@@ -26,6 +26,7 @@ done
 EYEBROW="DODO PIZZA · iOS"
 
 render() { # title subtitle output
+  mkdir -p "$(dirname "$3")"
   "$IM" -size 1200x630 xc:'#0e1216' \
     -fill '#eb6834' -draw "roundrectangle 90,196 100,434 5,5" \
     -font "$FONT" \

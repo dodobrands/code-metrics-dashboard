@@ -1,21 +1,35 @@
-# Dodo iOS — Engineering
+# Dodo — Engineering dashboards
 
-Public engineering page for the Dodo Pizza iOS app: beta (TestFlight), open source,
-tech radar, roadmap, and a live view of the `dodobrands/dodo-mobile-ios` codebase's
-modernization metrics.
+Public engineering pages for Dodo's mobile apps, one per app: product links (beta, open
+source, tech radar), a roadmap, and a live view of the codebase's modernization metrics
+from the `code-metrics` service. Today: the Dodo Pizza iOS app (`dodobrands/dodo-mobile-ios`).
 
-**Live: https://dodobrands.github.io/code-metrics-dashboard/**
+**Live: https://dodobrands.github.io/code-metrics-dashboard/** (redirects to the first app,
+`dodo-ios/`; each app is a directory, so `…/<dir>/` is the link to share).
 
 ## What it is
 
-A self-contained static site — one HTML page hydrated by a single bundled script:
+A self-contained static site — one page per app, hydrated by a single shared bundle:
 
-- `index.html` / `style.css` — the page. Martian Mono display type (Google Fonts),
-  Swift-orange accent, auto light/dark, one spacing scale (`--sp-*`).
+- `apps.json` — the list of apps: directory, repository, names and blurbs, whether it has a
+  roadmap. **Adding an app is one entry here** plus its directory (below).
+- `templates/app.html` / `templates/root.html` — the page template and the root redirect.
+  `scripts/render-pages.mjs` stamps them into `<dir>/index.html` and `index.html` at build
+  time; the generated pages are gitignored.
+- `style.css` — shared look. Martian Mono display type (Google Fonts), Swift-orange
+  accent, auto light/dark, one spacing scale (`--sp-*`).
 - `app.js` — renders the metric charts with **Chart.js** (+ zoom plugin), imported as
   npm dependencies and bundled by esbuild into `bundle.js` (gitignored, built at deploy).
-- `charts.json` — the chart spec (id, title, kind, series). Single source of truth shared
-  by the page **and** the build.
+  It fetches `charts.json` and `data/` relative to the page, so every app directory gets
+  its own without any code change.
+- `<dir>/charts.json` — the app's chart spec (id, title, kind, series). Single source of
+  truth shared by the page **and** the build.
+- `<dir>/sections.html` — optional; product sections that belong to that app only.
+- `<dir>/roadmap/` — the roadmap cards, when `apps.json` says the app has one.
+
+The site is a project-path Pages site (`github.io/<repo>/`), so every link is relative —
+apps link to each other as `../<dir>/`, pages load `../bundle.js` and `../style.css`. A
+root-absolute `href="/…"` would resolve to `dodobrands.github.io/…` and 404.
 
 ## Data pipeline
 
@@ -23,13 +37,18 @@ Metrics come from the `code-metrics` service via its `codemetrics` CLI. Data is 
 committed** — it is generated at publish time and injected into the Pages artifact only.
 
 ```
-codemetrics get --repo dodobrands/dodo-mobile-ios                          # full JSON dump  → data/raw.json
-swift run --package-path Tools/DashboardBuild build data/raw.json  # → data/meta.json + data/charts/<id>.json
+bash scripts/build-apps.sh   # stamp pages, then per app: fetch → build → roadmap, inside <dir>/
 ```
 
-- `data/meta.json` — shared x-axis bounds, repo/updated, and the headline stats
+Per app, that is `codemetrics get --repo <repo>` (or the HTTP API with `CODEMETRICS_URL` +
+`CODEMETRICS_TOKEN` when the CLI isn't installed) into `<dir>/data/raw.json`, then
+`swift run --package-path Tools/DashboardBuild build data/raw.json` with `<dir>` as the
+working directory — the build tools resolve `charts.json`, `data/`, `roadmap/` and
+`index.html` against it — and `build-roadmap` where `apps.json` says so.
+
+- `<dir>/data/meta.json` — shared x-axis bounds, repo/updated, and the headline stats
   (Swift 6 %, SwiftUI share, year span) — all computed, never hardcoded.
-- `data/charts/<id>.json` — one file per chart, holding **only** that chart's series.
+- `<dir>/data/charts/<id>.json` — one file per chart, holding **only** that chart's series.
 
 > **Deploy only what's drawn.** Every deployed chart file carries exactly the
 > points a chart plots — metric, date, value — and nothing else. Reduce the
@@ -64,11 +83,16 @@ token; read from `op` if unset).
 To build from a saved snapshot instead of the live service:
 
 ```
-swift run --package-path Tools/DashboardBuild build path/to/raw.json  # generate a local data snapshot
-swift run --package-path Tools/DashboardBuild build-roadmap           # inject the roadmap board into index.html
-python3 -m http.server 8099                                          # serve the folder
-open http://localhost:8099
+node scripts/render-pages.mjs                                                   # stamp the pages
+(cd dodo-ios && swift run --package-path ../Tools/DashboardBuild build path/to/raw.json)  # data snapshot
+(cd dodo-ios && swift run --package-path ../Tools/DashboardBuild build-roadmap)           # roadmap board
+python3 -m http.server 8099                                                     # serve the folder
+open http://localhost:8099/dodo-ios/
 ```
+
+The layout itself is covered by `node scripts/layout.test.mjs` (a two-app fixture:
+redirect, switcher, relative links, og cards) and `bash scripts/layout-dry-run.sh` (the
+whole pipeline on that fixture with a stubbed fetch, in a scratch copy of the checkout).
 
 ## Dependencies
 
@@ -82,7 +106,7 @@ Nothing is vendored. Every dependency comes from one of three places:
 - **npm** (`package.json`) — browser libraries (Chart.js + zoom plugin) and the typography
   tool (typopo). esbuild bundles them into `bundle.js`; `node_modules` is never shipped.
   Bump with `npm update`.
-- **Google Fonts** — the Martian Mono webfont, via a `<link>` in `index.html`.
+- **Google Fonts** — the Martian Mono webfont, via a `<link>` in `templates/app.html`.
 
 `codemetrics` is a private cross-org release, so mise needs a GitHub token that can read it (CI passes
 the `CODE_METRICS_DASHBOARD` secret). Without the token mise errors on that one tool and
@@ -94,7 +118,8 @@ installs the rest — fine for any local work that doesn't fetch metrics.
   installed, call any tool directly — `biome`, `esbuild`, `swift`, `codemetrics` — with no `mise exec`
   prefix; mise puts them on `PATH`. Build the bundle: `bash scripts/build.sh`.
 - Lint by running the linters directly (no `mise run` task): `biome check .`,
-  `html-validate index.html`, `actionlint`, `node scripts/typography.mjs`,
+  `node scripts/render-pages.mjs && html-validate index.html dodo-ios/index.html`, `actionlint`,
+  `node scripts/typography.mjs`, `node scripts/layout.test.mjs`,
   `node scripts/latin-only.mjs` (every letter in the sources must be Latin — this is a public English page).
   CI runs the same commands.
 - Install the git hooks once: `./scripts/hooks/install.sh` — pre-commit auto-typographs

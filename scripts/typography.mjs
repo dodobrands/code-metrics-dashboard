@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readdir, readFile, writeFile } from "node:fs/promises";
+import { access, readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 // Typography lint: verifies every authored text in the repo is already
 // typographed (curly quotes/apostrophes, ellipsis, dashes, spacing) via typopo.
@@ -19,21 +19,47 @@ const typoText = (t) => {
   const [, lead, core, trail] = t.match(/^(\s*)([\s\S]*?)(\s*)$/s);
   return lead + (core ? fixTypos(core, LOCALE) : "") + trail;
 };
+// Tags are skipped whole, and so are <script>/<style> bodies: code, not prose.
 const typoHtml = (s) =>
-  s.split(/(<[^>]*>)/).map((part) => (part.startsWith("<") ? part : typoText(part))).join("");
+  s
+    .split(/(<(?:script|style)\b[\s\S]*?<\/(?:script|style)>|<[^>]*>)/)
+    .map((part) => (part.startsWith("<") ? part : typoText(part)))
+    .join("");
 
+// Everything authored lives in apps.json, the page templates, and per app: its
+// charts.json, its optional sections.html partial, and its roadmap cards.
 async function targets() {
-  const dir = path.join(ROOT, "roadmap");
-  const files = (await readdir(dir)).filter((f) => f.endsWith(".json") && f !== "index.json");
-  const list = files.map((f) => ({ path: path.join(dir, f), kind: "roadmap" }));
-  list.push({ path: path.join(ROOT, "index.html"), kind: "html" });
-  list.push({ path: path.join(ROOT, "phrases.json"), kind: "phrases" });
-  list.push({ path: path.join(ROOT, "charts.json"), kind: "charts" });
+  const apps = JSON.parse(await readFile(path.join(ROOT, "apps.json"), "utf8"));
+  const list = [
+    { path: path.join(ROOT, "apps.json"), kind: "apps" },
+    { path: path.join(ROOT, "phrases.json"), kind: "phrases" },
+    { path: path.join(ROOT, "templates", "app.html"), kind: "html" },
+    { path: path.join(ROOT, "templates", "root.html"), kind: "html" },
+  ];
+  for (const app of apps) {
+    const dir = path.join(ROOT, app.dir);
+    list.push({ path: path.join(dir, "charts.json"), kind: "charts" });
+    const sections = path.join(dir, "sections.html");
+    if (await access(sections).then(() => true, () => false)) list.push({ path: sections, kind: "html" });
+    if (!app.roadmap) continue;
+    const cards = (await readdir(path.join(dir, "roadmap"))).filter((f) => f.endsWith(".json") && f !== "index.json");
+    list.push(...cards.map((f) => ({ path: path.join(dir, "roadmap", f), kind: "roadmap" })));
+  }
   return list;
 }
 
+// Only what lands in a text node. title/description/og* become attribute values and the
+// <title>, which the HTML pass never typographed either — and the og tags must stay
+// byte-identical to what is already shared.
+const APP_TEXT = ["name", "eyebrow", "heading", "lede"];
+
 function fixed(kind, raw) {
   if (kind === "html") return typoHtml(raw);
+  if (kind === "apps") {
+    const arr = JSON.parse(raw);
+    for (const app of arr) for (const k of APP_TEXT) if (app[k]) app[k] = fixTypos(app[k], LOCALE);
+    return `${JSON.stringify(arr, null, 2)}\n`;
+  }
   if (kind === "phrases") {
     const arr = JSON.parse(raw);
     return `${JSON.stringify(arr.map((s) => fixTypos(s, LOCALE)), null, 2)}\n`;
