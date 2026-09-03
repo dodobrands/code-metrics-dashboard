@@ -118,7 +118,7 @@ installs the rest — fine for any local work that doesn't fetch metrics.
   installed, call any tool directly — `biome`, `esbuild`, `swift`, `codemetrics` — with no `mise exec`
   prefix; mise puts them on `PATH`. Build the bundle: `bash scripts/build.sh`.
 - Lint by running the linters directly (no `mise run` task): `biome check .`,
-  `node scripts/render-pages.mjs && html-validate index.html dodo-ios/index.html`, `actionlint`,
+  `node scripts/render-pages.mjs && html-validate index.html */index.html`, `actionlint`,
   `node scripts/typography.mjs`, `node scripts/layout.test.mjs`,
   `node scripts/latin-only.mjs` (every letter in the sources must be Latin — this is a public English page).
   CI runs the same commands.

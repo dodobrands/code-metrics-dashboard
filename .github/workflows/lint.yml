@@ -35,9 +35,11 @@ jobs:
       - run: npm ci
       - run: biome check .
       - run: node scripts/render-pages.mjs
-      - run: html-validate index.html dodo-ios/index.html
+      - run: html-validate index.html */index.html
       - run: actionlint
       - run: node scripts/typography.mjs
       - run: node scripts/latin-only.mjs
       - run: node scripts/typo.test.mjs
       - run: node scripts/layout.test.mjs
+      # The whole per-app pipeline on a fixture, in a scratch copy — needs swift (from mise).
+      - run: bash scripts/layout-dry-run.sh
