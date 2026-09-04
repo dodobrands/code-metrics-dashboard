@@ -149,9 +149,10 @@ test("slice 3: both real pages carry both apps in the switcher, and the Android 
   assert.match(android, /<body data-page-config="page.json">/);
   assert.match(android, /<h2>Tools<\/h2>/);
   assert.match(android, /<h2>Telegram<\/h2>/);
-  assert.match(android, /https:\/\/t\.me\/mobilefiction/);
+  assert.match(android, /<a href="https:\/\/t\.me\/mobilefiction">Maxim Kachinkin<\/a><span>Android Tech Lead<\/span>/);
   assert.match(android, /<!--roadmap:board:start--><!--roadmap:board:end-->/);
-  assert.doesNotMatch(ios, /Tools<\/h2>|mobilefiction/);
+  // The Android partial must not leak into the iOS page; the person is the marker, not the heading.
+  assert.doesNotMatch(ios, /mobilefiction/);
 });
 
 test("AC-9 generated pages are ignored, never tracked, and preview.sh no longer restores index.html", async () => {
