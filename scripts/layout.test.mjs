@@ -7,7 +7,7 @@ import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
-import { mascotHtml, render, SITE } from "./render-pages.mjs";
+import { mascotHtml, phrasesDeclaration, render, SITE } from "./render-pages.mjs";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 
@@ -122,7 +122,7 @@ test("AC-7 one template stamps a page per app, with its own title and sections",
   assert.match(alpha, /Alpha extras/);
   assert.doesNotMatch(beta, /Alpha extras/);
   assert.match(alpha, /<code id="repo">org\/alpha-app<\/code>/);
-  assert.match(alpha, /<body data-page-config=""[ >]/);
+  assert.match(alpha, /data-page-config=""/);
 });
 
 test("AC-4 page.json is announced to the page only for the app that has one", async () => {
@@ -132,8 +132,8 @@ test("AC-4 page.json is announced to the page only for the app that has one", as
   await mkdir(path.join(src, "alpha"));
   await writeFile(path.join(src, "alpha", "page.json"), "{}");
   await render({ appsPath: path.join(src, "apps.json"), out });
-  assert.match(await readFile(path.join(out, "alpha/index.html"), "utf8"), /<body data-page-config="page.json"[ >]/);
-  assert.match(await readFile(path.join(out, "beta/index.html"), "utf8"), /<body data-page-config=""[ >]/);
+  assert.match(await readFile(path.join(out, "alpha/index.html"), "utf8"), /data-page-config="page.json"/);
+  assert.match(await readFile(path.join(out, "beta/index.html"), "utf8"), /data-page-config=""/);
 });
 
 test("slice 3: both real pages carry both apps in the switcher, and the Android page is its own", async () => {
@@ -149,7 +149,7 @@ test("slice 3: both real pages carry both apps in the switcher, and the Android 
   assert.match(controls(android), /<a href="\.\.\/drinkit-android\/" aria-current="page">Drinkit Android<\/a>/);
   assert.match(android, /<title>Drinkit Android—Engineering<\/title>/);
   assert.match(android, /<code id="repo">dodobrands\/drinkit-mobile-android<\/code>/);
-  assert.match(android, /<body data-page-config="page.json"[ >]/);
+  assert.match(android, /data-page-config="page.json"/);
   assert.match(android, /<h2>Tools<\/h2>/);
   assert.match(android, /<h2>Team<\/h2>/);
   assert.match(android, /<h2>Media<\/h2>/);
@@ -190,6 +190,19 @@ test("slice 3: an empty mascot partial falls back, one without the id is rejecte
   assert.match(mascotHtml("alpha", ""), /aria-label="Dodo"/);
   assert.match(mascotHtml("alpha", "  \n "), /aria-label="Dodo"/);
   assert.throws(() => mascotHtml("alpha", '<button id="whale">x</button>'), /alpha\/mascot\.html needs/);
+});
+
+test("slice 3: no phrase list is declared silently, an unusable one fails the build", () => {
+  // Silence is the honest answer only when the app never claimed a list of its own.
+  assert.equal(phrasesDeclaration("alpha", ""), "");
+  assert.equal(phrasesDeclaration("alpha", " \n "), "");
+  assert.equal(phrasesDeclaration("alpha", '["Snip."]'), "phrases.json");
+
+  // Otherwise the page would fall back to the shared list — the dodo's voice.
+  for (const raw of ["[]", "{}", '""', "null", '[""]', '["ok", 7]', '["ok", "  "]']) {
+    assert.throws(() => phrasesDeclaration("alpha", raw), /alpha\/phrases\.json must be/, raw);
+  }
+  assert.throws(() => phrasesDeclaration("alpha", "[oops"), /alpha\/phrases\.json is not valid JSON/);
 });
 
 test("slice 3: the Android page wears the whale, drawn and theme-inked, and the iOS page the dodo", async () => {

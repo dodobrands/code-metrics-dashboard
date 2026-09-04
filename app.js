@@ -666,17 +666,18 @@ function wireRoadmap() {
 }
 
 // Footer easter egg — tap the mascot for a random one-liner. The lines are the app's
-// own phrases.json where it has one, else the shared list; the tap is wired only once
-// they are in hand, so the mascot never speaks in the wrong voice.
-async function wireMascot() {
+// own phrases.json where it has one, else the shared list. Fetched once, awaited inside
+// the handler: a tap that lands before they arrive still answers, a beat later.
+function wireMascot() {
   const mascot = document.getElementById("mascot");
   const bubble = document.getElementById("mascot-bubble");
   if (!mascot || !bubble) return;
-  const phrases = await loadPhrases(fetch, document.body.dataset.phrases, sharedPhrases);
-  if (!phrases.length) return;
+  const loading = loadPhrases(fetch, document.body.dataset.phrases, sharedPhrases);
   let last = -1;
   let hideTimer;
-  mascot.addEventListener("click", () => {
+  mascot.addEventListener("click", async () => {
+    const phrases = await loading;
+    if (!phrases.length) return;
     let i = Math.floor(Math.random() * phrases.length);
     if (phrases.length > 1 && i === last) i = (i + 1) % phrases.length; // no repeat in a row
     last = i;

@@ -44,7 +44,7 @@ to `dodobrands.github.io/…` and 404.
 | `page.json` | no | `labels` (store name → legend label), `groupNotes` (a paragraph under a chart group's heading), `hero` (the headline as shares of one chart's last values: `{ chart, noun, parts: [{ series, text, class? }] }`). Without it: built-in labels, no notes, the Swift 6 headline when the data has one. |
 | `sections.html` | no | product sections that belong to this app only, inserted under the charts. Its link text is the one place a non-Latin proper noun is allowed (a channel's own title) — see `scripts/latin-only.mjs`. |
 | `mascot.html` | no | the footer easter egg's button — the app's own creature, carrying `id="mascot"`. Without it: the dodo. |
-| `phrases.json` | no | the lines that creature says, replacing the shared `phrases.json` wholesale — an app whose mascot is not the dodo needs its own, since 20 of the shared lines speak as the bird. Without it: the shared list. |
+| `phrases.json` | no | the lines that creature says, replacing the shared `phrases.json` wholesale — an app whose mascot is not the dodo needs its own, because much of the shared list speaks as the bird. A non-empty array of non-empty strings, or the build fails. Without it: the shared list. |
 | `roadmap/` | if `roadmap: true` | `index.json` (columns and their card ids) and one `<id>.json` per card: `title`, `description` (HTML), optional `progress` (0…1) — shown as a percentage on In Progress cards only. |
 | `data/` | generated | `meta.json` and `charts/<id>.json`, written at build time from the service; gitignored. |
 

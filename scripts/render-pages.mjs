@@ -42,6 +42,22 @@ export function fill(html, vars) {
   });
 }
 
+// A declared list must actually hold lines. The page falls back to the shared list when
+// it cannot use one, and that list is the dodo's — the wrong voice for any other mascot —
+// so an empty or malformed list fails the build instead of shipping silently.
+export function phrasesDeclaration(dir, raw) {
+  if (!raw.trim()) return "";
+  let list;
+  try {
+    list = JSON.parse(raw);
+  } catch {
+    throw new Error(`${dir}/phrases.json is not valid JSON`);
+  }
+  const usable = Array.isArray(list) && list.length && list.every((line) => typeof line === "string" && line.trim());
+  if (!usable) throw new Error(`${dir}/phrases.json must be a non-empty array of non-empty strings`);
+  return "phrases.json";
+}
+
 export function mascotHtml(dir, partial) {
   const html = partial.trimEnd();
   if (!html) return DODO_MASCOT;
@@ -65,8 +81,8 @@ export async function render({ appsPath, out }) {
     const sections = await readIfExists(path.join(src, app.dir, "sections.html"));
     const mascot = mascotHtml(app.dir, await readIfExists(path.join(src, app.dir, "mascot.html")));
     // The page fetches these only when told they exist, so an app without one costs no 404.
-    const declared = (file) => access(path.join(src, app.dir, file)).then(() => file, () => "");
-    const [pageConfig, phrases] = await Promise.all([declared("page.json"), declared("phrases.json")]);
+    const pageConfig = await access(path.join(src, app.dir, "page.json")).then(() => "page.json", () => "");
+    const phrases = phrasesDeclaration(app.dir, await readIfExists(path.join(src, app.dir, "phrases.json")));
     const vars = { ...app, site: SITE, nav: navHtml(apps, app), sections, mascot, pageConfig, phrases };
     const html = fill(conditional(appTemplate, "roadmap", Boolean(app.roadmap)), vars);
     const file = path.join(out, app.dir, "index.html");
