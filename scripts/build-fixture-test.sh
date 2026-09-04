@@ -80,7 +80,9 @@ cat >"$TMP/site/alpha/page.json" <<'EOF'
 { "groupNotes": { "UI": "It's about \"styling\"..." },
   "hero": { "chart": "c", "noun": "UI modules", "parts": [ { "series": "s", "text": "aren't shared" } ] } }
 EOF
-if (cd "$TMP/site" && node scripts/typography.mjs 2>&1 | grep -q 'needs typography: alpha/page.json'); then before=1; else before=0; fi
+# Captured, not piped into grep -q: with pipefail an early-closed pipe would fail the check.
+lint_out=$(cd "$TMP/site" && node scripts/typography.mjs 2>&1 || true)
+if grep -q 'needs typography: alpha/page.json' <<<"$lint_out"; then before=1; else before=0; fi
 (cd "$TMP/site" && node scripts/typography.mjs --fix >/dev/null 2>&1) || true
 if (cd "$TMP/site" && node scripts/typography.mjs >/dev/null 2>&1); then after=0; else after=$?; fi
 check "AC-8 an untypographed page.json is what the typography lint names" "[ $before -eq 1 ]"
