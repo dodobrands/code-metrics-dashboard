@@ -1,0 +1,44 @@
+{
+  "labels": {
+    ": [A-Za-z]*Presenter[(<]": "MVP",
+    ": MVIFeature<": "MVI",
+    "<(fragment|dialog|activity)\\b": "Nav2 destinations",
+    "entry<": "Nav3 destinations",
+    "Detekt:Baseline": "Detekt baseline entries",
+    "Konsist:Baseline": "Konsist baseline keys",
+    "Detekt:Rules": "Detekt rules",
+    "Tests:Unit": "Unit tests",
+    "Tests:Integration": "Integration tests",
+    "Konsist:Rules": "Konsist rules",
+    "Screenshot:Baselines": "Golden images",
+    "Modules:ComposeOnly": "Compose only",
+    "Modules:ViewOnly": "View only",
+    "Modules:Mixed": "Mixed",
+    "TextStyle(": "TextStyle literal",
+    "Color(0x": "Color literal",
+    "// TODO": "TODO",
+    "Modules:Total": "Modules"
+  },
+  "groupNotes": {
+    "UI": "Compose adoption: how much Compose there is, whether previews use the project annotations, and whether styling comes from the design system.",
+    "Architecture": "Two migrations, each counted as declarations: presenters vs MVI features, Navigation 2 graph destinations vs Navigation 3 entries.",
+    "Tests": "Unit and integration test methods, UI cases registered in TestOps, Roborazzi golden images, and where in the codebase the tests live.",
+    "Tech debt": "Suppressed findings, deprecations, TODOs, and what the lint and architecture baselines still carry.",
+    "Codebase": "Module count over time."
+  },
+  "hero": {
+    "chart": "ui-module-stacks",
+    "noun": "UI modules",
+    "parts": [
+      {
+        "series": "Modules:ComposeOnly",
+        "text": "are Compose-only"
+      },
+      {
+        "series": "Modules:Mixed",
+        "text": "mix Compose and Views",
+        "class": "mixed"
+      }
+    ]
+  }
+}

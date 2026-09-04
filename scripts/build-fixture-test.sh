@@ -61,6 +61,38 @@ check "AC-7 a group without shorten keeps names verbatim" "grep -q 'Other:a/b-im
 check "AC-7 a line chart keeps names verbatim" "[ \"\$(names line)\" = 'View ' ]"
 check "series count: 3 shortened + 2 collided + 1 other" "[ \$(jq '.series | length' '$TMP/build/data/charts/fam.json') -eq 6 ]"
 
+# --- an app with none of the charted series yet -------------------------------------
+mkdir -p "$TMP/empty"
+echo '[{ "id": "line", "group": "T", "title": "Line", "kind": "line", "series": ["View"] }]' >"$TMP/empty/charts.json"
+echo '{ "repo": "org/empty", "metrics": [ { "name": "kt", "commits": [ { "hash": "a", "timestamp": "2025-01-01T00:00:00Z", "value": 1 } ] } ] }' >"$TMP/empty/raw.json"
+echo '<b id="updated">—</b>' >"$TMP/empty/index.html"
+if (cd "$TMP/empty" && swift run --package-path "$ROOT/Tools/DashboardBuild" build raw.json >/dev/null 2>&1); then empty_exit=0; else empty_exit=$?; fi
+check "AC-7 build with none of the charted series exits 0 (exit $empty_exit)" "[ $empty_exit -eq 0 ]"
+check "AC-7 meta.json is written for the empty app" "[ -s '$TMP/empty/data/meta.json' ]"
+check "AC-7 the chart file is an empty series list" "[ \"\$(cat '$TMP/empty/data/charts/line.json')\" = '{\"series\":[]}' ]"
+check "AC-7 the updated date stays a dash" "grep -q '<b id=\"updated\">—</b>' '$TMP/empty/index.html'"
+
+# --- roadmap: progress shows only on In Progress cards ------------------------------
+mkdir -p "$TMP/rm/roadmap"
+cat >"$TMP/rm/roadmap/index.json" <<'EOF'
+{ "columns": [
+  { "key": "backlog", "title": "Backlog", "items": ["later"] },
+  { "key": "progress", "title": "In Progress", "items": ["half", "plain"] },
+  { "key": "done", "title": "Done", "items": ["shipped"] } ] }
+EOF
+echo '{ "title": "Later", "description": "<p>Later.</p>", "progress": 0.4 }' >"$TMP/rm/roadmap/later.json"
+echo '{ "title": "Half", "description": "<p>Half.</p>", "progress": 0.5 }' >"$TMP/rm/roadmap/half.json"
+echo '{ "title": "Plain", "description": "<p>Plain.</p>" }' >"$TMP/rm/roadmap/plain.json"
+echo '{ "title": "Shipped", "description": "<p>Shipped.</p>", "progress": 1 }' >"$TMP/rm/roadmap/shipped.json"
+printf '<div id="board"><!--roadmap:board:start--><!--roadmap:board:end--></div>\n<!--roadmap:dialogs:start--><!--roadmap:dialogs:end-->\n' >"$TMP/rm/index.html"
+(cd "$TMP/rm" && swift run --package-path "$ROOT/Tools/DashboardBuild" build-roadmap >/dev/null 2>&1)
+RM=$(tr -d '\n' <"$TMP/rm/index.html")
+check "AC-4 In Progress card with progress carries the percent" "grep -q 'data-dialog=\"rm-half\">Half · 50%</button>' <<<'$RM'"
+check "AC-4 In Progress card without progress is the plain markup" "grep -q '<li><button type=\"button\" class=\"card-item\" data-dialog=\"rm-plain\">Plain</button></li>' <<<'$RM'"
+check "AC-4 Backlog and Done cards never show a percent" "grep -q 'data-dialog=\"rm-later\">Later</button>' <<<'$RM' && grep -q 'data-dialog=\"rm-shipped\">Shipped</button>' <<<'$RM'"
+check "AC-4 the dialog of the In Progress card opens with the progress line" "grep -q '<div class=\"dlg-body\"><p>Progress: 50%</p><p>Half.</p></div>' <<<'$RM'"
+check "AC-4 no other dialog mentions progress" "[ \$(grep -o 'Progress: ' <<<'$RM' | wc -l) -eq 1 ]"
+
 # --- typography on a fixture page.json --------------------------------------------
 mkdir -p "$TMP/site"
 rsync -a --exclude .git --exclude node_modules --exclude .build "$ROOT/" "$TMP/site/"

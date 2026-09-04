@@ -1,0 +1,5 @@
+{
+  "title": "Navigation 3",
+  "description": "<p>Screens inside a feature navigate with Navigation 3, and each feature owns its navigation instead of sharing app-wide graphs. Tracked by <b>Navigation 2 vs Navigation 3</b>.</p>",
+  "progress": 0.05
+}

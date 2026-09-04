@@ -11,5 +11,18 @@
     "ogDescription": "Beta builds, open source, tech radar, and live code metrics for the Dodo Pizza iOS app.",
     "lede": "Beta builds, open source, tech radar and a live look at the",
     "roadmap": true
+  },
+  {
+    "dir": "drinkit-android",
+    "repo": "dodobrands/drinkit-mobile-android",
+    "name": "Drinkit Android",
+    "eyebrow": "Drinkit · Android",
+    "heading": "Android Engineering",
+    "title": "Drinkit Android—Engineering",
+    "description": "Engineering hub for the Drinkit Android app — roadmap and a live view of the codebase’s modernization metrics.",
+    "ogTitle": "Android Engineering — Drinkit",
+    "ogDescription": "Roadmap and live code metrics for the Drinkit Android app.",
+    "lede": "Roadmap and a live look at the",
+    "roadmap": true
   }
 ]

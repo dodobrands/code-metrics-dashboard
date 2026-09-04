@@ -1,0 +1,4 @@
+{
+  "title": "Screenshot testing",
+  "description": "<p>Every UI preview doubles as a screenshot test, so a visual regression is caught in the PR that causes it; over a thousand screens and components are covered. Tracked by <b>Screenshot tests</b>.</p>"
+}

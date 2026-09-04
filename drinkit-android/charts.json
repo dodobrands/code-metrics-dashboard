@@ -1,0 +1,186 @@
+[
+  {
+    "id": "ui-module-stacks",
+    "group": "UI",
+    "title": "Modules by UI stack",
+    "note": "modules with UI, by what they contain: @Composable only, res/layout only, or both",
+    "kind": "line",
+    "series": [
+      "Modules:ComposeOnly",
+      "Modules:Mixed",
+      "Modules:ViewOnly"
+    ]
+  },
+  {
+    "id": "ui-compose",
+    "group": "UI",
+    "title": "Compose surface",
+    "note": "composable function declarations",
+    "kind": "line",
+    "series": [
+      "@Composable"
+    ]
+  },
+  {
+    "id": "ui-typography",
+    "group": "UI",
+    "title": "Text styles: theme vs hardcoded",
+    "note": "text-style references from DrinkitTheme.typography vs TextStyle() literals",
+    "kind": "share",
+    "series": [
+      "DrinkitTheme.typography",
+      "TextStyle("
+    ]
+  },
+  {
+    "id": "ui-colors",
+    "group": "UI",
+    "title": "Colors: theme vs hardcoded",
+    "note": "color references from drinkitColors vs Color(0x…) literals",
+    "kind": "share",
+    "series": [
+      "drinkitColors",
+      "Color(0x"
+    ]
+  },
+  {
+    "id": "arch-mvi",
+    "group": "Architecture",
+    "title": "MVP vs MVI",
+    "note": "class declarations: Presenter subclasses vs MVIFeature subclasses",
+    "kind": "line",
+    "series": [
+      ": [A-Za-z]*Presenter[(<]",
+      ": MVIFeature<"
+    ]
+  },
+  {
+    "id": "arch-navigation",
+    "group": "Architecture",
+    "title": "Navigation 2 vs Navigation 3",
+    "note": "destination declarations: fragment/dialog/activity tags in res/navigation graphs vs entry<> in Navigation 3",
+    "kind": "line",
+    "series": [
+      "<(fragment|dialog|activity)\\b",
+      "entry<"
+    ]
+  },
+  {
+    "id": "tests-unit-integration",
+    "group": "Tests",
+    "title": "Unit and integration tests",
+    "note": "test methods under src/test without the Konsist suite; integration tests are the *IntegrationTest classes, a feature driven through its real domain chain with only the boundaries faked; logarithmic axis with zero on the floor, so both lines stay readable",
+    "kind": "line",
+    "yScale": "log",
+    "series": [
+      "Tests:Unit",
+      "Tests:Integration"
+    ]
+  },
+  {
+    "id": "tests-ui",
+    "group": "Tests",
+    "title": "UI tests",
+    "note": "cases registered in TestOps",
+    "kind": "line",
+    "series": [
+      "@AllureId"
+    ]
+  },
+  {
+    "id": "tests-screenshots",
+    "group": "Tests",
+    "title": "Screenshot tests",
+    "note": "golden images under src/test/screenshots, one per Roborazzi test",
+    "kind": "line",
+    "series": [
+      "Screenshot:Baselines"
+    ]
+  },
+  {
+    "id": "tests-by-module",
+    "group": "Tests",
+    "title": "Tests by module",
+    "note": "latest count per Gradle module: the 30 largest, the rest folded into Other",
+    "kind": "bar",
+    "toggle": [
+      {
+        "label": "Unit tests",
+        "seriesPrefix": "Tests:Unit:ByModule:",
+        "topN": 30,
+        "shorten": {
+          "dropSegments": [
+            "contexts",
+            "features",
+            "impl"
+          ],
+          "dropSuffixes": [
+            "-impl"
+          ],
+          "collapseRepeats": true
+        }
+      },
+      {
+        "label": "Screenshot tests",
+        "seriesPrefix": "Screenshot:ByModule:",
+        "topN": 30,
+        "shorten": {
+          "dropSegments": [
+            "contexts",
+            "features",
+            "impl"
+          ],
+          "dropSuffixes": [
+            "-impl"
+          ],
+          "collapseRepeats": true
+        }
+      }
+    ]
+  },
+  {
+    "id": "debt-suppressions",
+    "group": "Tech debt",
+    "title": "Suppressions, deprecations and TODOs",
+    "note": "@Suppress includes @SuppressLint; TODO comments counted separately",
+    "kind": "line",
+    "series": [
+      "@Suppress",
+      "@SuppressLint",
+      "@Deprecated",
+      "// TODO"
+    ]
+  },
+  {
+    "id": "debt-baselines",
+    "group": "Tech debt",
+    "title": "Lint and architecture baselines",
+    "note": "entries in detekt/config/baseline.xml and keys in the Konsist *Baseline.kt sets",
+    "kind": "line",
+    "series": [
+      "Detekt:Baseline",
+      "Konsist:Baseline"
+    ]
+  },
+  {
+    "id": "debt-rules",
+    "group": "Tech debt",
+    "title": "Rules enforced",
+    "note": "rules explicitly enabled in detekt-config.yml and Konsist architecture tests",
+    "kind": "line",
+    "series": [
+      "Detekt:Rules",
+      "Konsist:Rules"
+    ]
+  },
+  {
+    "id": "code-modules",
+    "group": "Codebase",
+    "title": "Modules",
+    "note": "Gradle projects included from settings.gradle",
+    "kind": "line",
+    "series": [
+      "Modules:Total"
+    ]
+  }
+]

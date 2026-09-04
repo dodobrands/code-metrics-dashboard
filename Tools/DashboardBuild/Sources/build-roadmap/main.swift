@@ -47,9 +47,16 @@ for col in columns {
     let key = col["key"] as? String ?? ""
     let title = col["title"] as? String ?? ""
     let items = col["items"] as? [String] ?? []
+    // A card's optional `progress` (0...1) shows only in the In Progress column: a
+    // percentage on a backlog or finished item says nothing.
+    func percent(_ tid: String) -> Int? {
+        guard key == "progress", let p = tasks[tid]?["progress"] as? Double else { return nil }
+        return Int((p * 100).rounded())
+    }
     let cards = items.map { tid in
-        "<li><button type=\"button\" class=\"card-item\" data-dialog=\"rm-\(tid)\">"
-            + "\(esc(tasks[tid]?["title"] as? String ?? ""))</button></li>"
+        let suffix = percent(tid).map { " \u{00B7} \($0)%" } ?? ""
+        return "<li><button type=\"button\" class=\"card-item\" data-dialog=\"rm-\(tid)\">"
+            + "\(esc(tasks[tid]?["title"] as? String ?? ""))\(suffix)</button></li>"
     }.joined()
     cols.append(
         "<div class=\"col\"><div class=\"col-head\">"
@@ -64,7 +71,8 @@ for col in columns {
                 + "<form method=\"dialog\" class=\"dlg-x\">"
                 + "<button type=\"submit\" aria-label=\"Close\">✕</button></form>"
                 + "<h3>\(esc(task["title"] as? String ?? ""))</h3>"
-                + "<div class=\"dlg-body\">\(task["description"] as? String ?? "")</div></dialog>"
+                + "<div class=\"dlg-body\">\(percent(tid).map { "<p>Progress: \($0)%</p>" } ?? "")"
+                + "\(task["description"] as? String ?? "")</div></dialog>"
         )
     }
 }

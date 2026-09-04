@@ -1,0 +1,4 @@
+{
+  "title": "Release automation",
+  "description": "<p>Release branches are cut on schedule, builds are published to Google Play and AppGallery without manual steps, and the team is reminded when a release is due.</p>"
+}

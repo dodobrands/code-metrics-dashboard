@@ -133,6 +133,28 @@ test("AC-4 page.json is announced to the page only for the app that has one", as
   assert.match(await readFile(path.join(out, "beta/index.html"), "utf8"), /<body data-page-config="">/);
 });
 
+test("slice 3: both real pages carry both apps in the switcher, and the Android page is its own", async () => {
+  const out = await mkdtemp(path.join(os.tmpdir(), "layout-real-"));
+  await render({ appsPath: path.join(ROOT, "apps.json"), out });
+  const ios = await readFile(path.join(out, "dodo-ios/index.html"), "utf8");
+  const android = await readFile(path.join(out, "drinkit-android/index.html"), "utf8");
+  for (const html of [ios, android]) {
+    assert.match(controls(html), /<a href="\.\.\/dodo-ios\/"/);
+    assert.match(controls(html), /<a href="\.\.\/drinkit-android\/"/);
+    assert.equal((controls(html).match(/aria-current="page"/g) ?? []).length, 1);
+  }
+  assert.match(controls(android), /<a href="\.\.\/drinkit-android\/" aria-current="page">Drinkit Android<\/a>/);
+  assert.match(android, /<title>Drinkit Android—Engineering<\/title>/);
+  assert.match(android, /<code id="repo">dodobrands\/drinkit-mobile-android<\/code>/);
+  assert.match(android, /<body data-page-config="page.json">/);
+  assert.match(android, /<h2>Tools<\/h2>/);
+  assert.match(android, /<h2>Telegram<\/h2>/);
+  assert.match(android, /<a href="https:\/\/t\.me\/mobilefiction">Maxim Kachinkin<\/a><span>Android Tech Lead<\/span>/);
+  assert.match(android, /<!--roadmap:board:start--><!--roadmap:board:end-->/);
+  // The Android partial must not leak into the iOS page; the person is the marker, not the heading.
+  assert.doesNotMatch(ios, /mobilefiction/);
+});
+
 test("AC-9 generated pages are ignored, never tracked, and preview.sh no longer restores index.html", async () => {
   const tracked = execFileSync("git", ["ls-files"], { cwd: ROOT, encoding: "utf8" }).split("\n");
   assert.deepEqual(tracked.filter((f) => /^([^/]+\/)?index\.html$/.test(f)), []);
