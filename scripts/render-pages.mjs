@@ -5,9 +5,10 @@
 //   node scripts/render-pages.mjs                      # repo root: apps.json → ./<dir>/index.html, ./index.html
 //   node scripts/render-pages.mjs --apps <path> --out <dir>
 //
-// The footer easter egg's creature is the app's own: <dir>/mascot.html is the button,
-// and an app without one gets the dodo the site started with. app.js wires the tap by
-// id, so a partial that drops it is rejected here rather than shipping a dead egg.
+// The footer easter egg is the app's own: <dir>/mascot.html is the button and
+// <dir>/phrases.json its lines; an app without them gets the dodo and the shared list
+// the site started with. app.js wires the tap by id, so a partial that drops it is
+// rejected here rather than shipping a dead egg.
 //
 // The site is a project-path Pages site (github.io/<repo>/), so every link the pages
 // carry is relative: apps link to each other as ../<dir>/, and to the shared bundle
@@ -63,9 +64,10 @@ export async function render({ appsPath, out }) {
   for (const app of apps) {
     const sections = await readIfExists(path.join(src, app.dir, "sections.html"));
     const mascot = mascotHtml(app.dir, await readIfExists(path.join(src, app.dir, "mascot.html")));
-    // The page fetches page.json only when told it exists, so an app without one costs no 404.
-    const pageConfig = (await access(path.join(src, app.dir, "page.json")).then(() => true, () => false)) ? "page.json" : "";
-    const vars = { ...app, site: SITE, nav: navHtml(apps, app), sections, mascot, pageConfig };
+    // The page fetches these only when told they exist, so an app without one costs no 404.
+    const declared = (file) => access(path.join(src, app.dir, file)).then(() => file, () => "");
+    const [pageConfig, phrases] = await Promise.all([declared("page.json"), declared("phrases.json")]);
+    const vars = { ...app, site: SITE, nav: navHtml(apps, app), sections, mascot, pageConfig, phrases };
     const html = fill(conditional(appTemplate, "roadmap", Boolean(app.roadmap)), vars);
     const file = path.join(out, app.dir, "index.html");
     await mkdir(path.dirname(file), { recursive: true });

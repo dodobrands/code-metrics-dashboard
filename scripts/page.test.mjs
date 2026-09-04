@@ -1,8 +1,8 @@
 // The per-app page config (page.json): labels, group notes, the declarative hero, and
-// what happens without the file. `node scripts/page.test.mjs`.
+// what happens without the file — plus the per-app phrase list. `node scripts/page.test.mjs`.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { heroThesis, labeller, loadPage, sectionNote } from "../lib/page.js";
+import { heroThesis, labeller, loadPage, loadPhrases, sectionNote } from "../lib/page.js";
 
 const BUILTIN = { "@available(*, deprecated": "@available deprecated", "Snapshot:All:Covered": "Covered" };
 
@@ -68,4 +68,35 @@ test("AC-4 loadPage: an app without page.json (empty data-page-config) fetches n
   let calls = 0;
   assert.deepEqual(await loadPage(async () => { calls++; return { ok: true, json: async () => ({}) }; }, ""), {});
   assert.equal(calls, 0);
+});
+
+const SHARED = ["I am the dodo.", "Tap counted."];
+const OWN = ["I am the whale."];
+
+test("AC-5 phrases: an app without its own list is never fetched, and keeps the shared one", async () => {
+  let calls = 0;
+  const fetchFn = async () => {
+    calls++;
+    return { ok: true, json: async () => OWN };
+  };
+  assert.deepEqual(await loadPhrases(fetchFn, "", SHARED), SHARED);
+  assert.equal(calls, 0);
+});
+
+test("AC-5 phrases: a declared list replaces the shared one", async () => {
+  assert.deepEqual(await loadPhrases(async () => ({ ok: true, json: async () => OWN }), "phrases.json", SHARED), OWN);
+});
+
+test("AC-5 phrases: anything unusable keeps the shared list, so the egg never goes silent", async () => {
+  const cases = [
+    { ok: false, status: 404 },
+    { ok: true, json: async () => [] },
+    { ok: true, json: async () => ({ lines: OWN }) },
+    { ok: true, json: async () => null },
+  ];
+  for (const r of cases) {
+    assert.deepEqual(await loadPhrases(async () => r, "phrases.json", SHARED), SHARED, JSON.stringify(r.status ?? r.ok));
+  }
+  assert.deepEqual(await loadPhrases(async () => { throw new TypeError("Failed to fetch"); }, "phrases.json", SHARED), SHARED);
+  assert.deepEqual(await loadPhrases(async () => ({ ok: true, json: async () => { throw new SyntaxError("bad json"); } }), "phrases.json", SHARED), SHARED);
 });

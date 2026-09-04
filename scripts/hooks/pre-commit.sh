@@ -15,7 +15,7 @@ cd "$ROOT"
 if [ -d node_modules/typopo ]; then
     node scripts/typography.mjs --fix
     git add apps.json templates phrases.json
-    for d in $(jq -r '.[].dir' apps.json); do git add "$d/charts.json" "$d/roadmap" "$d/sections.html" "$d/mascot.html" "$d/page.json" 2>/dev/null; done
+    for d in $(jq -r '.[].dir' apps.json); do git add "$d/charts.json" "$d/roadmap" "$d/sections.html" "$d/mascot.html" "$d/phrases.json" "$d/page.json" 2>/dev/null; done
 else
     echo "pre-commit: node_modules/typopo missing — run 'npm ci' to enable auto-typography" >&2
 fi

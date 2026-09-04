@@ -26,9 +26,9 @@ const typoHtml = (s) =>
     .map((part) => (part.startsWith("<") ? part : typoText(part)))
     .join("");
 
-// Everything authored lives in apps.json, the page templates, and per app: its
-// charts.json, its optional sections.html and mascot.html partials, and its
-// roadmap cards.
+// Everything authored lives in apps.json, the shared phrases, the page templates,
+// and per app: its charts.json, its optional sections.html and mascot.html
+// partials, its optional phrase list, and its roadmap cards.
 async function targets() {
   const apps = JSON.parse(await readFile(path.join(ROOT, "apps.json"), "utf8"));
   const list = [
@@ -46,6 +46,8 @@ async function targets() {
     }
     const page = path.join(dir, "page.json");
     if (await access(page).then(() => true, () => false)) list.push({ path: page, kind: "page" });
+    const lines = path.join(dir, "phrases.json");
+    if (await access(lines).then(() => true, () => false)) list.push({ path: lines, kind: "phrases" });
     if (!app.roadmap) continue;
     const cards = (await readdir(path.join(dir, "roadmap"))).filter((f) => f.endsWith(".json") && f !== "index.json");
     list.push(...cards.map((f) => ({ path: path.join(dir, "roadmap", f), kind: "roadmap" })));

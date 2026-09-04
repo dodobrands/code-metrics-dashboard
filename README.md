@@ -44,6 +44,7 @@ to `dodobrands.github.io/…` and 404.
 | `page.json` | no | `labels` (store name → legend label), `groupNotes` (a paragraph under a chart group's heading), `hero` (the headline as shares of one chart's last values: `{ chart, noun, parts: [{ series, text, class? }] }`). Without it: built-in labels, no notes, the Swift 6 headline when the data has one. |
 | `sections.html` | no | product sections that belong to this app only, inserted under the charts. Its link text is the one place a non-Latin proper noun is allowed (a channel's own title) — see `scripts/latin-only.mjs`. |
 | `mascot.html` | no | the footer easter egg's button — the app's own creature, carrying `id="mascot"`. Without it: the dodo. |
+| `phrases.json` | no | the lines that creature says, replacing the shared `phrases.json` wholesale — an app whose mascot is not the dodo needs its own, since 20 of the shared lines speak as the bird. Without it: the shared list. |
 | `roadmap/` | if `roadmap: true` | `index.json` (columns and their card ids) and one `<id>.json` per card: `title`, `description` (HTML), optional `progress` (0…1) — shown as a percentage on In Progress cards only. |
 | `data/` | generated | `meta.json` and `charts/<id>.json`, written at build time from the service; gitignored. |
 
@@ -57,7 +58,7 @@ to `dodobrands.github.io/…` and 404.
    chart, series within an order of magnitude of each other, one "good" direction per chart,
    `share` only for a true partition. For a `bar` chart with `toggle` groups, add a `shorten`
    rule if the series keys are module paths (below).
-4. Optionally add `page.json`, `sections.html`, `roadmap/`, `mascot.html`.
+4. Optionally add `page.json`, `sections.html`, `roadmap/`, `mascot.html` (+ `phrases.json`).
 5. Add the app's card to `og.json`.
 6. Run the checks (below). Nothing in `deploy.yml`, `app.js` or the templates changes: the
    deploy loop, the switcher and the lint glob all read `apps.json`.
@@ -137,12 +138,12 @@ CI (`.github/workflows/lint.yml`) runs, and so does the pre-commit hook:
 | `biome check .` | JS/JSON/CSS lint |
 | `node scripts/render-pages.mjs && html-validate index.html ./*/index.html` | every stamped page is valid HTML |
 | `actionlint` | the workflows |
-| `node scripts/typography.mjs` | authored text is typographed — templates, `apps.json`, and per app `charts.json`, `page.json`, `sections.html`, `mascot.html`, roadmap cards |
+| `node scripts/typography.mjs` | authored text is typographed — templates, `apps.json`, `phrases.json`, and per app `charts.json`, `page.json`, `sections.html`, `mascot.html`, `phrases.json`, roadmap cards |
 | `node scripts/latin-only.mjs` | every letter in the sources is Latin — this is a public English site. One exemption: the link text of an app's `sections.html`, where a channel's own title is a proper noun |
 | `node scripts/latin-only.test.mjs` | the guard's one exemption: link text in an app's `sections.html`, and nothing else |
 | `node scripts/typo.test.mjs` | the client-side typography |
 | `node scripts/layout.test.mjs` | the layout on a two-app fixture and on the real `apps.json`: root redirect, switcher, relative links, og cards, per-app pages |
-| `node scripts/page.test.mjs` | `page.json` handling: labels, notes, the hero, and nothing fetched without the file |
+| `node scripts/page.test.mjs` | `page.json` and `phrases.json` handling: labels, notes, the hero, the mascot's lines, and nothing fetched without the file |
 | `bash scripts/layout-dry-run.sh` | the whole per-app pipeline on the fixture with a stubbed fetch, in a scratch copy |
 | `bash scripts/build-fixture-test.sh` | the data build on fixtures: live-series filter, `shorten`, roadmap progress, an app with no data yet, typography of `page.json` |
 

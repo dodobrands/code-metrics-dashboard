@@ -4,9 +4,9 @@
 
 import Chart from "chart.js/auto";
 import zoomPlugin from "chartjs-plugin-zoom";
-import { heroThesis, labeller, loadPage, sectionNote } from "./lib/page.js";
+import { heroThesis, labeller, loadPage, loadPhrases, sectionNote } from "./lib/page.js";
 import logo from "./logo.txt";
-import phrases from "./phrases.json";
+import sharedPhrases from "./phrases.json";
 import { typo, typographize } from "./typo.js";
 
 Chart.register(zoomPlugin);
@@ -665,11 +665,15 @@ function wireRoadmap() {
   }
 }
 
-// Footer easter egg — tap the mascot for a random one-liner from phrases.json.
-function wireMascot() {
+// Footer easter egg — tap the mascot for a random one-liner. The lines are the app's
+// own phrases.json where it has one, else the shared list; the tap is wired only once
+// they are in hand, so the mascot never speaks in the wrong voice.
+async function wireMascot() {
   const mascot = document.getElementById("mascot");
   const bubble = document.getElementById("mascot-bubble");
-  if (!mascot || !bubble || !phrases.length) return;
+  if (!mascot || !bubble) return;
+  const phrases = await loadPhrases(fetch, document.body.dataset.phrases, sharedPhrases);
+  if (!phrases.length) return;
   let last = -1;
   let hideTimer;
   mascot.addEventListener("click", () => {
