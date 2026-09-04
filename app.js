@@ -665,14 +665,14 @@ function wireRoadmap() {
   }
 }
 
-// Footer easter egg — tap the dodo for a random one-liner from phrases.json.
-function wireDodo() {
-  const dodo = document.getElementById("dodo-egg");
-  const bubble = document.getElementById("dodo-bubble");
-  if (!dodo || !bubble || !phrases.length) return;
+// Footer easter egg — tap the mascot for a random one-liner from phrases.json.
+function wireMascot() {
+  const mascot = document.getElementById("mascot");
+  const bubble = document.getElementById("mascot-bubble");
+  if (!mascot || !bubble || !phrases.length) return;
   let last = -1;
   let hideTimer;
-  dodo.addEventListener("click", () => {
+  mascot.addEventListener("click", () => {
     let i = Math.floor(Math.random() * phrases.length);
     if (phrases.length > 1 && i === last) i = (i + 1) % phrases.length; // no repeat in a row
     last = i;
@@ -686,7 +686,7 @@ function wireDodo() {
 }
 
 wireRoadmap();
-wireDodo();
+wireMascot();
 // The static content (roadmap, header) is in the DOM now — typography it before
 // the async render, so it doesn't reflow when the charts arrive. Hero and
 // sections are typographed inside main() at insertion time.

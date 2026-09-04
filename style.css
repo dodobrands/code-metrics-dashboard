@@ -260,20 +260,22 @@ dialog.detail h3 { margin: 0 0 var(--sp-3); font-family: var(--mono); font-size:
 }
 @media (max-width: 560px) { .canvas-wrap { height: 240px; } }
 
-/* Footer easter egg: a lone dodo, dim until noticed; tap it for a speech bubble.
-   The bubble is absolutely positioned above the dodo, so showing it never shifts
-   the page — the dodo stays put. */
+/* Footer easter egg: a lone mascot — each app brings its own — dim until noticed;
+   tap it for a speech bubble. The bubble is absolutely positioned above the mascot,
+   so showing it never shifts the page — the mascot stays put. */
 .egg { display: flex; justify-content: center; padding: var(--sp-6) 0 var(--sp-8); }
-.egg-dodo-wrap { position: relative; display: inline-flex; }
-.egg-dodo {
+.egg-mascot-wrap { position: relative; display: inline-flex; }
+.egg-mascot {
   background: none; border: 0; padding: var(--sp-2);
-  font-size: 22px; line-height: 1; cursor: pointer;
+  font-size: 22px; line-height: 1; cursor: pointer; color: var(--text);
   opacity: .3; filter: grayscale(1);
   transition: opacity .2s, transform .1s, filter .2s;
   -webkit-tap-highlight-color: transparent;
 }
-.egg-dodo:hover { opacity: 1; filter: grayscale(0); }
-.egg-dodo:active { transform: scale(.85); }
+.egg-mascot:hover { opacity: 1; filter: grayscale(0); }
+.egg-mascot:active { transform: scale(.85); }
+/* A drawn mascot inks itself from the button's colour, so it follows the theme. */
+.egg-mascot svg { display: block; width: 24px; height: 24px; }
 .egg-bubble {
   position: absolute;
   bottom: calc(100% + var(--sp-2));
@@ -295,7 +297,7 @@ dialog.detail h3 { margin: 0 0 var(--sp-3); font-family: var(--mono); font-size:
   transform: translateX(-50%) translateY(0) scale(1);
   transition: opacity .2s ease, transform .25s cubic-bezier(.2, .7, .3, 1);
 }
-/* little tail pointing down at the dodo */
+/* little tail pointing down at the mascot */
 .egg-bubble::after {
   content: ""; position: absolute; left: 50%; bottom: -5px; width: 9px; height: 9px;
   background: var(--panel); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border);

@@ -27,7 +27,8 @@ const typoHtml = (s) =>
     .join("");
 
 // Everything authored lives in apps.json, the page templates, and per app: its
-// charts.json, its optional sections.html partial, and its roadmap cards.
+// charts.json, its optional sections.html and mascot.html partials, and its
+// roadmap cards.
 async function targets() {
   const apps = JSON.parse(await readFile(path.join(ROOT, "apps.json"), "utf8"));
   const list = [
@@ -39,8 +40,10 @@ async function targets() {
   for (const app of apps) {
     const dir = path.join(ROOT, app.dir);
     list.push({ path: path.join(dir, "charts.json"), kind: "charts" });
-    const sections = path.join(dir, "sections.html");
-    if (await access(sections).then(() => true, () => false)) list.push({ path: sections, kind: "html" });
+    for (const partial of ["sections.html", "mascot.html"]) {
+      const file = path.join(dir, partial);
+      if (await access(file).then(() => true, () => false)) list.push({ path: file, kind: "html" });
+    }
     const page = path.join(dir, "page.json");
     if (await access(page).then(() => true, () => false)) list.push({ path: page, kind: "page" });
     if (!app.roadmap) continue;
