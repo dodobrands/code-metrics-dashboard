@@ -132,6 +132,8 @@ h1 {
   line-height: 1;
 }
 .hero-stat b { color: var(--accent); }
+/* The second figure of a two-share headline takes the board's In Progress blue. */
+.hero-stat b.mixed { color: #3b87e5; }
 
 .section-head { margin: 0 0 var(--sp-3); display: flex; align-items: baseline; gap: var(--sp-3); }
 .section-head h2 {

@@ -233,7 +233,9 @@ function toggleBarChart(card, canvas, spec, byName) {
     const g = spec.toggle[gi];
     const items = [...byName.keys()].filter((n) => n.startsWith(g.seriesPrefix)).map((n) => {
       const p = byName.get(n).points;
-      return { label: n.slice(g.seriesPrefix.length), value: p.length ? p[p.length - 1][1] : 0 };
+      // A page.json label for the full name wins; otherwise the key after the family prefix.
+      const label = nameOf(n) === n ? n.slice(g.seriesPrefix.length) : nameOf(n);
+      return { label, value: p.length ? p[p.length - 1][1] : 0 };
     });
     chart?.destroy();
     chart = spec.percent

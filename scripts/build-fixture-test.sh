@@ -71,14 +71,19 @@ cat >"$TMP/site/apps.json" <<'EOF'
 [ { "dir": "alpha", "repo": "org/alpha", "name": "Alpha", "eyebrow": "Org · Alpha", "heading": "Alpha", "title": "Alpha",
     "description": "Alpha.", "ogTitle": "Alpha", "ogDescription": "Alpha.", "lede": "A look at the", "roadmap": false } ]
 EOF
+# Baseline first: the fixture apps.json is canonicalised by --fix, so that the only
+# thing left for the lint to find afterwards is the page.json.
+(cd "$TMP/site" && node scripts/typography.mjs --fix >/dev/null 2>&1) || true
+if (cd "$TMP/site" && node scripts/typography.mjs >/dev/null 2>&1); then baseline=0; else baseline=$?; fi
+check "AC-8 baseline without page.json is clean (exit $baseline)" "[ $baseline -eq 0 ]"
 cat >"$TMP/site/alpha/page.json" <<'EOF'
 { "groupNotes": { "UI": "It's about \"styling\"..." },
   "hero": { "chart": "c", "noun": "UI modules", "parts": [ { "series": "s", "text": "aren't shared" } ] } }
 EOF
-if (cd "$TMP/site" && node scripts/typography.mjs >/dev/null 2>&1); then before=0; else before=$?; fi
+if (cd "$TMP/site" && node scripts/typography.mjs 2>&1 | grep -q 'needs typography: alpha/page.json'); then before=1; else before=0; fi
 (cd "$TMP/site" && node scripts/typography.mjs --fix >/dev/null 2>&1) || true
 if (cd "$TMP/site" && node scripts/typography.mjs >/dev/null 2>&1); then after=0; else after=$?; fi
-check "AC-8 an untypographed page.json fails the typography lint (exit $before)" "[ $before -ne 0 ]"
+check "AC-8 an untypographed page.json is what the typography lint names" "[ $before -eq 1 ]"
 check "AC-8 after --fix the lint passes (exit $after)" "[ $after -eq 0 ]"
 check "AC-8 --fix curled the quotes in page.json" "grep -q '“styling”' '$TMP/site/alpha/page.json' && grep -q 'aren’t' '$TMP/site/alpha/page.json'"
 
