@@ -1,0 +1,4 @@
+{
+  "title": "Weekly releases",
+  "description": "<p>A release every week instead of every two. The pipeline is not the bottleneck &mdash; confidence is: a weekly train only works when regression is automated end to end.</p><ul><li>UI autotests cover the critical paths, so a release candidate is checked by the suite, not by hand.</li><li>Unit and screenshot coverage grows with every feature, so regressions surface in the PR, not in the release.</li><li>The regression run is stable: flaky tests are fixed or quarantined, a red run means a real bug.</li><li>Test stands are stable and monitored, so a failed run is never a stand being down.</li></ul>"
+}

@@ -25,12 +25,13 @@ done
 
 EYEBROW="DODO PIZZA · iOS"
 
-render() { # title subtitle output
+render() { # title subtitle output [eyebrow]
+  local eyebrow="${4:-$EYEBROW}"
   mkdir -p "$(dirname "$3")"
   "$IM" -size 1200x630 xc:'#0e1216' \
     -fill '#eb6834' -draw "roundrectangle 90,196 100,434 5,5" \
     -font "$FONT" \
-    -fill '#eb8a5f' -pointsize 30 -kerning 6 -annotate +128+224 "$EYEBROW" \
+    -fill '#eb8a5f' -pointsize 30 -kerning 6 -annotate +128+224 "$eyebrow" \
     -kerning 0 -fill '#f4f2ee' -pointsize 96 -annotate +122+322 "$1" \
     -fill '#9aa2ab' -pointsize 31 -annotate +128+402 "$2" \
     "$3"
@@ -40,7 +41,7 @@ render() { # title subtitle output
 if [ "$#" -ge 2 ]; then
   render "$1" "$2" "${3:-og.png}"
 else
-  while IFS=$'\t' read -r title subtitle output; do
-    render "$title" "$subtitle" "$output"
-  done < <(python3 -c "import json; [print(c['title']+chr(9)+c['subtitle']+chr(9)+c['output']) for c in json.load(open('og.json'))['cards']]")
+  while IFS=$'\t' read -r title subtitle output eyebrow; do
+    render "$title" "$subtitle" "$output" "$eyebrow"
+  done < <(python3 -c "import json; [print(c['title']+chr(9)+c['subtitle']+chr(9)+c['output']+chr(9)+c.get('eyebrow', '')) for c in json.load(open('og.json'))['cards']]")
 fi

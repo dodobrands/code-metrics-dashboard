@@ -701,8 +701,10 @@ for c in charts {
     for (n, _) in resolveSeries(c, metricNames, lastTs) where metrics[n] != nil { used.insert(n) }
 }
 let allTs = used.flatMap { metrics[$0]!.points.map(\.ts) }
-let minTs = allTs.min()!
-let maxTs = allTs.max()!
+// An app whose store has none of the charted series yet (the first nights of a
+// backfill) still builds: empty chart files and a zero range, not a failed deploy.
+let minTs = allTs.min() ?? 0
+let maxTs = allTs.max() ?? 0
 
 // Headline stats — recomputed every build.
 var heroJSON = "{}"
@@ -737,7 +739,7 @@ try? meta.write(toFile: "\(root)/data/meta.json", atomically: true, encoding: .u
 let (dy, dm, dd) = civilFromDays(maxTs / 1000 / 86400)
 let date = String(format: "%04d-%02d-%02d", dy, dm, dd)
 let indexPath = "\(root)/index.html"
-if var html = try? String(contentsOfFile: indexPath, encoding: .utf8) {
+if !allTs.isEmpty, var html = try? String(contentsOfFile: indexPath, encoding: .utf8) {
     let re = try! NSRegularExpression(pattern: "(<b id=\"updated\">)[^<]*(</b>)")
     let range = NSRange(html.startIndex..., in: html)
     html = re.stringByReplacingMatches(in: html, range: range, withTemplate: "$1\(date)$2")

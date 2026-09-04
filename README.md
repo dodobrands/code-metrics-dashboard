@@ -2,7 +2,8 @@
 
 Public engineering pages for Dodo's mobile apps, one per app: product links (beta, open
 source, tech radar), a roadmap, and a live view of the codebase's modernization metrics
-from the `code-metrics` service. Today: the Dodo Pizza iOS app (`dodobrands/dodo-mobile-ios`).
+from the `code-metrics` service. Today: the Dodo Pizza iOS app (`dodobrands/dodo-mobile-ios`)
+and the Drinkit Android app (`dodobrands/drinkit-mobile-android`).
 
 **Live: https://dodobrands.github.io/code-metrics-dashboard/** (redirects to the first app,
 `dodo-ios/`; each app is a directory, so `…/<dir>/` is the link to share).
@@ -29,7 +30,8 @@ A self-contained static site — one page per app, hydrated by a single shared b
   under a chart group's heading), `hero` (the headline as shares of one chart's last values:
   `{ chart, noun, parts: [{ series, text, class? }] }`). Without it the page uses the built-in
   labels and the Swift 6 headline.
-- `<dir>/roadmap/` — the roadmap cards, when `apps.json` says the app has one.
+- `<dir>/roadmap/` — the roadmap cards, when `apps.json` says the app has one. A card's optional
+  `progress` (0…1) shows as a percentage on In Progress cards only.
 
 The site is a project-path Pages site (`github.io/<repo>/`), so every link is relative —
 apps link to each other as `../<dir>/`, pages load `../bundle.js` and `../style.css`. A

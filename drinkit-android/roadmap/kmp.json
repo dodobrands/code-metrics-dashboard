@@ -1,0 +1,5 @@
+{
+  "title": "KMP in the app",
+  "description": "<p>Write shared code once instead of twice. Neither app is ready to move even its data and domain layers: platform-specific dependencies are woven through them. First step is an inventory of those dependencies and a roadmap to a state where data and domain can move.</p>",
+  "progress": 0.05
+}

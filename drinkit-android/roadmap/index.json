@@ -1,0 +1,33 @@
+{
+  "columns": [
+    {
+      "key": "backlog",
+      "title": "Backlog",
+      "items": [
+        "weeklyReleases",
+        "dsComponents"
+      ]
+    },
+    {
+      "key": "progress",
+      "title": "In Progress",
+      "items": [
+        "dsPalette",
+        "aiTooling",
+        "nav3",
+        "monitoring",
+        "offline",
+        "kmp"
+      ]
+    },
+    {
+      "key": "done",
+      "title": "Done",
+      "items": [
+        "screenshotTesting",
+        "releaseAutomation",
+        "swaggerCodegen"
+      ]
+    }
+  ]
+}

@@ -9,6 +9,12 @@
       "title": "iOS Engineering",
       "subtitle": "Beta · Open source · Tech radar · Live metrics",
       "output": "dodo-ios/og.png"
+    },
+    {
+      "title": "Android Engineering",
+      "subtitle": "Roadmap · Live metrics",
+      "eyebrow": "DRINKIT · ANDROID",
+      "output": "drinkit-android/og.png"
     }
   ]
 }

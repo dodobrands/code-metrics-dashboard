@@ -1,0 +1,4 @@
+{
+  "title": "Swagger contract codegen",
+  "description": "<p>Network contracts are generated from the backend’s API specs instead of being written by hand and drifting away from the backend.</p>"
+}
