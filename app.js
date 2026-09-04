@@ -4,9 +4,9 @@
 
 import Chart from "chart.js/auto";
 import zoomPlugin from "chartjs-plugin-zoom";
-import { heroThesis, labeller, loadPage, sectionNote } from "./lib/page.js";
+import { heroThesis, labeller, loadPage, loadPhrases, sectionNote } from "./lib/page.js";
 import logo from "./logo.txt";
-import phrases from "./phrases.json";
+import sharedPhrases from "./phrases.json";
 import { typo, typographize } from "./typo.js";
 
 Chart.register(zoomPlugin);
@@ -665,14 +665,19 @@ function wireRoadmap() {
   }
 }
 
-// Footer easter egg — tap the dodo for a random one-liner from phrases.json.
-function wireDodo() {
-  const dodo = document.getElementById("dodo-egg");
-  const bubble = document.getElementById("dodo-bubble");
-  if (!dodo || !bubble || !phrases.length) return;
+// Footer easter egg — tap the mascot for a random one-liner. The lines are the app's
+// own phrases.json where it has one, else the shared list. Fetched once, awaited inside
+// the handler: a tap that lands before they arrive still answers, a beat later.
+function wireMascot() {
+  const mascot = document.getElementById("mascot");
+  const bubble = document.getElementById("mascot-bubble");
+  if (!mascot || !bubble) return;
+  const loading = loadPhrases(fetch, document.body.dataset.phrases, sharedPhrases);
   let last = -1;
   let hideTimer;
-  dodo.addEventListener("click", () => {
+  mascot.addEventListener("click", async () => {
+    const phrases = await loading;
+    if (!phrases.length) return;
     let i = Math.floor(Math.random() * phrases.length);
     if (phrases.length > 1 && i === last) i = (i + 1) % phrases.length; // no repeat in a row
     last = i;
@@ -686,7 +691,7 @@ function wireDodo() {
 }
 
 wireRoadmap();
-wireDodo();
+wireMascot();
 // The static content (roadmap, header) is in the DOM now — typography it before
 // the async render, so it doesn't reflow when the charts arrive. Hero and
 // sections are typographed inside main() at insertion time.

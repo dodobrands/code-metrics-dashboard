@@ -39,6 +39,7 @@ jobs:
       - run: actionlint
       - run: node scripts/typography.mjs
       - run: node scripts/latin-only.mjs
+      - run: node scripts/latin-only.test.mjs
       - run: node scripts/typo.test.mjs
       - run: node scripts/layout.test.mjs
       - run: node scripts/page.test.mjs

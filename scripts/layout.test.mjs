@@ -7,7 +7,7 @@ import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
-import { render, SITE } from "./render-pages.mjs";
+import { mascotHtml, phrasesDeclaration, render, SITE } from "./render-pages.mjs";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 
@@ -40,6 +40,7 @@ const FIXTURE = [
   },
 ];
 const ALPHA_SECTIONS = '<section id="more"><h2>Alpha extras</h2></section>';
+const ALPHA_MASCOT = '      <button id="mascot" class="egg-mascot" type="button" aria-label="Crab">\u{1F980}</button>';
 
 async function renderFixture() {
   const src = await mkdtemp(path.join(os.tmpdir(), "layout-src-"));
@@ -47,6 +48,8 @@ async function renderFixture() {
   await writeFile(path.join(src, "apps.json"), JSON.stringify(FIXTURE));
   await mkdir(path.join(src, "alpha"));
   await writeFile(path.join(src, "alpha", "sections.html"), ALPHA_SECTIONS);
+  await writeFile(path.join(src, "alpha", "mascot.html"), ALPHA_MASCOT);
+  await writeFile(path.join(src, "alpha", "phrases.json"), JSON.stringify(["Snip."]));
   await render({ appsPath: path.join(src, "apps.json"), out });
   const page = (p) => readFile(path.join(out, p), "utf8");
   return { out, root: await page("index.html"), alpha: await page("alpha/index.html"), beta: await page("beta/index.html") };
@@ -119,7 +122,7 @@ test("AC-7 one template stamps a page per app, with its own title and sections",
   assert.match(alpha, /Alpha extras/);
   assert.doesNotMatch(beta, /Alpha extras/);
   assert.match(alpha, /<code id="repo">org\/alpha-app<\/code>/);
-  assert.match(alpha, /<body data-page-config="">/);
+  assert.match(alpha, /data-page-config=""/);
 });
 
 test("AC-4 page.json is announced to the page only for the app that has one", async () => {
@@ -129,8 +132,8 @@ test("AC-4 page.json is announced to the page only for the app that has one", as
   await mkdir(path.join(src, "alpha"));
   await writeFile(path.join(src, "alpha", "page.json"), "{}");
   await render({ appsPath: path.join(src, "apps.json"), out });
-  assert.match(await readFile(path.join(out, "alpha/index.html"), "utf8"), /<body data-page-config="page.json">/);
-  assert.match(await readFile(path.join(out, "beta/index.html"), "utf8"), /<body data-page-config="">/);
+  assert.match(await readFile(path.join(out, "alpha/index.html"), "utf8"), /data-page-config="page.json"/);
+  assert.match(await readFile(path.join(out, "beta/index.html"), "utf8"), /data-page-config=""/);
 });
 
 test("slice 3: both real pages carry both apps in the switcher, and the Android page is its own", async () => {
@@ -146,13 +149,73 @@ test("slice 3: both real pages carry both apps in the switcher, and the Android 
   assert.match(controls(android), /<a href="\.\.\/drinkit-android\/" aria-current="page">Drinkit Android<\/a>/);
   assert.match(android, /<title>Drinkit Android—Engineering<\/title>/);
   assert.match(android, /<code id="repo">dodobrands\/drinkit-mobile-android<\/code>/);
-  assert.match(android, /<body data-page-config="page.json">/);
+  assert.match(android, /data-page-config="page.json"/);
   assert.match(android, /<h2>Tools<\/h2>/);
-  assert.match(android, /<h2>Telegram<\/h2>/);
-  assert.match(android, /<a href="https:\/\/t\.me\/mobilefiction">Maxim Kachinkin<\/a><span>Android Tech Lead<\/span>/);
+  assert.match(android, /<h2>Team<\/h2>/);
+  assert.match(android, /<h2>Media<\/h2>/);
+  // A channel is listed under its own title, escaped here so this file itself stays Latin
+  // (\u041c\u043e\u0431\u0438\u043b\u044c\u043d\u043e\u0435 \u0427\u0442\u0438\u0432\u043e). The author is the line's second half.
+  assert.match(
+    android,
+    /<a href="https:\/\/t\.me\/mobilefiction">\u041c\u043e\u0431\u0438\u043b\u044c\u043d\u043e\u0435 \u0427\u0442\u0438\u0432\u043e<\/a><span>Maxim Kachinkin<\/span>/u,
+  );
+  assert.match(android, /<a href="https:\/\/t\.me\/maxkachinkin">Kachinkin Maxim<\/a><span>Android Tech Lead<\/span>/);
   assert.match(android, /<!--roadmap:board:start--><!--roadmap:board:end-->/);
   // The Android partial must not leak into the iOS page; the person is the marker, not the heading.
   assert.doesNotMatch(ios, /mobilefiction/);
+});
+
+test("slice 3: the footer mascot is the app's own, and an app without one keeps the dodo", async () => {
+  const { alpha, beta } = await renderFixture();
+  assert.match(alpha, /<button id="mascot" class="egg-mascot" type="button" aria-label="Crab">\u{1F980}<\/button>/u);
+  assert.match(beta, /<button id="mascot" class="egg-mascot" type="button" aria-label="Dodo">\u{1F9A4}<\/button>/u);
+  // The bubble the script writes into is the shared half, so every page carries it once.
+  for (const html of [alpha, beta]) {
+    assert.equal((html.match(/id="mascot-bubble"/g) ?? []).length, 1);
+  }
+});
+
+test("slice 3: the mascot's lines are declared only where the app has its own", async () => {
+  const { alpha, beta } = await renderFixture();
+  assert.match(alpha, /data-phrases="phrases\.json"/);
+  assert.match(beta, /data-phrases=""/);
+  const out = await mkdtemp(path.join(os.tmpdir(), "layout-phrases-"));
+  await render({ appsPath: path.join(ROOT, "apps.json"), out });
+  assert.match(await readFile(path.join(out, "drinkit-android/index.html"), "utf8"), /data-phrases="phrases\.json"/);
+  // The shared list speaks as the bird, which is exactly who the iOS mascot is.
+  assert.match(await readFile(path.join(out, "dodo-ios/index.html"), "utf8"), /data-phrases=""/);
+});
+
+test("slice 3: an empty mascot partial falls back, one without the id is rejected", () => {
+  assert.match(mascotHtml("alpha", ""), /aria-label="Dodo"/);
+  assert.match(mascotHtml("alpha", "  \n "), /aria-label="Dodo"/);
+  assert.throws(() => mascotHtml("alpha", '<button id="whale">x</button>'), /alpha\/mascot\.html needs/);
+});
+
+test("slice 3: no phrase list is declared silently, an unusable one fails the build", () => {
+  // Silence is the honest answer only when the app never claimed a list of its own.
+  assert.equal(phrasesDeclaration("alpha", ""), "");
+  assert.equal(phrasesDeclaration("alpha", " \n "), "");
+  assert.equal(phrasesDeclaration("alpha", '["Snip."]'), "phrases.json");
+
+  // Otherwise the page would fall back to the shared list — the dodo's voice.
+  for (const raw of ["[]", "{}", '""', "null", '[""]', '["ok", 7]', '["ok", "  "]']) {
+    assert.throws(() => phrasesDeclaration("alpha", raw), /alpha\/phrases\.json must be/, raw);
+  }
+  assert.throws(() => phrasesDeclaration("alpha", "[oops"), /alpha\/phrases\.json is not valid JSON/);
+});
+
+test("slice 3: the Android page wears the whale, drawn and theme-inked, and the iOS page the dodo", async () => {
+  const out = await mkdtemp(path.join(os.tmpdir(), "layout-mascot-"));
+  await render({ appsPath: path.join(ROOT, "apps.json"), out });
+  const ios = await readFile(path.join(out, "dodo-ios/index.html"), "utf8");
+  const android = await readFile(path.join(out, "drinkit-android/index.html"), "utf8");
+  assert.match(android, /<button id="mascot" class="egg-mascot" type="button" aria-label="Whale">/);
+  // Decorative next to a labelled button, and inked from the button so it follows the theme.
+  assert.match(android, /<svg viewBox="0 0 64 64"[^>]*aria-hidden="true"[^>]*focusable="false"/);
+  assert.match(android, /<path fill="currentColor"/);
+  assert.doesNotMatch(android, /\u{1F9A4}/u);
+  assert.match(ios, /<button id="mascot" class="egg-mascot" type="button" aria-label="Dodo">\u{1F9A4}<\/button>/u);
 });
 
 test("AC-9 generated pages are ignored, never tracked, and preview.sh no longer restores index.html", async () => {

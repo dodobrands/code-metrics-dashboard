@@ -5,6 +5,11 @@
 //   node scripts/render-pages.mjs                      # repo root: apps.json → ./<dir>/index.html, ./index.html
 //   node scripts/render-pages.mjs --apps <path> --out <dir>
 //
+// The footer easter egg is the app's own: <dir>/mascot.html is the button and
+// <dir>/phrases.json its lines; an app without them gets the dodo and the shared list
+// the site started with. app.js wires the tap by id, so a partial that drops it is
+// rejected here rather than shipping a dead egg.
+//
 // The site is a project-path Pages site (github.io/<repo>/), so every link the pages
 // carry is relative: apps link to each other as ../<dir>/, and to the shared bundle
 // and stylesheet one level up. The build tools resolve charts.json, data/ and
@@ -13,6 +18,7 @@ import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 export const SITE = "https://dodobrands.github.io/code-metrics-dashboard/";
+const DODO_MASCOT = '      <button id="mascot" class="egg-mascot" type="button" aria-label="Dodo">🦤</button>';
 const ROOT = path.resolve(import.meta.dirname, "..");
 
 export function navHtml(apps, current) {
@@ -36,6 +42,29 @@ export function fill(html, vars) {
   });
 }
 
+// A declared list must actually hold lines. The page falls back to the shared list when
+// it cannot use one, and that list is the dodo's — the wrong voice for any other mascot —
+// so an empty or malformed list fails the build instead of shipping silently.
+export function phrasesDeclaration(dir, raw) {
+  if (!raw.trim()) return "";
+  let list;
+  try {
+    list = JSON.parse(raw);
+  } catch {
+    throw new Error(`${dir}/phrases.json is not valid JSON`);
+  }
+  const usable = Array.isArray(list) && list.length && list.every((line) => typeof line === "string" && line.trim());
+  if (!usable) throw new Error(`${dir}/phrases.json must be a non-empty array of non-empty strings`);
+  return "phrases.json";
+}
+
+export function mascotHtml(dir, partial) {
+  const html = partial.trimEnd();
+  if (!html) return DODO_MASCOT;
+  if (!html.includes('id="mascot"')) throw new Error(`${dir}/mascot.html needs the button to carry id="mascot"`);
+  return html;
+}
+
 async function readIfExists(file) {
   return access(file).then(() => readFile(file, "utf8"), () => "");
 }
@@ -50,9 +79,11 @@ export async function render({ appsPath, out }) {
   const written = [];
   for (const app of apps) {
     const sections = await readIfExists(path.join(src, app.dir, "sections.html"));
-    // The page fetches page.json only when told it exists, so an app without one costs no 404.
-    const pageConfig = (await access(path.join(src, app.dir, "page.json")).then(() => true, () => false)) ? "page.json" : "";
-    const vars = { ...app, site: SITE, nav: navHtml(apps, app), sections, pageConfig };
+    const mascot = mascotHtml(app.dir, await readIfExists(path.join(src, app.dir, "mascot.html")));
+    // The page fetches these only when told they exist, so an app without one costs no 404.
+    const pageConfig = await access(path.join(src, app.dir, "page.json")).then(() => "page.json", () => "");
+    const phrases = phrasesDeclaration(app.dir, await readIfExists(path.join(src, app.dir, "phrases.json")));
+    const vars = { ...app, site: SITE, nav: navHtml(apps, app), sections, mascot, pageConfig, phrases };
     const html = fill(conditional(appTemplate, "roadmap", Boolean(app.roadmap)), vars);
     const file = path.join(out, app.dir, "index.html");
     await mkdir(path.dirname(file), { recursive: true });
