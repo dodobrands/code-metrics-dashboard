@@ -119,6 +119,18 @@ test("AC-7 one template stamps a page per app, with its own title and sections",
   assert.match(alpha, /Alpha extras/);
   assert.doesNotMatch(beta, /Alpha extras/);
   assert.match(alpha, /<code id="repo">org\/alpha-app<\/code>/);
+  assert.match(alpha, /<body data-page-config="">/);
+});
+
+test("AC-4 page.json is announced to the page only for the app that has one", async () => {
+  const src = await mkdtemp(path.join(os.tmpdir(), "layout-src-"));
+  const out = await mkdtemp(path.join(os.tmpdir(), "layout-out-"));
+  await writeFile(path.join(src, "apps.json"), JSON.stringify(FIXTURE));
+  await mkdir(path.join(src, "alpha"));
+  await writeFile(path.join(src, "alpha", "page.json"), "{}");
+  await render({ appsPath: path.join(src, "apps.json"), out });
+  assert.match(await readFile(path.join(out, "alpha/index.html"), "utf8"), /<body data-page-config="page.json">/);
+  assert.match(await readFile(path.join(out, "beta/index.html"), "utf8"), /<body data-page-config="">/);
 });
 
 test("AC-9 generated pages are ignored, never tracked, and preview.sh no longer restores index.html", async () => {

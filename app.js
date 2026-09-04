@@ -4,6 +4,7 @@
 
 import Chart from "chart.js/auto";
 import zoomPlugin from "chartjs-plugin-zoom";
+import { heroThesis, labeller, loadPage, sectionNote } from "./lib/page.js";
 import logo from "./logo.txt";
 import phrases from "./phrases.json";
 import { typo, typographize } from "./typo.js";
@@ -44,7 +45,8 @@ const NAMES = {
   "Snapshot:UIKit:Covered": "Covered",
   "Snapshot:UIKit:Bare": "Not covered",
 };
-const nameOf = (k) => NAMES[k] || k;
+// The built-in map is the fallback; an app's page.json labels win (see main).
+let nameOf = labeller(NAMES);
 
 // Every mounted chart, so the date-range picker can retarget all their x-axes.
 const charts = [];
@@ -560,13 +562,6 @@ function versionsChart(canvas, spec, byName, bounds) {
   stack100(canvas, datasets, bounds);
 }
 
-// --- headline thesis (stats computed in build.py, shipped in data/meta.json) ---
-
-function heroThesis(meta) {
-  const h = meta.hero || {};
-  return h.swift6Total ? `<span class="hero-stat"><b>${h.swift6Pct}%</b> of ${h.swift6Total} modules on Swift 6</span>` : "";
-}
-
 // --- date-range picker --------------------------------------------------------
 
 const DAY = 864e5;
@@ -603,18 +598,27 @@ function rangePicker(bounds) {
 // -----------------------------------------------------------------------------
 
 async function main() {
-  const [specs, meta] = await Promise.all([
+  const [specs, meta, page] = await Promise.all([
     fetch("charts.json").then((r) => r.json()),
     fetch("data/meta.json", { cache: "no-store" }).then((r) => r.json()),
+    loadPage(fetch, document.body.dataset.pageConfig),
   ]);
+  nameOf = labeller(NAMES, page.labels);
   if (meta.repo) document.getElementById("repo").textContent = meta.repo;
   const hero = document.getElementById("hero");
-  hero.innerHTML = heroThesis(meta);
-  typographize(hero); // settle the hero now, before the next await paints it
+  if (!page.hero) {
+    hero.innerHTML = heroThesis(meta, page);
+    typographize(hero); // settle the hero now, before the next await paints it
+  }
   const bounds = meta.bounds;
 
   // Each chart's data lives in its own file — fetch them all in parallel.
   const datas = await Promise.all(specs.map((s) => fetch(`data/charts/${s.id}.json`, { cache: "no-store" }).then((r) => r.json())));
+  if (page.hero) {
+    // A declarative hero is shares of one chart's last values, so it waits for the data.
+    hero.innerHTML = heroThesis(meta, page, Object.fromEntries(specs.map((s, i) => [s.id, datas[i]])));
+    typographize(hero);
+  }
 
   const app = document.getElementById("app");
   app.textContent = "";
@@ -625,7 +629,7 @@ async function main() {
     if (spec.group !== group) {
       group = spec.group;
       section = document.createElement("section");
-      section.innerHTML = `<div class="section-head"><h2>${escapeHtml(group)}</h2></div>`;
+      section.innerHTML = `<div class="section-head"><h2>${escapeHtml(group)}</h2></div>${sectionNote(page.groupNotes, group)}`;
       app.appendChild(section);
     }
     const card = document.createElement("figure");

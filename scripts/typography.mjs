@@ -41,6 +41,8 @@ async function targets() {
     list.push({ path: path.join(dir, "charts.json"), kind: "charts" });
     const sections = path.join(dir, "sections.html");
     if (await access(sections).then(() => true, () => false)) list.push({ path: sections, kind: "html" });
+    const page = path.join(dir, "page.json");
+    if (await access(page).then(() => true, () => false)) list.push({ path: page, kind: "page" });
     if (!app.roadmap) continue;
     const cards = (await readdir(path.join(dir, "roadmap"))).filter((f) => f.endsWith(".json") && f !== "index.json");
     list.push(...cards.map((f) => ({ path: path.join(dir, "roadmap", f), kind: "roadmap" })));
@@ -59,6 +61,14 @@ function fixed(kind, raw) {
     const arr = JSON.parse(raw);
     for (const app of arr) for (const k of APP_TEXT) if (app[k]) app[k] = fixTypos(app[k], LOCALE);
     return `${JSON.stringify(arr, null, 2)}\n`;
+  }
+  if (kind === "page") {
+    // Notes and the hero are prose; labels are names of series and stay verbatim.
+    const page = JSON.parse(raw);
+    for (const k of Object.keys(page.groupNotes ?? {})) page.groupNotes[k] = fixTypos(page.groupNotes[k], LOCALE);
+    if (page.hero?.noun) page.hero.noun = fixTypos(page.hero.noun, LOCALE);
+    for (const part of page.hero?.parts ?? []) part.text = fixTypos(part.text, LOCALE);
+    return `${JSON.stringify(page, null, 2)}\n`;
   }
   if (kind === "phrases") {
     const arr = JSON.parse(raw);

@@ -296,15 +296,47 @@ func pyRound(_ x: Double) -> Int64 { Int64(x.rounded(.toNearestOrEven)) }
 
 // MARK: - resolve_series
 
-func resolveSeries(_ chart: [String: Any], _ metricNames: [String]) -> [(String, String)] {
+/// A toggle group's `shorten` rule, applied to the key after the family prefix: drop
+/// whole path segments, strip suffixes, collapse a segment repeated back to back.
+/// `contexts/common/payment/payment-impl` -> `common/payment`.
+func shortened(_ key: String, _ rule: [String: Any]) -> String {
+    let drop = Set(rule["dropSegments"] as? [String] ?? [])
+    let suffixes = rule["dropSuffixes"] as? [String] ?? []
+    let collapse = rule["collapseRepeats"] as? Bool ?? true
+    var out: [String] = []
+    for raw in key.split(separator: "/") {
+        var seg = String(raw)
+        if drop.contains(seg) { continue }
+        for s in suffixes where seg.hasSuffix(s) { seg = String(seg.dropLast(s.count)) }
+        if collapse, out.last == seg { continue }
+        out.append(seg)
+    }
+    return out.isEmpty ? key : out.joined(separator: "/")
+}
+
+func resolveSeries(_ chart: [String: Any], _ metricNames: [String], _ lastTs: [String: Int64]) -> [(String, String)] {
     // A toggle chart draws one of several prefix groups at a time (the client
-    // switches). Emit the union of every group's series, keeping FULL names so
-    // the client can split them back per group.
+    // switches). Emit the union of every group's series, keeping the prefix in every
+    // name so the client can split them back per group.
     if let toggle = chart["toggle"] as? [[String: Any]] {
         var out: [(String, String)] = []
         for group in toggle {
             guard let prefix = group["seriesPrefix"] as? String else { continue }
-            out += metricNames.sorted().filter { $0.hasPrefix(prefix) }.map { ($0, $0) }
+            var names = metricNames.sorted().filter { $0.hasPrefix(prefix) }
+            // The bar shows each series' last value whatever its date, so a series that
+            // stopped getting points (a module renamed away) would keep a bar forever.
+            if let newest = names.compactMap({ lastTs[$0] }).max() {
+                names = names.filter { lastTs[$0] == newest }
+            }
+            var pairs = names.map { ($0, $0) }
+            if let rule = group["shorten"] as? [String: Any] {
+                let shorts = names.map { prefix + shortened(String($0.dropFirst(prefix.count)), rule) }
+                var taken: [String: Int] = [:]
+                for s in shorts { taken[s, default: 0] += 1 }
+                // Two keys that shorten alike keep their full names rather than merge.
+                pairs = zip(names, shorts).map { taken[$1] == 1 ? ($0, $1) : ($0, $0) }
+            }
+            out += pairs
         }
         return out
     }
@@ -663,9 +695,10 @@ if !uikit.isEmpty {
 
 // Shared x-axis bounds across every series any chart draws (selfBounds-agnostic).
 let metricNames = Array(metrics.keys)
+let lastTs = metrics.mapValues { $0.points.last?.ts ?? 0 }
 var used = Set<String>()
 for c in charts {
-    for (n, _) in resolveSeries(c, metricNames) where metrics[n] != nil { used.insert(n) }
+    for (n, _) in resolveSeries(c, metricNames, lastTs) where metrics[n] != nil { used.insert(n) }
 }
 let allTs = used.flatMap { metrics[$0]!.points.map(\.ts) }
 let minTs = allTs.min()!
@@ -685,7 +718,7 @@ let chartsDir = "\(root)/data/charts"
 try? FileManager.default.createDirectory(atPath: chartsDir, withIntermediateDirectories: true)
 for c in charts {
     let id = c["id"] as? String ?? ""
-    let seriesJSON = resolveSeries(c, metricNames).compactMap { pair -> String? in
+    let seriesJSON = resolveSeries(c, metricNames, lastTs).compactMap { pair -> String? in
         guard let metric = metrics[pair.0] else { return nil }
         let pts = metric.points.map { $0.json() }.joined(separator: ",")
         return "{\"name\":\(jsonString(pair.1)),\"kind\":\(jsonString(metric.kind)),\"points\":[\(pts)]}"

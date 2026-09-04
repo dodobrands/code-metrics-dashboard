@@ -5,7 +5,7 @@
   "scripts": {
     "typography": "node scripts/typography.mjs",
     "typography:fix": "node scripts/typography.mjs --fix",
-    "test": "node scripts/typo.test.mjs && node scripts/layout.test.mjs"
+    "test": "node scripts/typo.test.mjs && node scripts/layout.test.mjs && node scripts/page.test.mjs"
   },
   "dependencies": {
     "chart.js": "^4.5.1",
