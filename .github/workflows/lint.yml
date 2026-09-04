@@ -41,5 +41,8 @@ jobs:
       - run: node scripts/latin-only.mjs
       - run: node scripts/typo.test.mjs
       - run: node scripts/layout.test.mjs
+      - run: node scripts/page.test.mjs
       # The whole per-app pipeline on a fixture, in a scratch copy — needs swift (from mise).
       - run: bash scripts/layout-dry-run.sh
+      # The data build on a fixture: live-series filter and label shortening for bar families.
+      - run: bash scripts/build-fixture-test.sh

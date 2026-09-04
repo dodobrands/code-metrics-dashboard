@@ -50,7 +50,9 @@ export async function render({ appsPath, out }) {
   const written = [];
   for (const app of apps) {
     const sections = await readIfExists(path.join(src, app.dir, "sections.html"));
-    const vars = { ...app, site: SITE, nav: navHtml(apps, app), sections };
+    // The page fetches page.json only when told it exists, so an app without one costs no 404.
+    const pageConfig = (await access(path.join(src, app.dir, "page.json")).then(() => true, () => false)) ? "page.json" : "";
+    const vars = { ...app, site: SITE, nav: navHtml(apps, app), sections, pageConfig };
     const html = fill(conditional(appTemplate, "roadmap", Boolean(app.roadmap)), vars);
     const file = path.join(out, app.dir, "index.html");
     await mkdir(path.dirname(file), { recursive: true });

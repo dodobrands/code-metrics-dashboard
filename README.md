@@ -25,6 +25,10 @@ A self-contained static site — one page per app, hydrated by a single shared b
 - `<dir>/charts.json` — the app's chart spec (id, title, kind, series). Single source of
   truth shared by the page **and** the build.
 - `<dir>/sections.html` — optional; product sections that belong to that app only.
+- `<dir>/page.json` — optional; `labels` (store name → legend label), `groupNotes` (a paragraph
+  under a chart group's heading), `hero` (the headline as shares of one chart's last values:
+  `{ chart, noun, parts: [{ series, text, class? }] }`). Without it the page uses the built-in
+  labels and the Swift 6 headline.
 - `<dir>/roadmap/` — the roadmap cards, when `apps.json` says the app has one.
 
 The site is a project-path Pages site (`github.io/<repo>/`), so every link is relative —
@@ -49,6 +53,10 @@ working directory — the build tools resolve `charts.json`, `data/`, `roadmap/`
 - `<dir>/data/meta.json` — shared x-axis bounds, repo/updated, and the headline stats
   (Swift 6 %, SwiftUI share, year span) — all computed, never hardcoded.
 - `<dir>/data/charts/<id>.json` — one file per chart, holding **only** that chart's series.
+  For a `bar` chart with `toggle` groups, only series alive at the group's newest commit are
+  kept (a module renamed away would otherwise keep its bar forever), and a group's `shorten`
+  rule — `{ dropSegments, dropSuffixes, collapseRepeats }` — turns a module path into the bar
+  label, prefix kept; keys that shorten alike keep their full names.
 
 > **Deploy only what's drawn.** Every deployed chart file carries exactly the
 > points a chart plots — metric, date, value — and nothing else. Reduce the
@@ -119,7 +127,8 @@ installs the rest — fine for any local work that doesn't fetch metrics.
   prefix; mise puts them on `PATH`. Build the bundle: `bash scripts/build.sh`.
 - Lint by running the linters directly (no `mise run` task): `biome check .`,
   `node scripts/render-pages.mjs && html-validate index.html ./*/index.html`, `actionlint`,
-  `node scripts/typography.mjs`, `node scripts/layout.test.mjs`,
+  `node scripts/typography.mjs`, `node scripts/layout.test.mjs`, `node scripts/page.test.mjs`,
+  `bash scripts/build-fixture-test.sh`,
   `node scripts/latin-only.mjs` (every letter in the sources must be Latin — this is a public English page).
   CI runs the same commands.
 - Install the git hooks once: `./scripts/hooks/install.sh` — pre-commit auto-typographs
