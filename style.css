@@ -358,3 +358,20 @@ details.modules > summary {
 }
 details.modules > summary:hover { color: var(--fg); }
 details.modules[open] > summary { margin-bottom: 6px; }
+
+/* App switcher in the controls bar: links, so a page can be shared and opened in a new tab. */
+#controls .apps {
+  display: flex;
+  gap: var(--sp-2);
+}
+
+#controls .apps a {
+  color: var(--muted);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+
+#controls .apps a[aria-current="page"] {
+  color: var(--text);
+  border-bottom-color: currentColor;
+}

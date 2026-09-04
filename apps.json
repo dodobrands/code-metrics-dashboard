@@ -1,0 +1,15 @@
+[
+  {
+    "dir": "dodo-ios",
+    "repo": "dodobrands/dodo-mobile-ios",
+    "name": "Dodo iOS",
+    "eyebrow": "Dodo Pizza · iOS",
+    "heading": "iOS Engineering",
+    "title": "Dodo iOS—Engineering",
+    "description": "Engineering hub for the Dodo Pizza iOS app — beta builds, open source, tech radar, and a live view of the codebase’s modernization metrics.",
+    "ogTitle": "iOS Engineering — Dodo Pizza",
+    "ogDescription": "Beta builds, open source, tech radar, and live code metrics for the Dodo Pizza iOS app.",
+    "lede": "Beta builds, open source, tech radar and a live look at the",
+    "roadmap": true
+  }
+]

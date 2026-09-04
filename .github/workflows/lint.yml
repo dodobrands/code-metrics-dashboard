@@ -14,17 +14,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      # index.html is a template — build_roadmap.py fills the roadmap region at
-      # deploy time. The committed source must keep empty markers; otherwise
-      # generated markup leaked into git.
-      - name: index.html keeps an empty roadmap
+      # Pages are stamped from templates/ at build time. The template must keep the
+      # roadmap markers empty, and no generated index.html may be tracked.
+      - name: templates keep an empty roadmap, generated pages stay untracked
         run: |
-          if grep -q '<!--roadmap:board:start--><!--roadmap:board:end-->' index.html \
-            && grep -q '<!--roadmap:dialogs:start--><!--roadmap:dialogs:end-->' index.html; then
-            exit 0
+          grep -q '<!--roadmap:board:start--><!--roadmap:board:end-->' templates/app.html
+          grep -q '<!--roadmap:dialogs:start--><!--roadmap:dialogs:end-->' templates/app.html
+          if git ls-files | grep -Ex '([^/]+/)?index\.html'; then
+            echo "::error::a generated index.html is tracked — pages come from templates/ (see scripts/render-pages.mjs)"
+            exit 1
           fi
-          echo "::error::index.html has a filled roadmap region — commit the empty template (git checkout index.html)"
-          exit 1
       # codemetrics (in mise.toml) is a private cross-org release — mise needs a token
       # that can read it, or the install step fails. Pass it through the action's
       # github_token input, not env: the action exports MISE_GITHUB_TOKEN from
@@ -35,8 +34,12 @@ jobs:
           github_token: ${{ secrets.CODE_METRICS_DASHBOARD }}
       - run: npm ci
       - run: biome check .
-      - run: html-validate index.html
+      - run: node scripts/render-pages.mjs
+      - run: html-validate index.html ./*/index.html
       - run: actionlint
       - run: node scripts/typography.mjs
       - run: node scripts/latin-only.mjs
       - run: node scripts/typo.test.mjs
+      - run: node scripts/layout.test.mjs
+      # The whole per-app pipeline on a fixture, in a scratch copy — needs swift (from mise).
+      - run: bash scripts/layout-dry-run.sh
