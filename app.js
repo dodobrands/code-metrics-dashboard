@@ -4,7 +4,7 @@
 
 import Chart from "chart.js/auto";
 import zoomPlugin from "chartjs-plugin-zoom";
-import { heroThesis, labeller, loadPage, loadPhrases, sectionNote } from "./lib/page.js";
+import { heroThesis, labeller, loadPage, loadPhrases, sectionNote, shareSeries } from "./lib/page.js";
 import logo from "./logo.txt";
 import sharedPhrases from "./phrases.json";
 import { typo, typographize } from "./typo.js";
@@ -533,18 +533,17 @@ function stack100(canvas, datasets, bounds) {
 
 function shareChart(canvas, spec, byName, bounds) {
   const colors = palette();
-  const [a, b] = spec.series;
-  const ma = new Map(byName.get(a).points), mb = new Map(byName.get(b).points);
-  const ts = [...ma.keys()].filter((t) => mb.has(t)).sort((x, y) => x - y);
-  const pa = [], pb = [];
-  for (const t of ts) {
-    const sum = ma.get(t) + mb.get(t), share = sum > 0 ? (ma.get(t) / sum) * 100 : 0;
-    pa.push({ x: t, y: share }); pb.push({ x: t, y: 100 - share });
-  }
-  return stack100(canvas, [
-    { label: nameOf(a), data: pa, borderColor: colors[0], backgroundColor: hexA(colors[0], 0.78), borderWidth: 0, pointRadius: 0, fill: "origin", tension: 0 },
-    { label: nameOf(b), data: pb, borderColor: colors[1], backgroundColor: hexA(colors[1], 0.78), borderWidth: 0, pointRadius: 0, fill: "-1", tension: 0 },
-  ], bounds);
+  const normalized = shareSeries(spec.series.map((name) => byName.get(name)));
+  return stack100(canvas, normalized.map(({ name, points }, index) => ({
+    label: nameOf(name),
+    data: points,
+    borderColor: colors[index % colors.length],
+    backgroundColor: hexA(colors[index % colors.length], 0.78),
+    borderWidth: 0,
+    pointRadius: 0,
+    fill: index === 0 ? "origin" : "-1",
+    tension: 0,
+  })), bounds);
 }
 
 // Swift version share — newest version at the bottom so it grows upward.
