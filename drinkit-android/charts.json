@@ -36,7 +36,7 @@
     "id": "arch-navigation",
     "group": "Architecture",
     "title": "Navigation 2 vs Navigation 3",
-    "note": "destination declarations: fragment/dialog/activity tags in res/navigation graphs vs entry<> in Navigation 3",
+    "note": "destination declarations: fragment/dialog/activity tags vs entry<> in Navigation 3",
     "kind": "line",
     "series": [
       "<(fragment|dialog|activity)\\b",
@@ -47,9 +47,8 @@
     "id": "tests-unit-integration",
     "group": "Tests",
     "title": "Unit and integration tests",
-    "note": "test methods under src/test without the Konsist suite; integration tests are the *IntegrationTest classes, a feature driven through its real domain chain with only the boundaries faked; logarithmic axis with zero on the floor, so both lines stay readable",
+    "note": "test methods under src/test, excluding the Konsist suite; integration tests are the *IntegrationTest classes",
     "kind": "line",
-    "yScale": "log",
     "series": [
       "Tests:Unit",
       "Tests:Integration"
