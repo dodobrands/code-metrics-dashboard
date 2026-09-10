@@ -3,8 +3,8 @@
     "id": "ui-module-stacks",
     "group": "UI",
     "title": "Modules by UI stack",
-    "note": "modules with UI, by what they contain: @Composable only, res/layout only, or both",
-    "kind": "line",
+    "note": "share of UI modules by what they contain: @Composable only, res/layout only, or both",
+    "kind": "share",
     "series": [
       "Modules:ComposeOnly",
       "Modules:Mixed",
@@ -19,28 +19,6 @@
     "kind": "line",
     "series": [
       "@Composable"
-    ]
-  },
-  {
-    "id": "ui-typography",
-    "group": "UI",
-    "title": "Text styles: theme vs hardcoded",
-    "note": "text-style references from DrinkitTheme.typography vs TextStyle() literals",
-    "kind": "share",
-    "series": [
-      "DrinkitTheme.typography",
-      "TextStyle("
-    ]
-  },
-  {
-    "id": "ui-colors",
-    "group": "UI",
-    "title": "Colors: theme vs hardcoded",
-    "note": "color references from drinkitColors vs Color(0x…) literals",
-    "kind": "share",
-    "series": [
-      "drinkitColors",
-      "Color(0x"
     ]
   },
   {

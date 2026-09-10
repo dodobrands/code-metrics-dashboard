@@ -2,7 +2,7 @@
 // what happens without the file — plus the per-app phrase list. `node scripts/page.test.mjs`.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { heroThesis, labeller, loadPage, loadPhrases, sectionNote } from "../lib/page.js";
+import { heroThesis, labeller, loadPage, loadPhrases, sectionNote, shareSeries } from "../lib/page.js";
 
 const BUILTIN = { "@available(*, deprecated": "@available deprecated", "Snapshot:All:Covered": "Covered" };
 
@@ -99,4 +99,28 @@ test("AC-5 phrases: anything unusable keeps the shared list, so the egg never go
   }
   assert.deepEqual(await loadPhrases(async () => { throw new TypeError("Failed to fetch"); }, "phrases.json", SHARED), SHARED);
   assert.deepEqual(await loadPhrases(async () => ({ ok: true, json: async () => { throw new SyntaxError("bad json"); } }), "phrases.json", SHARED), SHARED);
+});
+
+test("shareSeries normalizes three series at their common timestamps", () => {
+  const result = shareSeries([
+    { name: "Compose-only", points: [[1, 20], [2, 30]] },
+    { name: "Mixed", points: [[1, 50], [2, 50]] },
+    { name: "View-only", points: [[1, 30], [2, 20]] },
+  ]);
+
+  assert.deepEqual(result, [
+    { name: "Compose-only", points: [{ x: 1, y: 20 }, { x: 2, y: 30 }] },
+    { name: "Mixed", points: [{ x: 1, y: 50 }, { x: 2, y: 50 }] },
+    { name: "View-only", points: [{ x: 1, y: 30 }, { x: 2, y: 20 }] },
+  ]);
+});
+
+test("shareSeries keeps the two-series zero-total fallback", () => {
+  assert.deepEqual(shareSeries([
+    { name: "Theme", points: [[1, 1], [2, 0], [3, 3]] },
+    { name: "Literal", points: [[1, 3], [2, 0]] },
+  ]), [
+    { name: "Theme", points: [{ x: 1, y: 25 }, { x: 2, y: 0 }] },
+    { name: "Literal", points: [{ x: 1, y: 75 }, { x: 2, y: 100 }] },
+  ]);
 });
