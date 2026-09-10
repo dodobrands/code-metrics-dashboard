@@ -36,7 +36,7 @@
     "id": "arch-navigation",
     "group": "Architecture",
     "title": "Navigation 2 vs Navigation 3",
-    "note": "destination declarations: fragment/dialog/activity tags in res/navigation graphs vs entry<> in Navigation 3",
+    "note": "destination declarations: fragment/dialog/activity tags vs entry<> in Navigation 3",
     "kind": "line",
     "series": [
       "<(fragment|dialog|activity)\\b",
