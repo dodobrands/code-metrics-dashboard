@@ -1,6 +1,6 @@
 {
   "labels": {
-    ": [A-Za-z]*Presenter[(<]": "MVP",
+    ": Common[A-Za-z]*Presenter[(<]": "MVP",
     ": MVIFeature<": "MVI",
     "<(fragment|dialog|activity)\\b": "Nav2 destinations",
     "entry<": "Nav3 destinations",
