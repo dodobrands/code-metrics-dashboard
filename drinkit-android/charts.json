@@ -28,7 +28,7 @@
     "note": "class declarations: Presenter subclasses vs MVIFeature subclasses",
     "kind": "line",
     "series": [
-      ": [A-Za-z]*Presenter[(<]",
+      ": Common[A-Za-z]*Presenter[(<]",
       ": MVIFeature<"
     ]
   },
