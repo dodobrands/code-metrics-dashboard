@@ -526,6 +526,11 @@ function stack100(canvas, datasets, bounds) {
   const scales = commonScales(bounds);
   scales.y = { ...scales.y, stacked: true, min: 0, max: 100, ticks: { ...scales.y.ticks, callback: (v) => `${v}%` } };
   const opts = baseOptions(scales, false, bounds);
+  // These datasets have borderWidth: 0 (an area fill, not a stroked line), but the
+  // shared legendConfig's "line" point style draws its swatch as a stroke whose
+  // width comes from that same borderWidth — at 0 it's an invisible line. The
+  // plain box swatch below fills from backgroundColor instead, so it stays visible.
+  opts.plugins.legend = { ...opts.plugins.legend, labels: { ...opts.plugins.legend.labels, usePointStyle: false } };
   opts.plugins.tooltip = tooltipConfig((y) => `${y.toFixed(1)}%`);
   opts.plugins.tooltip.filter = (item) => item.parsed.y > 0; // hide 0% rows
   return mount(canvas, { type: "line", data: { datasets }, options: opts });
