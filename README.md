@@ -103,8 +103,9 @@ directory, and `build-roadmap` where `apps.json` says so.
 tools via **mise**, builds `bundle.js` (`npm ci` + esbuild), runs `scripts/build-apps.sh` for
 every app in `apps.json`, renders the share cards, and deploys the whole tree to GitHub Pages.
 
-It needs the secrets `CODEMETRICS_URL` and `CODEMETRICS_READ_TOKEN` (to fetch metrics — one
-read token covers every repository). mise installs `codemetrics` from the private
+It fetches metrics with the org variable `CODEMETRICS_URL` (the service base URL,
+`https://code-metrics.dodo-ai-platform.io`) and the secret `CODEMETRICS_READ_TOKEN` (one read
+token covers every repository). mise installs `codemetrics` from the private
 `dodo-ai-platform/code-metrics` release with a token of the `dodo-ai-code-metrics-reader` GitHub
 App, minted in the job from the org variable `CODEMETRICS_READER_APP_CLIENT_ID` and the org
 secret `CODEMETRICS_READER_APP_PRIVATE_KEY`.
