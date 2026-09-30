@@ -104,8 +104,10 @@ tools via **mise**, builds `bundle.js` (`npm ci` + esbuild), runs `scripts/build
 every app in `apps.json`, renders the share cards, and deploys the whole tree to GitHub Pages.
 
 It needs the secrets `CODEMETRICS_URL` and `CODEMETRICS_READ_TOKEN` (to fetch metrics — one
-read token covers every repository) plus `CODE_METRICS_DASHBOARD` (a token that can read the
-private `dodo-ai-platform/code-metrics` release, which mise uses to install `codemetrics`).
+read token covers every repository). mise installs `codemetrics` from the private
+`dodo-ai-platform/code-metrics` release with a token of the `dodo-ai-code-metrics-reader` GitHub
+App, minted in the job from the org variable `CODEMETRICS_READER_APP_CLIENT_ID` and the org
+secret `CODEMETRICS_READER_APP_PRIVATE_KEY`.
 
 ## Local development
 
@@ -162,8 +164,8 @@ Nothing is vendored. Every dependency comes from one of three places:
 - **Google Fonts** — the Martian Mono webfont, via a `<link>` in `templates/app.html`.
 
 `codemetrics` is a private cross-org release, so mise needs a GitHub token that can read it (CI
-passes the `CODE_METRICS_DASHBOARD` secret). Without the token mise errors on that one tool and
-installs the rest — fine for any local work that doesn't fetch metrics.
+mints one from the `dodo-ai-code-metrics-reader` app, see Deploy). Without the token mise errors
+on that one tool and installs the rest — fine for any local work that doesn't fetch metrics.
 
 ## Tooling & contributing
 
