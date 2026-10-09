@@ -39,7 +39,7 @@ jobs:
           private-key: ${{ secrets.CODEMETRICS_READER_APP_PRIVATE_KEY }}
           owner: dodo-ai-platform
           repositories: code-metrics
-      - uses: jdx/mise-action@v4
+      - uses: jdx/mise-action@v5
         with:
           github_token: ${{ steps.codemetrics-token.outputs.token }}
 
