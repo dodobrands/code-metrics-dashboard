@@ -17,6 +17,8 @@
         "swiftDeps",
         "ibKill",
         "uikit2swiftui",
+        "snapshotCoverage",
+        "prefire",
         "swiftTesting",
         "dsComponents"
       ]
