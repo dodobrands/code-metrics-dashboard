@@ -159,7 +159,7 @@ test("slice 3: both real pages carry both apps in the switcher, and the Android 
     android,
     /<a href="https:\/\/t\.me\/mobilefiction">\u041c\u043e\u0431\u0438\u043b\u044c\u043d\u043e\u0435 \u0427\u0442\u0438\u0432\u043e<\/a><span>Maxim Kachinkin<\/span>/u,
   );
-  assert.match(android, /<a href="https:\/\/t\.me\/maxkachinkin">Kachinkin Maxim<\/a><span>Android Tech Lead<\/span>/);
+  assert.match(android, /<a href="https:\/\/t\.me\/maxkachinkin">Maxim Kachinkin<\/a><span>Android Tech Lead<\/span>/);
   assert.match(android, /<!--roadmap:board:start--><!--roadmap:board:end-->/);
   // The Android partial must not leak into the iOS page; the person is the marker, not the heading.
   assert.doesNotMatch(ios, /mobilefiction/);
