@@ -8,7 +8,7 @@
     "test": "node scripts/latin-only.test.mjs && node scripts/typo.test.mjs && node scripts/layout.test.mjs && node scripts/page.test.mjs && node scripts/charts.test.mjs"
   },
   "dependencies": {
-    "chart.js": "^4.5.1",
+    "chart.js": "^4.6.1",
     "chartjs-plugin-zoom": "^2.2.0",
     "typopo": "^3.1.0"
   }
