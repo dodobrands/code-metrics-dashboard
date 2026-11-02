@@ -574,17 +574,27 @@ func deriveBuildWarnings(_ commits: [[String: Any]]) -> [String: Metric] {
 /// Counts rather than a ratio: a module that grew from four views to forty while
 /// holding the same share did something a percentage cannot say.
 func deriveMigrationByModule(swiftUI: [[String: Any]], uiKit: [[[String: Any]]]) -> [String: Metric] {
+    // Modules the repository still has, and both halves present for each: a cell
+    // stacks two series, and one of them missing would draw a full bar of the other.
+    let alive = Set(
+        (swiftUI.last?["value"] as? [[String: Any]] ?? []).map { moduleOf($0["path"] as? String ?? "") }
+    ).union(
+        Set((uiKit.compactMap { $0.last }.flatMap { ($0["value"] as? [[String: Any]]) ?? [] })
+            .map { moduleOf($0["path"] as? String ?? "") })
+    )
     var points: [String: [Point]] = [:]
 
     func fold(_ commits: [[String: Any]], suffix: String) {
         for c in commits {
-            guard let types = c["value"] as? [[String: Any]], !types.isEmpty else { continue }
+            guard let types = c["value"] as? [[String: Any]] else { continue }
             let ts = toMs(c["timestamp"] as? String ?? "")
             var perModule: [String: Int64] = [:]
             for type in types {
                 perModule[moduleOf(type["path"] as? String ?? ""), default: 0] += 1
             }
-            for (module, count) in perModule {
+            // Omitted zeroes would leave the chart holding the last nonzero count.
+            for module in alive {
+                let count = perModule[module] ?? 0
                 let key = "Migration:ByModule:" + module + ":" + suffix
                 if let index = points[key]?.lastIndex(where: { $0.ts == ts }) {
                     if case let .int(existing) = points[key]![index].value {
@@ -598,16 +608,19 @@ func deriveMigrationByModule(swiftUI: [[String: Any]], uiKit: [[[String: Any]]])
     }
 
     fold(swiftUI, suffix: "SwiftUI")
-    for commits in uiKit { fold(commits, suffix: "UIKit") }
-
-    // Modules the repository still has, and both halves present for each: a cell
-    // stacks two series, and one of them missing would draw a full bar of the other.
-    let alive = Set(
-        (swiftUI.last?["value"] as? [[String: Any]] ?? []).map { moduleOf($0["path"] as? String ?? "") }
-    ).union(
-        Set((uiKit.compactMap { $0.last }.flatMap { ($0["value"] as? [[String: Any]]) ?? [] })
-            .map { moduleOf($0["path"] as? String ?? "") })
-    )
+    // A missing UIKit component is unknown, not a measured zero.
+    let uiKitTimestamps = uiKit.map { commits in
+        Set(commits.compactMap { c -> Int64? in
+            guard c["value"] is [[String: Any]] else { return nil }
+            return toMs(c["timestamp"] as? String ?? "")
+        })
+    }
+    let completeUIKitTimestamps = uiKitTimestamps.dropFirst().reduce(uiKitTimestamps.first ?? []) {
+        $0.intersection($1)
+    }
+    for commits in uiKit {
+        fold(commits.filter { completeUIKitTimestamps.contains(toMs($0["timestamp"] as? String ?? "")) }, suffix: "UIKit")
+    }
 
     var out: [String: Metric] = [:]
     for module in alive {
