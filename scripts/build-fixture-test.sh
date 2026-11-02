@@ -61,6 +61,50 @@ check "AC-7 a group without shorten keeps names verbatim" "grep -q 'Other:a/b-im
 check "AC-7 a line chart keeps names verbatim" "[ \"\$(names line)\" = 'View ' ]"
 check "series count: 3 shortened + 2 collided + 1 other" "[ \$(jq '.series | length' '$TMP/build/data/charts/fam.json') -eq 6 ]"
 
+# --- migration: a disappearing framework must leave a zero, not a stale count --------
+mkdir -p "$TMP/migration"
+echo '[{ "id": "migration", "kind": "migration", "series": ["SwiftUI", "UIKit"], "moduleSeriesPrefix": "Migration:ByModule:" }]' >"$TMP/migration/charts.json"
+python3 - "$TMP/migration/raw.json" <<'EOF'
+import json, sys
+
+def types(module, count=1):
+    return [{"name": f"Type{i}", "path": f"Modules/{module}/Type{i}.swift"} for i in range(count)]
+
+def metric(name, values):
+    return {"name": name, "commits": [
+        {"hash": str(i), "timestamp": f"2025-01-0{i + 1}T00:00:00Z", "value": value}
+        for i, value in enumerate(values)
+    ]}
+
+metrics = [
+    metric("View", [42, types("OrderHistory", 18) + types("Mixed") + types("UIKitOnly"),
+                    types("OrderHistory", 18) + types("Mixed") + types("UIKitOnly"),
+                    types("OrderHistory", 20) + types("Mixed")]),
+    metric("UIView", [42, types("Mixed") + types("UIKitOnly") + types("Gone"), types("UIKitOnly"), []]),
+    metric("UIViewController", [42, types("OrderHistory") + types("Mixed") + types("UIKitOnly"),
+                                types("OrderHistory") + types("Mixed") + types("UIKitOnly"), types("UIKitOnly")]),
+]
+json.dump({"repo": "org/migration", "metrics": metrics}, open(sys.argv[1], "w"))
+EOF
+(cd "$TMP/migration" && swift run --package-path "$ROOT/Tools/DashboardBuild" build raw.json >/dev/null)
+MIGRATION="$TMP/migration/data/charts/migration.json"
+check "migration drops deleted modules" "! jq -e '.series[] | select(.name | contains(\":Gone:\"))' '$MIGRATION' >/dev/null"
+check "migration records the last UIKit type disappearing" "jq -e '.series[] | select(.name == \"Migration:ByModule:OrderHistory:UIKit\") | .points == [[1735776000000,1],[1735862400000,1],[1735948800000,0]]' '$MIGRATION' >/dev/null"
+check "migration keeps the current SwiftUI count" "jq -e '.series[] | select(.name == \"Migration:ByModule:OrderHistory:SwiftUI\") | .points[-1] == [1735948800000,20]' '$MIGRATION' >/dev/null"
+check "migration sums UIKit kinds without losing zeroes" "jq -e '.series[] | select(.name == \"Migration:ByModule:Mixed:UIKit\") | .points == [[1735776000000,2],[1735862400000,1],[1735948800000,0]]' '$MIGRATION' >/dev/null"
+check "migration records the last SwiftUI type disappearing" "jq -e '.series[] | select(.name == \"Migration:ByModule:UIKitOnly:SwiftUI\") | .points == [[1735776000000,1],[1735862400000,1],[1735948800000,0]]' '$MIGRATION' >/dev/null"
+check "migration preserves the other UIKit kind when UIView empties" "jq -e '.series[] | select(.name == \"Migration:ByModule:UIKitOnly:UIKit\") | .points == [[1735776000000,2],[1735862400000,2],[1735948800000,1]]' '$MIGRATION' >/dev/null"
+# A combined UIKit point requires both component measurements, not just one empty list.
+for value in null 42; do
+  jq --argjson value "$value" '(.metrics[] | select(.name == "UIViewController") | .commits[-1].value) = $value' "$TMP/migration/raw.json" >"$TMP/migration/incomplete-uikit.json"
+  (cd "$TMP/migration" && swift run --package-path "$ROOT/Tools/DashboardBuild" build incomplete-uikit.json >/dev/null)
+  check "migration skips incomplete UIKit snapshot ($value)" "jq -e '.series[] | select(.name == \"Migration:ByModule:OrderHistory:UIKit\") | .points == [[1735776000000,1],[1735862400000,1]]' '$MIGRATION' >/dev/null"
+done
+# An explicit empty list is a measured zero; a missing/legacy scalar sample is not.
+jq '(.metrics[] | select(.name == "View") | .commits[-1].value) = []' "$TMP/migration/raw.json" >"$TMP/migration/empty-views.json"
+(cd "$TMP/migration" && swift run --package-path "$ROOT/Tools/DashboardBuild" build empty-views.json >/dev/null)
+check "migration records an entirely empty SwiftUI snapshot" "jq -e '.series[] | select(.name == \"Migration:ByModule:UIKitOnly:SwiftUI\") | .points == [[1735776000000,1],[1735862400000,1],[1735948800000,0]]' '$MIGRATION' >/dev/null"
+
 # --- an app with none of the charted series yet -------------------------------------
 mkdir -p "$TMP/empty"
 echo '[{ "id": "line", "group": "T", "title": "Line", "kind": "line", "series": ["View"] }]' >"$TMP/empty/charts.json"
