@@ -1,5 +1,9 @@
 [settings]
 lockfile = true
+# Lock (and auto-lock during `mise install`) only the platforms we run: CI linux-x64,
+# dev macs. Default is every platform, and swift publishes no musl builds — mise ≥2026.10.25
+# hard-fails resolving it, which broke every deploy since 2026-11-03.
+lockfile_platforms = ["linux-x64", "macos-arm64"]
 # codemetrics ships fresh releases; exempt it from mise's minimum-release-age gate so
 # `@latest` resolves the newest tag instead of the CI install failing with
 # "no versions matching date filter".
