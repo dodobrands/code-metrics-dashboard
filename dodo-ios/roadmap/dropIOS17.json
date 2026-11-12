@@ -1,0 +1,4 @@
+{
+  "title": "Drop iOS 17 support",
+  "description": "<p>The app now requires iOS 18, so we can use the modern APIs without availability checks and fallbacks.</p>"
+}
