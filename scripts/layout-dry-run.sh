@@ -37,7 +37,8 @@ for app in alpha beta; do
 ]
 EOF
 done
-cp -R "$SITE/dodo-ios/roadmap" "$SITE/alpha/roadmap"
+# Drinkit's roadmap is hand-written; Dodo iOS's comes from Kaiten, which this run can't reach.
+cp -R "$SITE/drinkit-android/roadmap" "$SITE/alpha/roadmap"
 echo '<section id="more"><h2>Alpha extras</h2></section>' >"$SITE/alpha/sections.html"
 rm -rf "$SITE/dodo-ios"
 

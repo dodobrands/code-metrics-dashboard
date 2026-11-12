@@ -24,7 +24,10 @@ to `dodobrands.github.io/…` and 404.
   roadmap. The switcher in the controls bar is built from it.
 - `templates/app.html`, `templates/root.html` — the page template and the root redirect.
   `scripts/render-pages.mjs` stamps them into `<dir>/index.html` and `index.html` at build
-  time; generated pages are gitignored and never committed.
+  time; generated pages are gitignored and never committed. It links `style.css` and
+  `bundle.js` as `?v=<hash of the file>`: GitHub Pages lets browsers cache everything for 10
+  minutes, and a fresh page with a stale stylesheet renders broken. So `bundle.js` must be
+  built before the pages are stamped, as `deploy.yml` and `scripts/preview.sh` do.
 - `app.js` (+ `lib/page.js`) — renders the charts with **Chart.js** (+ zoom plugin), bundled
   by esbuild into `bundle.js` (gitignored). It fetches `charts.json`, `page.json` and `data/`
   relative to the page, so it knows nothing about which app it is drawing.

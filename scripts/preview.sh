@@ -32,11 +32,12 @@ if [ -z "${KAITEN_URL:-}" ]; then
 fi
 export CODEMETRICS_URL CODEMETRICS_TOKEN KAITEN_TOKEN KAITEN_URL
 
-echo "Fetching metrics from $CODEMETRICS_URL …"
-bash scripts/build-apps.sh
-
+# The bundle first, as on deploy: the pages link it under a hash of its content.
 npm ci --silent
 bash scripts/build.sh # esbuild → bundle.js
+
+echo "Fetching metrics from $CODEMETRICS_URL …"
+bash scripts/build-apps.sh
 
 PORT="${PORT:-8000}"
 echo "Dashboard built → http://localhost:$PORT  (Ctrl-C to stop)"
