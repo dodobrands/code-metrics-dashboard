@@ -51,7 +51,8 @@ const at = (points, t) => {
 };
 
 // Progress from the dashboard's own chart data, for cards whose work a metric measures
-// better than Kaiten's task split. `rule` is one of
+// better than Kaiten's task split — only those listed by id under "progressSource" in
+// roadmap/kaiten.json. A rule is one of
 //   { chart, done: [series…], left: [series…] }  → done / (done + left), latest values
 //   { chart, burndown: [series…] }                → 1 − latest sum / peak sum
 // `series` maps a series name to its [[timestamp, value]…] points. null when the
@@ -155,8 +156,9 @@ export async function pull(dir, token) {
     }
     const task = { title, description: markdown(card.properties[PROP.description] ?? "") };
     if (key === "progress") {
-      // A metric on the dashboard beats the task split where config.progress names one.
-      const rule = config.progress?.[card.id];
+      // Only the cards listed in progressSource take a dashboard metric; the rest, by
+      // default, count their Kaiten children.
+      const rule = config.progressSource?.[card.id];
       const p = (rule && metricProgress(rule, await chartSeries(dir, rule.chart))) ?? progress(await all(token, `/cards/${card.id}/children`));
       if (p !== null) task.progress = p;
     }
