@@ -1,4 +1,0 @@
-{
-  "title": "Cover all views with snapshot tests",
-  "description": "<p>We’re covering all views with snapshot tests to make the UIKit-to-SwiftUI migration easier and the app more stable. Snapshots give us a visual baseline, so we catch unintended appearance changes as we replace each view and before a release ships.</p>"
-}

@@ -1,4 +1,0 @@
-{
-  "title": "Move all snapshot tests to Prefire",
-  "description": "<p>We’re moving our snapshot tests to Prefire to make it easier to add new snapshots and cover more views.</p>"
-}

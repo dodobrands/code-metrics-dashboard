@@ -32,12 +32,23 @@ func between(_ marker: String, _ replacement: String, _ doc: String) -> String {
 }
 
 let index = loadJSON("\(root)/roadmap/index.json") as? [String: Any] ?? [:]
-let columns = index["columns"] as? [[String: Any]] ?? []
+var columns = index["columns"] as? [[String: Any]] ?? []
+
+// Cards pulled from Kaiten at deploy (scripts/kaiten-roadmap.mjs) land in
+// roadmap/kaiten/, same shape; they follow the hand-written cards of each column.
+let kaiten = loadJSON("\(root)/roadmap/kaiten/index.json") as? [String: Any] ?? [:]
+var taskDir: [String: String] = [:]
+for extra in kaiten["columns"] as? [[String: Any]] ?? [] {
+    guard let i = columns.firstIndex(where: { $0["key"] as? String == extra["key"] as? String }) else { continue }
+    let items = extra["items"] as? [String] ?? []
+    columns[i]["items"] = (columns[i]["items"] as? [String] ?? []) + items
+    for tid in items { taskDir[tid] = "roadmap/kaiten" }
+}
 
 var tasks: [String: [String: Any]] = [:]
 for col in columns {
     for tid in (col["items"] as? [String] ?? []) {
-        tasks[tid] = loadJSON("\(root)/roadmap/\(tid).json") as? [String: Any] ?? [:]
+        tasks[tid] = loadJSON("\(root)/\(taskDir[tid] ?? "roadmap")/\(tid).json") as? [String: Any] ?? [:]
     }
 }
 

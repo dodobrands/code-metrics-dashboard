@@ -4,6 +4,8 @@
 /index.html
 /*/index.html
 **/data/
+# Roadmap cards pulled from Kaiten at deploy (scripts/kaiten-roadmap.mjs).
+/*/roadmap/kaiten/
 raw.json
 node_modules/
 bundle.js

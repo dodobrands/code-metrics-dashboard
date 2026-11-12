@@ -20,7 +20,14 @@ cd "$(dirname "${BASH_SOURCE[0]}")/.."
 if [ -z "${CODEMETRICS_TOKEN:-}" ]; then
     CODEMETRICS_TOKEN=$(op read "op://Mobile/code-metrics DAP READ_TOKEN/credential")
 fi
-export CODEMETRICS_URL CODEMETRICS_TOKEN
+if [ -z "${KAITEN_TOKEN:-}" ]; then
+    KAITEN_TOKEN=$(op read "op://Mobile/KAITEN_TOKEN/credential")
+fi
+# The deploy reads the same repository variable.
+if [ -z "${KAITEN_URL:-}" ]; then
+    KAITEN_URL=$(gh variable get KAITEN_URL --repo dodobrands/code-metrics-dashboard)
+fi
+export CODEMETRICS_URL CODEMETRICS_TOKEN KAITEN_TOKEN KAITEN_URL
 
 echo "Fetching metrics from $CODEMETRICS_URL …"
 bash scripts/build-apps.sh

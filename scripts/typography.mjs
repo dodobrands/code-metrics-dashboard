@@ -49,7 +49,7 @@ async function targets() {
     const lines = path.join(dir, "phrases.json");
     if (await access(lines).then(() => true, () => false)) list.push({ path: lines, kind: "phrases" });
     if (!app.roadmap) continue;
-    const cards = (await readdir(path.join(dir, "roadmap"))).filter((f) => f.endsWith(".json") && f !== "index.json");
+    const cards = (await readdir(path.join(dir, "roadmap"))).filter((f) => f.endsWith(".json") && f !== "index.json" && f !== "kaiten.json");
     list.push(...cards.map((f) => ({ path: path.join(dir, "roadmap", f), kind: "roadmap" })));
   }
   return list;

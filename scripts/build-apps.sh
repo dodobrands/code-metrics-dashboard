@@ -42,6 +42,10 @@ jq -c '.[]' "$APPS" | while read -r app; do
   echo "== $dir ($repo)"
   mkdir -p "$dir/data"
   fetch_raw "$repo" >"$dir/data/raw.json"
+  # An app with roadmap/kaiten.json also gets its Kaiten cards (KAITEN_TOKEN).
+  if [ "$roadmap" = true ] && [ -f "$dir/roadmap/kaiten.json" ]; then
+    node scripts/kaiten-roadmap.mjs "$dir"
+  fi
   (
     cd "$dir"
     swift run --package-path "$TOOLS" build data/raw.json

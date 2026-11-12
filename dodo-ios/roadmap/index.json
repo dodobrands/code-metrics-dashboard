@@ -3,23 +3,12 @@
     {
       "key": "backlog",
       "title": "Backlog",
-      "items": [
-        "codegenAnalytics",
-        "codegenNetwork",
-        "stringCatalogs"
-      ]
+      "items": []
     },
     {
       "key": "progress",
       "title": "In Progress",
       "items": [
-        "swiftDeps",
-        "ibKill",
-        "uikit2swiftui",
-        "mvvm",
-        "snapshotCoverage",
-        "prefire",
-        "swiftTesting",
         "dsComponents"
       ]
     },
@@ -27,11 +16,7 @@
       "key": "done",
       "title": "Done",
       "items": [
-        "dropIOS17",
-        "swiftSharing",
-        "dropIOS16",
-        "routing",
-        "swift6"
+        "dropIOS17"
       ]
     }
   ]
