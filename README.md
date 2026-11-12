@@ -45,7 +45,7 @@ to `dodobrands.github.io/…` and 404.
 | `sections.html` | no | product sections that belong to this app only, inserted under the charts. Its link text is the one place a non-Latin proper noun is allowed (a channel's own title) — see `scripts/latin-only.mjs`. |
 | `mascot.html` | no | the footer easter egg's button — the app's own creature, carrying `id="mascot"`. Without it: the dodo. |
 | `phrases.json` | no | the lines that creature says, replacing the shared `phrases.json` wholesale — an app whose mascot is not the dodo needs its own, because much of the shared list speaks as the bird. A non-empty array of non-empty strings, or the build fails. Without it: the shared list. |
-| `roadmap/` | if `roadmap: true` | the hand-written cards: `index.json` (columns and their card ids) and one `<id>.json` per card: `title`, `description` (HTML), optional `progress` (0…1) — shown as a percentage on In Progress cards only. Optionally `kaiten.json`, which adds cards from Kaiten after the hand-written ones — see [Roadmap from Kaiten](#roadmap-from-kaiten). |
+| `roadmap/` | if `roadmap: true` | either `kaiten.json`, and the roadmap comes from Kaiten only — see [Roadmap from Kaiten](#roadmap-from-kaiten) — or hand-written cards: `index.json` (columns and their card ids) and one `<id>.json` per card: `title`, `description` (HTML), optional `progress` (0…1) — shown as a percentage on In Progress cards only. |
 | `data/` | generated | `meta.json` and `charts/<id>.json`, written at build time from the service; gitignored. |
 
 ## Adding an app
@@ -70,9 +70,9 @@ sections; charts appear as the series arrive.
 
 ## Roadmap from Kaiten
 
-An app's roadmap can come from Kaiten, from hand-written JSON, or from both. Hand-written
-cards in `roadmap/` stay as they are; Kaiten cards are pulled at every deploy and shown after
-them in each column.
+An app's roadmap comes either from Kaiten or from hand-written JSON in `roadmap/`, never both:
+an app with `roadmap/kaiten.json` takes Kaiten's cards only, pulled at every deploy. Drinkit
+Android is hand-written; Dodo iOS is on Kaiten.
 
 ### Put a card on the page
 
@@ -95,7 +95,8 @@ What the page shows is worked out from Kaiten, never typed in:
   → In Progress. Cards in a column named Cancelled are left out.
 - **Progress**, on In Progress cards: the share of the card's child cards that are done. A child
   with children of its own counts as those children, so a project's progress is the tasks of
-  its epics.
+  its epics. A card listed under `progressSource` (below) takes its progress from the
+  dashboard's chart data instead.
 - **Order** — Done newest first; the other columns in the order the cards were created.
 
 Untick **Roadmap: publish** to take a card off the page; to fix its text, edit the two English
@@ -114,22 +115,41 @@ Projects:
   "filters": [
     { "board_id": 1072766, "lane_id": 1374853 },
     { "board_id": 1004113, "lane_id": 1967603 }
-  ]
+  ],
+  "progressSource": {
+    "58347915": { "chart": "tests-imports", "done": ["import Testing"], "left": ["import XCTest"] },
+    "61588556": { "chart": "ui-interface-builder", "burndown": ["storyboard", "xib"] }
+  }
 }
 ```
 
 Keep a filter as narrow as the app: a ticked card from another team's lane matching the filter
 shows up on this page.
 
+`progressSource` is for cards whose work a dashboard metric measures better than Kaiten's task
+split — a migration is often three quarters done in code while its two big tasks are still
+open. Key a card by its Kaiten id, name a chart id from `charts.json` and its series:
+
+- `done` + `left` — progress is done ÷ (done + left) at the latest point: Swift Testing imports
+  against XCTest ones.
+- `burndown` — progress is 1 − the latest sum ÷ its peak: storyboards and xibs left, against the
+  most there ever were.
+
+A card not listed, or whose chart has none of the named series, falls back to its Kaiten
+children.
+
 ### How it runs
 
 `scripts/build-apps.sh` runs `scripts/kaiten-roadmap.mjs <dir>` for every app with a
-`kaiten.json`. It writes the cards into `<dir>/roadmap/kaiten/` (gitignored), and
-`build-roadmap` merges them with the hand-written ones. It needs `KAITEN_URL` (repository
-variable) and `KAITEN_TOKEN` (repository secret; the same token is in 1Password, vault
-**Mobile**, item **KAITEN_TOKEN**). `scripts/preview.sh` fetches both by itself. Outside CI a
-missing token only skips the Kaiten cards; on CI it fails the deploy instead of silently
-emptying the roadmap.
+`kaiten.json`, after the app's chart data is built, so `progressSource` can read it. The
+script writes the cards into `<dir>/roadmap/kaiten/` (gitignored), and `build-roadmap` renders
+them. It needs `KAITEN_URL` (repository variable) and `KAITEN_TOKEN` (repository secret; the
+same token is in 1Password, vault **Mobile**, item **KAITEN_TOKEN**). `scripts/preview.sh`
+fetches both by itself.
+
+When the pull fails for any reason — no token, Kaiten down, no ticked cards — the page goes out
+**without a roadmap**: the whole section is hidden, rather than shown empty or half-filled. The
+deploy itself does not fail; the reason is a warning in its log.
 
 The three field ids are in `scripts/kaiten-roadmap.mjs` (`PROP`).
 

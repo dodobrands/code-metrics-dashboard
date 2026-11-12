@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   deploy:
-    # Needs secrets: CODEMETRICS_READER_APP_PRIVATE_KEY (org, with the CODEMETRICS_READER_APP_CLIENT_ID variable), CODEMETRICS_READ_TOKEN; org variable CODEMETRICS_URL.
+    # Needs secrets: CODEMETRICS_READER_APP_PRIVATE_KEY (org, with the CODEMETRICS_READER_APP_CLIENT_ID variable), CODEMETRICS_READ_TOKEN, KAITEN_TOKEN; org variable CODEMETRICS_URL, repo variable KAITEN_URL.
     runs-on: ubuntu-latest
     environment:
       name: github-pages

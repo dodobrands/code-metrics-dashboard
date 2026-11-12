@@ -31,24 +31,18 @@ func between(_ marker: String, _ replacement: String, _ doc: String) -> String {
     return result
 }
 
-let index = loadJSON("\(root)/roadmap/index.json") as? [String: Any] ?? [:]
-var columns = index["columns"] as? [[String: Any]] ?? []
-
-// Cards pulled from Kaiten at deploy (scripts/kaiten-roadmap.mjs) land in
-// roadmap/kaiten/, same shape; they follow the hand-written cards of each column.
-let kaiten = loadJSON("\(root)/roadmap/kaiten/index.json") as? [String: Any] ?? [:]
-var taskDir: [String: String] = [:]
-for extra in kaiten["columns"] as? [[String: Any]] ?? [] {
-    guard let i = columns.firstIndex(where: { $0["key"] as? String == extra["key"] as? String }) else { continue }
-    let items = extra["items"] as? [String] ?? []
-    columns[i]["items"] = (columns[i]["items"] as? [String] ?? []) + items
-    for tid in items { taskDir[tid] = "roadmap/kaiten" }
-}
+// An app with roadmap/kaiten.json takes its roadmap from Kaiten only: the cards
+// scripts/kaiten-roadmap.mjs pulled into roadmap/kaiten/ at deploy, same shape as
+// the hand-written roadmap/. When that pull failed or found nothing, the folder is
+// empty and the roadmap is hidden below.
+let dir = FileManager.default.fileExists(atPath: "\(root)/roadmap/kaiten.json") ? "roadmap/kaiten" : "roadmap"
+let index = loadJSON("\(root)/\(dir)/index.json") as? [String: Any] ?? [:]
+let columns = index["columns"] as? [[String: Any]] ?? []
 
 var tasks: [String: [String: Any]] = [:]
 for col in columns {
     for tid in (col["items"] as? [String] ?? []) {
-        tasks[tid] = loadJSON("\(root)/\(taskDir[tid] ?? "roadmap")/\(tid).json") as? [String: Any] ?? [:]
+        tasks[tid] = loadJSON("\(root)/\(dir)/\(tid).json") as? [String: Any] ?? [:]
     }
 }
 
@@ -90,9 +84,23 @@ for col in columns {
 
 let indexPath = "\(root)/index.html"
 var doc = (try? String(contentsOfFile: indexPath, encoding: .utf8)) ?? ""
+let total = columns.reduce(0) { $0 + ($1["items"] as? [String] ?? []).count }
+if total == 0 {
+    // No cards — the whole section goes, heading included, rather than an empty board.
+    if let start = doc.range(of: "<section id=\"roadmap\">"),
+       let end = doc.range(of: "</section>", range: start.upperBound ..< doc.endIndex)
+    {
+        // Take the line's indent too, or the page is left with trailing whitespace.
+        var from = start.lowerBound
+        while from > doc.startIndex, doc[doc.index(before: from)] == " " { from = doc.index(before: from) }
+        doc.removeSubrange(from ..< end.upperBound)
+    }
+    try? doc.write(toFile: indexPath, atomically: true, encoding: .utf8)
+    print("roadmap: no tasks in \(dir)/ -> roadmap hidden")
+    exit(0)
+}
 doc = between("roadmap:board", "\n        " + cols.joined(separator: "\n        ") + "\n      ", doc)
 doc = between("roadmap:dialogs", "\n  " + dialogs.joined(separator: "\n  ") + "\n  ", doc)
 try? doc.write(toFile: indexPath, atomically: true, encoding: .utf8)
 
-let total = columns.reduce(0) { $0 + ($1["items"] as? [String] ?? []).count }
 print("roadmap: \(total) tasks -> board + dialogs injected into index.html")

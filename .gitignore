@@ -15,3 +15,6 @@ og.png
 .build/
 Tools/DashboardBuild/.build/
 Package.resolved
+
+# macOS Finder metadata
+.DS_Store

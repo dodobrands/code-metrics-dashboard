@@ -8,6 +8,9 @@
 # fallback so a signed-in `op` needs no setup:
 #   CODEMETRICS_URL    service base URL (required)
 #   CODEMETRICS_TOKEN  a read token; else read from op
+#   KAITEN_TOKEN       the roadmap's Kaiten token; else read from op
+#   KAITEN_URL         Kaiten API base; else the repository variable, via gh
+# Without the Kaiten pair the preview still builds, with the roadmap hidden.
 #
 # Everything the build writes — the stamped pages, data/, bundle.js — is
 # gitignored, so a local build never leaves the checkout dirty.
@@ -21,11 +24,11 @@ if [ -z "${CODEMETRICS_TOKEN:-}" ]; then
     CODEMETRICS_TOKEN=$(op read "op://Mobile/code-metrics DAP READ_TOKEN/credential")
 fi
 if [ -z "${KAITEN_TOKEN:-}" ]; then
-    KAITEN_TOKEN=$(op read "op://Mobile/KAITEN_TOKEN/credential")
+    KAITEN_TOKEN=$(op read "op://Mobile/KAITEN_TOKEN/credential" || true)
 fi
 # The deploy reads the same repository variable.
 if [ -z "${KAITEN_URL:-}" ]; then
-    KAITEN_URL=$(gh variable get KAITEN_URL --repo dodobrands/code-metrics-dashboard)
+    KAITEN_URL=$(gh variable get KAITEN_URL --repo dodobrands/code-metrics-dashboard || true)
 fi
 export CODEMETRICS_URL CODEMETRICS_TOKEN KAITEN_TOKEN KAITEN_URL
 
