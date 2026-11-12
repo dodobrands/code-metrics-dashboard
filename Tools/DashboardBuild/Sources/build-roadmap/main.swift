@@ -56,19 +56,21 @@ for col in columns {
     // percentage on a backlog or finished item says nothing.
     func percent(_ tid: String) -> Int? {
         guard key == "progress", let p = tasks[tid]?["progress"] as? Double else { return nil }
-        return Int((p * 100).rounded())
+        // Clamped: a hand-typed 1.2 must not trap the pips' repeat count and fail the deploy.
+        return min(max(Int((p * 100).rounded()), 0), 100)
     }
     // Progress is ten mono blocks under the title, the number after them. The blocks
     // are decoration, hidden from screen readers; the number is what gets read.
     func pips(_ pct: Int) -> String {
-        let on = Int((Double(pct) / 10).rounded())
+        let on = pct / 10 // floor: ten lit blocks only at 100%, the first one at 10%
         return "<span class=\"pips\"><span aria-hidden=\"true\">\(String(repeating: "■", count: on))"
             + "<span class=\"pips-rest\">\(String(repeating: "■", count: 10 - on))</span></span>"
             + "<em>\(pct)%</em></span>"
     }
     let cards = items.map { tid in
         "<li><button type=\"button\" class=\"card-item\" data-dialog=\"rm-\(tid)\">"
-            + "\(esc(tasks[tid]?["title"] as? String ?? ""))\(percent(tid).map(pips) ?? "")</button></li>"
+            // The space keeps title and percent apart in copied text and without CSS.
+            + "\(esc(tasks[tid]?["title"] as? String ?? ""))\(percent(tid).map { " " + pips($0) } ?? "")</button></li>"
     }.joined()
     cols.append(
         "<div class=\"col\"><div class=\"col-head\">"

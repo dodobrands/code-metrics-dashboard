@@ -55,11 +55,12 @@ const at = (points, t) => {
 // roadmap/kaiten.json. A rule is one of
 //   { chart, done: [series…], left: [series…] }  → done / (done + left), latest values
 //   { chart, burndown: [series…] }                → 1 − latest sum / peak sum
-// `series` maps a series name to its [[timestamp, value]…] points. null when the
-// chart has none of the named series, so the caller can fall back to Kaiten.
+// `series` maps a series name to its [[timestamp, value]…] points. null unless every
+// named series has data — a renamed or dropped "left" series would otherwise read as
+// 100% — so the caller falls back to Kaiten.
 export function metricProgress(rule, series) {
-  const names = rule.burndown ?? [...rule.done, ...rule.left];
-  if (!names.some((n) => series[n]?.length)) return null;
+  const names = rule.burndown ?? [...(rule.done ?? []), ...(rule.left ?? [])];
+  if (!names.length || !names.every((n) => series[n]?.length)) return null;
   const times = [...new Set(names.flatMap((n) => (series[n] ?? []).map(([t]) => t)))].sort((a, b) => a - b);
   const sum = (list, t) => list.reduce((s, n) => s + at(series[n] ?? [], t), 0);
   const last = times.at(-1);
@@ -67,7 +68,7 @@ export function metricProgress(rule, series) {
     const peak = Math.max(...times.map((t) => sum(rule.burndown, t)));
     return peak ? 1 - sum(rule.burndown, last) / peak : null;
   }
-  const done = sum(rule.done, last), total = done + sum(rule.left, last);
+  const done = sum(rule.done ?? [], last), total = done + sum(rule.left ?? [], last);
   return total ? done / total : null;
 }
 
@@ -159,7 +160,9 @@ export async function pull(dir, token) {
       // Only the cards listed in progressSource take a dashboard metric; the rest, by
       // default, count their Kaiten children.
       const rule = config.progressSource?.[card.id];
-      const p = (rule && metricProgress(rule, await chartSeries(dir, rule.chart))) ?? progress(await all(token, `/cards/${card.id}/children`));
+      let p = rule ? metricProgress(rule, await chartSeries(dir, rule.chart)) : null;
+      if (rule && p === null) console.warn(`kaiten: card ${card.id}: chart "${rule.chart}" lacks data for its progressSource series — using Kaiten children`);
+      p ??= progress(await all(token, `/cards/${card.id}/children`));
       if (p !== null) task.progress = p;
     }
     const id = `kaiten-${card.id}`;

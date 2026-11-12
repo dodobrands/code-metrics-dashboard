@@ -138,8 +138,9 @@ open. Key a card by its Kaiten id, name a chart id from `charts.json` and its se
 - `burndown` — progress is 1 − the latest sum ÷ its peak: storyboards and xibs left, against the
   most there ever were.
 
-A card not listed, or whose chart has none of the named series, falls back to its Kaiten
-children.
+A card not listed, or whose chart lacks data for any of the named series, falls back to its
+Kaiten children, with a warning in the deploy log. `scripts/kaiten-roadmap.test.mjs` checks
+every rule against the app's `charts.json` — a wrong chart id or series name fails lint.
 
 ### How it runs
 
