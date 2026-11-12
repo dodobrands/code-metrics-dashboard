@@ -5,7 +5,6 @@
       "title": "Backlog",
       "items": [
         "codegenAnalytics",
-        "udf",
         "codegenNetwork",
         "stringCatalogs"
       ]
@@ -17,6 +16,7 @@
         "swiftDeps",
         "ibKill",
         "uikit2swiftui",
+        "mvvm",
         "snapshotCoverage",
         "prefire",
         "swiftTesting",
@@ -27,6 +27,7 @@
       "key": "done",
       "title": "Done",
       "items": [
+        "dropIOS17",
         "swiftSharing",
         "dropIOS16",
         "routing",
