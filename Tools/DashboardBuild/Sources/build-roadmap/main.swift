@@ -58,10 +58,17 @@ for col in columns {
         guard key == "progress", let p = tasks[tid]?["progress"] as? Double else { return nil }
         return Int((p * 100).rounded())
     }
+    // Progress is ten mono blocks under the title, the number after them. The blocks
+    // are decoration, hidden from screen readers; the number is what gets read.
+    func pips(_ pct: Int) -> String {
+        let on = Int((Double(pct) / 10).rounded())
+        return "<span class=\"pips\"><span aria-hidden=\"true\">\(String(repeating: "■", count: on))"
+            + "<span class=\"pips-rest\">\(String(repeating: "■", count: 10 - on))</span></span>"
+            + "<em>\(pct)%</em></span>"
+    }
     let cards = items.map { tid in
-        let suffix = percent(tid).map { " \u{00B7} \($0)%" } ?? ""
-        return "<li><button type=\"button\" class=\"card-item\" data-dialog=\"rm-\(tid)\">"
-            + "\(esc(tasks[tid]?["title"] as? String ?? ""))\(suffix)</button></li>"
+        "<li><button type=\"button\" class=\"card-item\" data-dialog=\"rm-\(tid)\">"
+            + "\(esc(tasks[tid]?["title"] as? String ?? ""))\(percent(tid).map(pips) ?? "")</button></li>"
     }.joined()
     cols.append(
         "<div class=\"col\"><div class=\"col-head\">"

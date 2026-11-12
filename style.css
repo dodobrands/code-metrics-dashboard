@@ -208,6 +208,10 @@ h1 {
   appearance: none;
   -webkit-tap-highlight-color: transparent;
 }
+/* An In Progress card's progress: ten mono blocks, the done ones in the column's blue. */
+.pips { display: block; margin-top: 5px; font-size: 11px; letter-spacing: 1px; color: #3b87e5; }
+.pips-rest { color: color-mix(in srgb, var(--muted) 18%, transparent); }
+.pips em { font-style: normal; color: var(--muted); letter-spacing: 0; margin-left: 6px; }
 button.card-item { cursor: pointer; transition: border-color .12s; }
 button.card-item:hover { border-color: color-mix(in srgb, var(--accent) 55%, var(--border)); }
 @media (max-width: 720px) { .board { grid-template-columns: 1fr; } }
