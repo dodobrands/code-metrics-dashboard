@@ -53,7 +53,8 @@ to `dodobrands.github.io/…` and 404.
 1. Make sure the app's repository already writes to `code-metrics` under its `owner/name` — the
    dashboard reads with one shared token and needs no new secret.
 2. Add an entry to `apps.json`: `dir`, `repo`, `name`, `eyebrow`, `heading`, `title`,
-   `description`, `ogTitle`, `ogDescription`, `lede`, `roadmap`.
+   `description`, `ogTitle`, `ogDescription`, `lede`, `roadmap`, and optionally `metrika`
+   (see [Analytics](#analytics)).
 3. Create `<dir>/charts.json`. Keep the chart rules the existing specs follow: one unit per
    chart, series within an order of magnitude of each other, one "good" direction per chart,
    `share` only for a true partition. For a `bar` chart with `toggle` groups, add a `shorten`
@@ -66,6 +67,35 @@ to `dodobrands.github.io/…` and 404.
 The first deploy may find no data yet — a repository's backfill takes a few nightly runs.
 The build then writes empty chart files and the page stands with its header, roadmap and
 sections; charts appear as the series arrive.
+
+## Analytics
+
+Each app has its own Yandex Metrika counter, its id in `apps.json` as `metrika`. An app
+without one gets neither the snippet nor the footer notice. The snippet in
+`templates/app.html` starts only on `dodobrands.github.io`, so local previews stay out of the
+stats. It records visits, the click and scroll maps, and sessions (Webvisor). Webvisor cannot
+see what a `<canvas>` draws, so `app.js` sends three goals itself:
+
+| Goal | When | Params |
+|---|---|---|
+| `range` | the range selector changes | `range` — the chosen label |
+| `zoom` | a chart is zoomed, once per chart per page load | `chart` — its title |
+| `outbound` | any link off the site is clicked | `url` |
+
+The counters belong to the work Yandex account. Its OAuth token (`metrika:read` +
+`metrika:write`) is in 1Password, vault **Mobile**, item **Yandex Metrika
+code-metrics-dashboard**. Counters, goals and filters are managed through the
+[Management API](https://yandex.ru/dev/metrika/en/management/), which has no official CLI:
+
+```bash
+T=$(op read "op://Mobile/Yandex Metrika code-metrics-dashboard/credential")
+curl -s "https://api-metrika.yandex.net/management/v1/counter/<id>/goals" -H "Authorization: OAuth $T"
+```
+
+A new JS goal is `POST …/counter/<id>/goals` with `Content-Type: application/x-yametrika+json`
+and `{"goal":{"name":"…","type":"action","conditions":[{"type":"exact","url":"<goal>"}]}}`; the
+goal name sits in `url`, not `value`. Each counter also has an "exclude my visits" filter, so
+check goals from a private window.
 
 ## Data pipeline
 

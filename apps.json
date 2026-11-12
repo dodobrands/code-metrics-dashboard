@@ -10,7 +10,8 @@
     "ogTitle": "iOS Engineering — Dodo Pizza",
     "ogDescription": "Beta builds, open source, tech radar, and live code metrics for the Dodo Pizza iOS app.",
     "lede": "Beta builds, open source, tech radar and a live look at the",
-    "roadmap": true
+    "roadmap": true,
+    "metrika": 114223577
   },
   {
     "dir": "drinkit-android",
@@ -23,6 +24,7 @@
     "ogTitle": "Android Engineering — Drinkit",
     "ogDescription": "Roadmap and live code metrics for the Drinkit Android app.",
     "lede": "Roadmap and a live look at the",
-    "roadmap": true
+    "roadmap": true,
+    "metrika": 114223578
   }
 ]
