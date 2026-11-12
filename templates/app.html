@@ -20,6 +20,16 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@100..800&display=swap">
   <link rel="stylesheet" href="../style.css">
+<!--if:metrika-->
+  <!-- Yandex Metrika: one counter per app, its id is "metrika" in apps.json. Counts only the live site, so local previews stay out of the stats. -->
+  <script>
+    if (location.hostname === "dodobrands.github.io") {
+      (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};m[i].l=1*new Date();k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})(window,document,"script","https://mc.yandex.ru/metrika/tag.js","ym");
+      ym({{metrika}}, "init", { clickmap: true, trackLinks: true, accurateTrackBounce: true, webvisor: true });
+      window.metrikaGoal = (name, params) => ym({{metrika}}, "reachGoal", name, params);
+    }
+  </script>
+<!--endif:metrika-->
 </head>
 <body data-page-config="{{pageConfig}}" data-phrases="{{phrases}}">
   <div id="controls">{{nav}}<label>range <select id="rangepick"></select></label></div>
@@ -53,6 +63,9 @@
       <div id="mascot-bubble" class="egg-bubble" role="status"></div>
 {{mascot}}
     </div>
+<!--if:metrika-->
+    <p class="meta tracking">This page uses <a href="https://yandex.com/legal/metrica_termsofuse/">Yandex Metrica</a>, session recording included, to see what gets read.</p>
+<!--endif:metrika-->
   </footer>
 
 <!--if:roadmap-->

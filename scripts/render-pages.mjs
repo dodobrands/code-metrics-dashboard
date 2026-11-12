@@ -84,7 +84,7 @@ export async function render({ appsPath, out }) {
     const pageConfig = await access(path.join(src, app.dir, "page.json")).then(() => "page.json", () => "");
     const phrases = phrasesDeclaration(app.dir, await readIfExists(path.join(src, app.dir, "phrases.json")));
     const vars = { ...app, site: SITE, nav: navHtml(apps, app), sections, mascot, pageConfig, phrases };
-    const html = fill(conditional(appTemplate, "roadmap", Boolean(app.roadmap)), vars);
+    const html = fill(conditional(conditional(appTemplate, "roadmap", Boolean(app.roadmap)), "metrika", Boolean(app.metrika)), vars);
     const file = path.join(out, app.dir, "index.html");
     await mkdir(path.dirname(file), { recursive: true });
     await writeFile(file, html);

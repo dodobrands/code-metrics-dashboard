@@ -142,8 +142,18 @@ const commonScales = (bounds) => {
 };
 const legendConfig = () => ({ display: true, position: "bottom", labels: { color: ink().muted, boxWidth: 10, boxHeight: 10, usePointStyle: true, pointStyle: "line", padding: 16, font: { size: 11 } } });
 const tooltipConfig = (fmt) => ({ callbacks: { title: (i) => new Date(i[0].parsed.x).toISOString().slice(0, 10), label: (i) => ` ${i.dataset.label}: ${fmt(i.parsed.y)}` } });
+// Metrika goals; metrikaGoal exists only on the live site with a counter (templates/app.html).
+const goal = (name, params) => window.metrikaGoal?.(name, params);
+// A wheel zoom fires on every tick, so each chart reports its first zoom only.
+const zoomed = new Set();
 const ZOOM = {
-  zoom: { wheel: { enabled: true }, drag: { enabled: true, backgroundColor: hexA("#f05138", 0.12), borderColor: hexA("#f05138", 0.5), borderWidth: 1 }, mode: "x" },
+  zoom: {
+    wheel: { enabled: true }, drag: { enabled: true, backgroundColor: hexA("#f05138", 0.12), borderColor: hexA("#f05138", 0.5), borderWidth: 1 }, mode: "x",
+    onZoomComplete: ({ chart }) => {
+      const title = chart.canvas.closest("figure")?.querySelector("h3")?.textContent;
+      if (title && !zoomed.has(title)) { zoomed.add(title); goal("zoom", { chart: title }); }
+    },
+  },
   pan: { enabled: true, mode: "x", modifierKey: "shift" },
 };
 // layout.padding insets the plot from the canvas edges — same 4px scale as CSS
@@ -593,6 +603,7 @@ function rangePicker(bounds) {
     const r = RANGES[sel.selectedIndex];
     const min = r.ms == null ? bounds.min : Math.max(bounds.min, bounds.max - r.ms);
     axisWindow = { min, max: bounds.max };
+    goal("range", { range: r.label });
     for (const c of charts) {
       c.options.scales.x.min = min;
       c.options.scales.x.max = bounds.max;
@@ -602,6 +613,12 @@ function rangePicker(bounds) {
 }
 
 // -----------------------------------------------------------------------------
+
+// Every link off the site is one "outbound" goal, the address in its params.
+document.addEventListener("click", (e) => {
+  const a = e.target.closest?.("a[href]");
+  if (a && a.host !== location.host) goal("outbound", { url: a.href });
+});
 
 async function main() {
   const [specs, meta, page] = await Promise.all([
