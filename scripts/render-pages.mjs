@@ -14,6 +14,7 @@
 // carry is relative: apps link to each other as ../<dir>/, and to the shared bundle
 // and stylesheet one level up. The build tools resolve charts.json, data/ and
 // index.html against their working directory, which is why each app has a directory.
+import { createHash } from "node:crypto";
 import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
@@ -69,6 +70,17 @@ async function readIfExists(file) {
   return access(file).then(() => readFile(file, "utf8"), () => "");
 }
 
+// GitHub Pages serves everything with max-age=600 and that can't be changed, so a
+// browser may pair a fresh page with a stale stylesheet or script for ten minutes.
+// The asset's URL carries a hash of its content instead: it changes exactly when the
+// file does, and an unchanged file stays cached across deploys. A file not built yet
+// (bundle.js in a test render) is linked bare.
+export async function versioned(name) {
+  const file = path.join(ROOT, name);
+  const body = await access(file).then(() => readFile(file), () => null);
+  return body ? `${name}?v=${createHash("sha256").update(body).digest("hex").slice(0, 10)}` : name;
+}
+
 export async function render({ appsPath, out }) {
   const src = path.dirname(appsPath);
   const apps = JSON.parse(await readFile(appsPath, "utf8"));
@@ -76,6 +88,7 @@ export async function render({ appsPath, out }) {
   const appTemplate = await readFile(path.join(ROOT, "templates", "app.html"), "utf8");
   const rootTemplate = await readFile(path.join(ROOT, "templates", "root.html"), "utf8");
 
+  const assets = { css: await versioned("style.css"), js: await versioned("bundle.js") };
   const written = [];
   for (const app of apps) {
     const sections = await readIfExists(path.join(src, app.dir, "sections.html"));
@@ -83,7 +96,7 @@ export async function render({ appsPath, out }) {
     // The page fetches these only when told they exist, so an app without one costs no 404.
     const pageConfig = await access(path.join(src, app.dir, "page.json")).then(() => "page.json", () => "");
     const phrases = phrasesDeclaration(app.dir, await readIfExists(path.join(src, app.dir, "phrases.json")));
-    const vars = { ...app, site: SITE, nav: navHtml(apps, app), sections, mascot, pageConfig, phrases };
+    const vars = { ...app, ...assets, site: SITE, nav: navHtml(apps, app), sections, mascot, pageConfig, phrases };
     const html = fill(conditional(conditional(appTemplate, "roadmap", Boolean(app.roadmap)), "metrika", Boolean(app.metrika)), vars);
     const file = path.join(out, app.dir, "index.html");
     await mkdir(path.dirname(file), { recursive: true });

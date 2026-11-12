@@ -3,11 +3,12 @@
 // that no generated page is tracked. `node scripts/layout.test.mjs`.
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
-import { mascotHtml, phrasesDeclaration, render, SITE } from "./render-pages.mjs";
+import { mascotHtml, phrasesDeclaration, render, SITE, versioned } from "./render-pages.mjs";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 
@@ -87,9 +88,17 @@ test("AC-3 root redirect carries the fragment along", async () => {
 
 test("AC-4 an app page loads the shared stylesheet and bundle one level up", async () => {
   const { alpha } = await renderFixture();
-  assert.match(alpha, /<link rel="stylesheet" href="\.\.\/style\.css">/);
-  assert.match(alpha, /<script src="\.\.\/bundle\.js"><\/script>/);
-  assert.doesNotMatch(alpha, /href="style\.css"|src="bundle\.js"/);
+  assert.match(alpha, /<link rel="stylesheet" href="\.\.\/style\.css\?v=[0-9a-f]{10}">/);
+  // bundle.js is versioned when it has been built, linked bare when it hasn't
+  assert.match(alpha, /<script src="\.\.\/bundle\.js(\?v=[0-9a-f]{10})?"><\/script>/);
+  assert.doesNotMatch(alpha, /href="style\.css|src="bundle\.js/);
+});
+
+test("AC-4b an asset's version is a hash of its content", async () => {
+  const css = await readFile(path.join(ROOT, "style.css"));
+  const hash = createHash("sha256").update(css).digest("hex").slice(0, 10);
+  assert.equal(await versioned("style.css"), `style.css?v=${hash}`);
+  assert.equal(await versioned("no-such-file.js"), "no-such-file.js");
 });
 
 test("AC-5 no root-absolute paths anywhere a page or the stylesheet points", async () => {

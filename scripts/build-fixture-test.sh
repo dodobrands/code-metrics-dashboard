@@ -131,11 +131,44 @@ echo '{ "title": "Shipped", "description": "<p>Shipped.</p>", "progress": 1 }' >
 printf '<div id="board"><!--roadmap:board:start--><!--roadmap:board:end--></div>\n<!--roadmap:dialogs:start--><!--roadmap:dialogs:end-->\n' >"$TMP/rm/index.html"
 (cd "$TMP/rm" && swift run --package-path "$ROOT/Tools/DashboardBuild" build-roadmap >/dev/null 2>&1)
 RM=$(tr -d '\n' <"$TMP/rm/index.html")
-check "AC-4 In Progress card with progress carries the percent" "grep -q 'data-dialog=\"rm-half\">Half · 50%</button>' <<<'$RM'"
+check "AC-4 In Progress card with progress carries ten pips and the percent" "grep -q 'data-dialog=\"rm-half\">Half <span class=\"pips\"><span aria-hidden=\"true\">■■■■■<span class=\"pips-rest\">■■■■■</span></span><em>50%</em></span></button>' <<<'$RM'"
 check "AC-4 In Progress card without progress is the plain markup" "grep -q '<li><button type=\"button\" class=\"card-item\" data-dialog=\"rm-plain\">Plain</button></li>' <<<'$RM'"
 check "AC-4 Backlog and Done cards never show a percent" "grep -q 'data-dialog=\"rm-later\">Later</button>' <<<'$RM' && grep -q 'data-dialog=\"rm-shipped\">Shipped</button>' <<<'$RM'"
 check "AC-4 the dialog of the In Progress card opens with the progress line" "grep -q '<div class=\"dlg-body\"><p>Progress: 50%</p><p>Half.</p></div>' <<<'$RM'"
 check "AC-4 no other dialog mentions progress" "[ \$(grep -o 'Progress: ' <<<'$RM' | wc -l) -eq 1 ]"
+
+# --- pips: floor rounding, and an out-of-range progress is clamped, not a crash -------
+mkdir -p "$TMP/pips/roadmap"
+echo '{ "columns": [ { "key": "progress", "title": "In Progress", "items": ["almost", "over", "tiny"] } ] }' >"$TMP/pips/roadmap/index.json"
+echo '{ "title": "Almost", "description": "", "progress": 0.97 }' >"$TMP/pips/roadmap/almost.json"
+echo '{ "title": "Over", "description": "", "progress": 1.2 }' >"$TMP/pips/roadmap/over.json"
+echo '{ "title": "Tiny", "description": "", "progress": 0.04 }' >"$TMP/pips/roadmap/tiny.json"
+printf '<div id="board"><!--roadmap:board:start--><!--roadmap:board:end--></div>\n<!--roadmap:dialogs:start--><!--roadmap:dialogs:end-->\n' >"$TMP/pips/index.html"
+if (cd "$TMP/pips" && swift run --package-path "$ROOT/Tools/DashboardBuild" build-roadmap >/dev/null 2>&1); then pips_exit=0; else pips_exit=$?; fi
+PIPS=$(tr -d '\n' <"$TMP/pips/index.html")
+check "pips: progress 1.2 does not crash the build (exit $pips_exit)" "[ $pips_exit -eq 0 ]"
+check "pips: progress 1.2 shows as a full 100%" "grep -q 'aria-hidden=\"true\">■■■■■■■■■■<span class=\"pips-rest\"></span></span><em>100%</em>' <<<'$PIPS'"
+check "pips: 97% leaves the last block unlit" "grep -q 'aria-hidden=\"true\">■■■■■■■■■<span class=\"pips-rest\">■</span></span><em>97%</em>' <<<'$PIPS'"
+check "pips: 4% lights no block" "grep -q 'aria-hidden=\"true\"><span class=\"pips-rest\">■■■■■■■■■■</span></span><em>4%</em>' <<<'$PIPS'"
+
+# --- roadmap from Kaiten: kaiten.json makes roadmap/kaiten/ the only source ----------
+ROADMAP_PAGE='<main><section id="roadmap"><h2>Roadmap</h2><div id="board"><!--roadmap:board:start--><!--roadmap:board:end--></div></section></main>\n<!--roadmap:dialogs:start--><!--roadmap:dialogs:end-->\n'
+mkdir -p "$TMP/kt/roadmap/kaiten"
+cp "$TMP/rm/roadmap/"*.json "$TMP/kt/roadmap/" # hand cards present, and must be ignored
+echo '{ "filters": [] }' >"$TMP/kt/roadmap/kaiten.json"
+echo '{ "columns": [ { "key": "progress", "title": "In Progress", "items": ["kaiten-1"] } ] }' >"$TMP/kt/roadmap/kaiten/index.json"
+echo '{ "title": "From Kaiten", "description": "<p>K.</p>" }' >"$TMP/kt/roadmap/kaiten/kaiten-1.json"
+printf "$ROADMAP_PAGE" >"$TMP/kt/index.html"
+(cd "$TMP/kt" && swift run --package-path "$ROOT/Tools/DashboardBuild" build-roadmap >/dev/null 2>&1)
+KT=$(tr -d '\n' <"$TMP/kt/index.html")
+check "Kaiten: an app with kaiten.json shows the Kaiten cards" "grep -q 'data-dialog=\"rm-kaiten-1\">From Kaiten</button>' <<<'$KT'"
+check "Kaiten: its hand-written cards are ignored" "! grep -q 'rm-half' <<<'$KT'"
+
+mkdir -p "$TMP/kt-empty/roadmap"
+echo '{ "filters": [] }' >"$TMP/kt-empty/roadmap/kaiten.json"
+printf "$ROADMAP_PAGE" >"$TMP/kt-empty/index.html"
+(cd "$TMP/kt-empty" && swift run --package-path "$ROOT/Tools/DashboardBuild" build-roadmap >/dev/null 2>&1)
+check "Kaiten: a failed or empty pull hides the whole roadmap section" "! grep -q 'id=\"roadmap\"' '$TMP/kt-empty/index.html' && grep -q '<main></main>' '$TMP/kt-empty/index.html'"
 
 # --- typography on a fixture page.json --------------------------------------------
 mkdir -p "$TMP/site"

@@ -31,13 +31,18 @@ func between(_ marker: String, _ replacement: String, _ doc: String) -> String {
     return result
 }
 
-let index = loadJSON("\(root)/roadmap/index.json") as? [String: Any] ?? [:]
+// An app with roadmap/kaiten.json takes its roadmap from Kaiten only: the cards
+// scripts/kaiten-roadmap.mjs pulled into roadmap/kaiten/ at deploy, same shape as
+// the hand-written roadmap/. When that pull failed or found nothing, the folder is
+// empty and the roadmap is hidden below.
+let dir = FileManager.default.fileExists(atPath: "\(root)/roadmap/kaiten.json") ? "roadmap/kaiten" : "roadmap"
+let index = loadJSON("\(root)/\(dir)/index.json") as? [String: Any] ?? [:]
 let columns = index["columns"] as? [[String: Any]] ?? []
 
 var tasks: [String: [String: Any]] = [:]
 for col in columns {
     for tid in (col["items"] as? [String] ?? []) {
-        tasks[tid] = loadJSON("\(root)/roadmap/\(tid).json") as? [String: Any] ?? [:]
+        tasks[tid] = loadJSON("\(root)/\(dir)/\(tid).json") as? [String: Any] ?? [:]
     }
 }
 
@@ -51,12 +56,21 @@ for col in columns {
     // percentage on a backlog or finished item says nothing.
     func percent(_ tid: String) -> Int? {
         guard key == "progress", let p = tasks[tid]?["progress"] as? Double else { return nil }
-        return Int((p * 100).rounded())
+        // Clamped: a hand-typed 1.2 must not trap the pips' repeat count and fail the deploy.
+        return min(max(Int((p * 100).rounded()), 0), 100)
+    }
+    // Progress is ten mono blocks under the title, the number after them. The blocks
+    // are decoration, hidden from screen readers; the number is what gets read.
+    func pips(_ pct: Int) -> String {
+        let on = pct / 10 // floor: ten lit blocks only at 100%, the first one at 10%
+        return "<span class=\"pips\"><span aria-hidden=\"true\">\(String(repeating: "■", count: on))"
+            + "<span class=\"pips-rest\">\(String(repeating: "■", count: 10 - on))</span></span>"
+            + "<em>\(pct)%</em></span>"
     }
     let cards = items.map { tid in
-        let suffix = percent(tid).map { " \u{00B7} \($0)%" } ?? ""
-        return "<li><button type=\"button\" class=\"card-item\" data-dialog=\"rm-\(tid)\">"
-            + "\(esc(tasks[tid]?["title"] as? String ?? ""))\(suffix)</button></li>"
+        "<li><button type=\"button\" class=\"card-item\" data-dialog=\"rm-\(tid)\">"
+            // The space keeps title and percent apart in copied text and without CSS.
+            + "\(esc(tasks[tid]?["title"] as? String ?? ""))\(percent(tid).map { " " + pips($0) } ?? "")</button></li>"
     }.joined()
     cols.append(
         "<div class=\"col\"><div class=\"col-head\">"
@@ -79,9 +93,23 @@ for col in columns {
 
 let indexPath = "\(root)/index.html"
 var doc = (try? String(contentsOfFile: indexPath, encoding: .utf8)) ?? ""
+let total = columns.reduce(0) { $0 + ($1["items"] as? [String] ?? []).count }
+if total == 0 {
+    // No cards — the whole section goes, heading included, rather than an empty board.
+    if let start = doc.range(of: "<section id=\"roadmap\">"),
+       let end = doc.range(of: "</section>", range: start.upperBound ..< doc.endIndex)
+    {
+        // Take the line's indent too, or the page is left with trailing whitespace.
+        var from = start.lowerBound
+        while from > doc.startIndex, doc[doc.index(before: from)] == " " { from = doc.index(before: from) }
+        doc.removeSubrange(from ..< end.upperBound)
+    }
+    try? doc.write(toFile: indexPath, atomically: true, encoding: .utf8)
+    print("roadmap: no tasks in \(dir)/ -> roadmap hidden")
+    exit(0)
+}
 doc = between("roadmap:board", "\n        " + cols.joined(separator: "\n        ") + "\n      ", doc)
 doc = between("roadmap:dialogs", "\n  " + dialogs.joined(separator: "\n  ") + "\n  ", doc)
 try? doc.write(toFile: indexPath, atomically: true, encoding: .utf8)
 
-let total = columns.reduce(0) { $0 + ($1["items"] as? [String] ?? []).count }
 print("roadmap: \(total) tasks -> board + dialogs injected into index.html")

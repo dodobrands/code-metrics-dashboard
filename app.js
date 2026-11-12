@@ -622,7 +622,7 @@ document.addEventListener("click", (e) => {
 
 async function main() {
   const [specs, meta, page] = await Promise.all([
-    fetch("charts.json").then((r) => r.json()),
+    fetch("charts.json", { cache: "no-store" }).then((r) => r.json()),
     fetch("data/meta.json", { cache: "no-store" }).then((r) => r.json()),
     loadPage(fetch, document.body.dataset.pageConfig),
   ]);

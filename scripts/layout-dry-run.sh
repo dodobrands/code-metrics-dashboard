@@ -18,7 +18,8 @@ mkdir -p "$SITE"
 # SwiftPM's module cache is bound to its absolute path, so the copy builds the tools afresh.
 rsync -a --exclude .git --exclude node_modules --exclude .build . "$SITE/"
 
-# Fixture: alpha has a roadmap and its own sections, beta has neither.
+# Fixture: alpha has a hand-written roadmap and its own sections, beta has neither, and
+# gamma takes its roadmap from Kaiten — which this run can't reach, so it must be hidden.
 cat >"$SITE/apps.json" <<'EOF'
 [
   { "dir": "alpha", "repo": "org/alpha-app", "name": "Alpha", "eyebrow": "Org · Alpha", "heading": "Alpha Engineering",
@@ -26,10 +27,13 @@ cat >"$SITE/apps.json" <<'EOF'
     "lede": "A live look at the", "roadmap": true },
   { "dir": "beta", "repo": "org/beta-app", "name": "Beta", "eyebrow": "Org · Beta", "heading": "Beta Engineering",
     "title": "Beta—Engineering", "description": "Beta.", "ogTitle": "Beta — Org", "ogDescription": "Beta.",
-    "lede": "A live look at the", "roadmap": false }
+    "lede": "A live look at the", "roadmap": false },
+  { "dir": "gamma", "repo": "org/gamma-app", "name": "Gamma", "eyebrow": "Org · Gamma", "heading": "Gamma Engineering",
+    "title": "Gamma—Engineering", "description": "Gamma.", "ogTitle": "Gamma — Org", "ogDescription": "Gamma.",
+    "lede": "A live look at the", "roadmap": true }
 ]
 EOF
-for app in alpha beta; do
+for app in alpha beta gamma; do
   mkdir -p "$SITE/$app"
   cat >"$SITE/$app/charts.json" <<'EOF'
 [
@@ -37,8 +41,11 @@ for app in alpha beta; do
 ]
 EOF
 done
-cp -R "$SITE/dodo-ios/roadmap" "$SITE/alpha/roadmap"
+# Drinkit's roadmap is hand-written; Dodo iOS's comes from Kaiten, which this run can't reach.
+cp -R "$SITE/drinkit-android/roadmap" "$SITE/alpha/roadmap"
 echo '<section id="more"><h2>Alpha extras</h2></section>' >"$SITE/alpha/sections.html"
+mkdir -p "$SITE/gamma/roadmap"
+echo '{ "filters": [ { "board_id": 1 } ] }' >"$SITE/gamma/roadmap/kaiten.json"
 rm -rf "$SITE/dodo-ios"
 
 # The stub stands in for `codemetrics get <repo>`: the same JSON shape, two points per metric.
@@ -56,8 +63,9 @@ JSON
 EOF
 chmod +x "$TMP/fetch"
 
-(cd "$SITE" && CODEMETRICS_FETCH="$TMP/fetch" bash scripts/build-apps.sh)
-: >"$SITE/bundle.js" # esbuild output, not part of this run; pages link to it
+# Stands in for esbuild's output, built before the pages as on deploy: they link it by hash.
+: >"$SITE/bundle.js"
+(cd "$SITE" && env -u KAITEN_TOKEN -u KAITEN_URL CODEMETRICS_FETCH="$TMP/fetch" bash scripts/build-apps.sh)
 
 fail=0
 check() { if eval "$2"; then echo "ok   $1"; else echo "FAIL $1"; fail=1; fi; }
@@ -72,9 +80,12 @@ done
 check "alpha: roadmap board filled between the markers" "tr -d '\\n' <'$SITE/alpha/index.html' | grep -q 'roadmap:board:start-->[[:space:]]*<div class=\"col\"'"
 check "beta: no roadmap markers at all" "! grep -q 'roadmap:board' '$SITE/beta/index.html'"
 check "root: index.html redirects to alpha" "grep -q 'url=alpha/' '$SITE/index.html'"
+check "gamma: Kaiten unreachable — the build went on and the roadmap section is gone" "[ -s '$SITE/gamma/data/meta.json' ] && ! grep -q 'id=\"roadmap\"' '$SITE/gamma/index.html'"
+check "gamma: no Kaiten cards left behind" "[ ! -e '$SITE/gamma/roadmap/kaiten' ]"
+check "pages link style.css and bundle.js by content hash" "grep -q 'href=\"../style.css?v=[0-9a-f]\{10\}\"' '$SITE/alpha/index.html' && grep -q 'src=\"../bundle.js?v=[0-9a-f]\{10\}\"' '$SITE/alpha/index.html'"
 
 # Every relative href/src of every generated page must exist on disk.
-for page in "$SITE/index.html" "$SITE/alpha/index.html" "$SITE/beta/index.html"; do
+for page in "$SITE/index.html" "$SITE/alpha/index.html" "$SITE/beta/index.html" "$SITE/gamma/index.html"; do
   dir=$(dirname "$page")
   while read -r ref; do
     case "$ref" in http://*|https://*|'#'*|data:*) continue ;; esac

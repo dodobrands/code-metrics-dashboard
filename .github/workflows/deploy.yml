@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   deploy:
-    # Needs secrets: CODEMETRICS_READER_APP_PRIVATE_KEY (org, with the CODEMETRICS_READER_APP_CLIENT_ID variable), CODEMETRICS_READ_TOKEN; org variable CODEMETRICS_URL.
+    # Needs secrets: CODEMETRICS_READER_APP_PRIVATE_KEY (org, with the CODEMETRICS_READER_APP_CLIENT_ID variable), CODEMETRICS_READ_TOKEN, KAITEN_TOKEN; org variable CODEMETRICS_URL, repo variable KAITEN_URL.
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -50,6 +50,9 @@ jobs:
         env:
           CODEMETRICS_URL: ${{ vars.CODEMETRICS_URL }}
           CODEMETRICS_TOKEN: ${{ secrets.CODEMETRICS_READ_TOKEN }}
+          # Roadmap cards of apps with roadmap/kaiten.json (scripts/kaiten-roadmap.mjs).
+          KAITEN_URL: ${{ vars.KAITEN_URL }}
+          KAITEN_TOKEN: ${{ secrets.KAITEN_TOKEN }}
           # Distributed tracing: ship the CLI's client spans to alloy-frontend, so a
           # dashboard build traces the `codemetrics get` end to end (CLI -> code-metrics).
           OTEL_EXPORTER_OTLP_ENDPOINT: ${{ vars.ALLOY_OTLP_ENDPOINT }}
