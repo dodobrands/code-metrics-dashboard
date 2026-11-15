@@ -1,0 +1,44 @@
+{
+  "labels": {
+    "Modules:ComposeOnly": "Compose only",
+    "Modules:Mixed": "Mixed",
+    "Modules:ViewOnly": "View only",
+    "@Composable": "Lines with @Composable",
+    "ComposeView(": "Lines with ComposeView(",
+    "AndroidView(": "Lines with AndroidView(",
+    "DodoTypography": "Lines with DodoTypography",
+    ": BaseViewModel(": "Lines with BaseViewModel inheritance",
+    ": BasePresenter<": "Lines with BasePresenter inheritance",
+    "Tests:Unit": "Unit test annotations",
+    "Tests:E2E": "E2E test annotations",
+    "Screenshot:Baselines": "Golden images",
+    "Detekt:Baseline": "Detekt baseline entries",
+    "@Suppress": "Lines with @Suppress",
+    "!!": "Lines with !!",
+    "Toggles": "Feature toggles",
+    "Modules:Total": "Modules",
+    "kt": "Kotlin files"
+  },
+  "groupNotes": {
+    "UI": "Compose adoption at module level, interoperability with Views, and use of design-system typography. Pattern series count matching lines, including comments and tests.",
+    "Architecture": "ViewModel and MVP inheritance patterns over time. These counts describe source code, not a screen migration percentage.",
+    "Tests": "Unit and E2E test annotations, screenshot golden images, and their distribution across modules. Counts do not measure test coverage.",
+    "Tech debt": "Detekt baseline entries and source-level markers to follow over time. These counts provide context, not a quality score.",
+    "Codebase": "The size and structure of the codebase, and feature-toggle registry entries."
+  },
+  "hero": {
+    "chart": "ui-module-stacks",
+    "noun": "UI modules",
+    "parts": [
+      {
+        "series": "Modules:ComposeOnly",
+        "text": "are Compose-only"
+      },
+      {
+        "series": "Modules:Mixed",
+        "text": "mix Compose and Views",
+        "class": "mixed"
+      }
+    ]
+  }
+}
