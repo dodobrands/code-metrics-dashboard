@@ -18,7 +18,10 @@ def read_archive(stream):
         day = entry["date"]
         migration = (entry.get("android") or {}).get("mvvm_migration") or {}
         emit("MVP:Remaining", day, migration.get("total_presenters"))
-        emit("MVVM:Screens", day, migration.get("total_viewmodels"))
+        # The scanner switched to BaseViewModel subclasses on May 4 (mobile_okrs PR #1).
+        # The three June 30–July 2 snapshots repeat the May 4 module counts.
+        if day >= "2026-05-04" and not "2026-06-30" <= day <= "2026-07-02":
+            emit("MVVM:Screens", day, migration.get("total_viewmodels"))
         inventory = (entry.get("ds_components") or {}).get("android") or {}
         done, total = inventory.get("adopted"), inventory.get("total")
         if type(done) is int and type(total) is int and 0 <= done <= total and total > 0:

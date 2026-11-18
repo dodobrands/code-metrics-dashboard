@@ -100,7 +100,7 @@ window.visualViewport?.addEventListener("resize", () => {
 });
 
 function mount(canvas, config) {
-  if (axisWindow) Object.assign(config.options.scales.x, axisWindow);
+  if (axisWindow) applyAxisWindow(config.options, axisWindow);
   const chart = new Chart(canvas, config);
   watcher.observe(canvas);
   canvas.title = "scroll to zoom · shift-drag to pan · double-click to reset";
@@ -168,10 +168,17 @@ function lineChart(canvas, spec, byName, bounds) {
   const names = spec.series ?? [...byName.keys()];
   const datasets = names.filter((n) => byName.has(n)).map((n, i) => ({
     label: nameOf(n), data: byName.get(n).points.map(([x, y]) => ({ x, y })),
+    spanGaps: spec.maxGapDays == null ? false : spec.maxGapDays * DAY,
     borderColor: colors[i % colors.length], backgroundColor: colors[i % colors.length],
     borderWidth: 1.75, pointRadius: 0, pointHoverRadius: 3, tension: 0.12, fill: false,
   }));
   const opts = baseOptions(commonScales(bounds), datasets.length === 1, bounds);
+  if (spec.selfBounds) {
+    const date = new Intl.DateTimeFormat("en", { month: "short", day: "numeric", timeZone: "UTC" });
+    opts.scales.x.ticks.callback = function (value) {
+      return this.max - this.min < 366 * DAY ? date.format(value) : new Date(value).getUTCFullYear();
+    };
+  }
   opts.plugins.tooltip = tooltipConfig((y) => `${y}`);
   mount(canvas, { type: "line", data: { datasets }, options: opts });
 }
@@ -591,6 +598,14 @@ const RANGES = [
   { label: "Last month", ms: 30 * DAY },
   { label: "Last week", ms: 7 * DAY },
 ];
+function applyAxisWindow(options, range) {
+  const limits = options.plugins.zoom?.limits?.x;
+  // Keep a young series on its own axis when a longer range or All time is selected.
+  const start = Math.max(range.min, limits?.min ?? range.min);
+  const end = Math.min(range.max, limits?.max ?? range.max);
+  Object.assign(options.scales.x, start < end ? { min: start, max: end } : range);
+}
+
 function rangePicker(bounds) {
   const sel = document.getElementById("rangepick");
   if (!sel) return;
@@ -605,8 +620,7 @@ function rangePicker(bounds) {
     axisWindow = { min, max: bounds.max };
     goal("range", { range: r.label });
     for (const c of charts) {
-      c.options.scales.x.min = min;
-      c.options.scales.x.max = bounds.max;
+      applyAxisWindow(c.options, axisWindow);
       c.update("none");
     }
   };
