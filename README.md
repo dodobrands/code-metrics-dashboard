@@ -79,6 +79,11 @@ and adds only aggregate counts and dates to the chart data. A failed download st
 Pages deployment. A `roadmapOnly` entry in `charts.json` supplies series for
 `progressSource` without drawing another chart on the page.
 
+The Android MVVM chart starts in March 2025. Through May 3, 2026 it uses daily UTC
+snapshots reconstructed from the Android repository. To reproduce the fixed history
+from a full clone, run `python3 scripts/android-mvvm-history.py /path/to/dodo-mobile-android`.
+From May 4, the regular Pages build appends daily Mobile OKR observations.
+
 ## Roadmap from Kaiten
 
 An app's roadmap comes either from Kaiten or from hand-written JSON in `roadmap/`, never both:

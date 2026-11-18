@@ -1,5 +1,6 @@
 """Project the existing mobile_okrs main-branch archive to public numeric series."""
 from collections import defaultdict
+import csv
 import json
 from pathlib import Path
 import re
@@ -63,6 +64,14 @@ def main():
                 "OKR:DS:NoEquivalent", "OKR:DS:NeedsChanges", "OKR:DS:Ready"}
     if {row["name"] for row in feed["metrics"]} != required:
         raise ValueError("mobile_okrs archive lacks required Android metric series")
+    mvvm = next(row for row in feed["metrics"] if row["name"] == "OKR:MVVM:Screens")
+    history = Path(__file__).resolve().parents[1] / "dodo-android/mvvm-history.csv"
+    with history.open(newline="") as source:
+        before_okr = [{"timestamp": row["date"] + "T00:00:00Z", "value": int(row["viewmodels"])}
+                      for row in csv.DictReader(source)]
+    if before_okr[-1]["timestamp"] >= mvvm["commits"][0]["timestamp"]:
+        raise ValueError("Android Git history overlaps daily OKR observations")
+    mvvm["commits"] = before_okr + mvvm["commits"]
     raw = json.loads(raw_path.read_text())
     if required.intersection(row["name"] for row in raw["metrics"]):
         raise ValueError("Duplicate OKR metrics in the base payload")

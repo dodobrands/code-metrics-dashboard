@@ -175,8 +175,12 @@ function lineChart(canvas, spec, byName, bounds) {
   const opts = baseOptions(commonScales(bounds), datasets.length === 1, bounds);
   if (spec.selfBounds) {
     const date = new Intl.DateTimeFormat("en", { month: "short", day: "numeric", timeZone: "UTC" });
+    const month = new Intl.DateTimeFormat("en", { month: "short", year: "numeric", timeZone: "UTC" });
     opts.scales.x.ticks.callback = function (value) {
-      return this.max - this.min < 366 * DAY ? date.format(value) : new Date(value).getUTCFullYear();
+      const duration = this.max - this.min;
+      if (duration < 366 * DAY) return date.format(value);
+      if (duration < 3 * 366 * DAY) return month.format(value);
+      return new Date(value).getUTCFullYear();
     };
   }
   opts.plugins.tooltip = tooltipConfig((y) => `${y}`);
