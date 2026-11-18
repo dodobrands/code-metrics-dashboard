@@ -45,14 +45,13 @@
     ]
   },
   {
-    "id": "tests-unit-integration",
+    "id": "tests-unit",
     "group": "Tests",
-    "title": "Unit and integration tests",
-    "note": "Kotlin test methods under src/test, excluding the Konsist suite. Methods in *IntegrationTest.kt count as integration tests.",
+    "title": "Unit tests",
+    "note": "Methods annotated with @Test in Kotlin unit tests under src/test, excluding the Konsist suite.",
     "kind": "line",
     "series": [
-      "Tests:Unit",
-      "Tests:Integration"
+      "Tests:Unit"
     ]
   },
   {

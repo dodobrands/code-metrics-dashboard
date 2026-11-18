@@ -11,7 +11,6 @@
     "Screenshot:Baselines": "Golden images",
     "Detekt:Baseline": "Detekt baseline entries",
     "Modules:Total": "Modules",
-    "Tests:Integration": "Integration tests",
     "@AllureId": "TestOps case annotations",
     "OKR:DS:InUse": "Using the design system",
     "OKR:DS:Ready": "Ready to replace",
@@ -21,7 +20,7 @@
   },
   "groupNotes": {
     "UI": "Compose adoption across UI modules and Kotlin sources.",
-    "Tests": "Unit and integration tests, UI cases linked to TestOps, and screenshot baselines.",
+    "Tests": "Unit tests, UI cases linked to TestOps, and screenshot baselines.",
     "Tech debt": "Existing detekt findings recorded in the baseline.",
     "Codebase": "Gradle modules included in the Android project."
   },
