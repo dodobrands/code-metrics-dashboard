@@ -71,9 +71,11 @@ The first deploy may find no data yet — a repository's backfill takes a few ni
 The build then writes empty chart files and the page stands with its header, roadmap and
 sections; charts appear as the series arrive.
 
-An optional `metricsFeed` URL in `apps.json` adds public numeric series to the app's
-code metrics at each deploy. Dodo Android reads the Android engineering feed generated
-by the daily mobile OKR scan. A failed download stops the build and keeps the previous
+An app with `mobileOkrs: true` reads the committed daily Android snapshots and DS usage
+history from `dodobrands/mobile_okrs` during the Pages build. Configure the dashboard
+repository secret `MOBILE_OKRS_READ_TOKEN` with read-only Contents access to that repository.
+Locally the same command uses the signed-in GitHub CLI. The build streams the archive
+and adds only aggregate counts and dates to the chart data. A failed download stops the build and keeps the previous
 Pages deployment. A `roadmapOnly` entry in `charts.json` supplies series for
 `progressSource` without drawing another chart on the page.
 

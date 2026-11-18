@@ -29,7 +29,7 @@
   },
   {
     "dir": "dodo-android",
-    "metricsFeed": "https://dodobrands.github.io/mobile_okrs/android-engineering.json",
+    "mobileOkrs": true,
     "repo": "dodobrands/dodo-mobile-android",
     "name": "Dodo Android",
     "eyebrow": "Dodo Pizza · Android",
