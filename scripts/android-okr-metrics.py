@@ -18,6 +18,7 @@ def read_archive(stream):
         day = entry["date"]
         migration = (entry.get("android") or {}).get("mvvm_migration") or {}
         emit("MVP:Remaining", day, migration.get("total_presenters"))
+        emit("MVVM:Screens", day, migration.get("total_viewmodels"))
         inventory = (entry.get("ds_components") or {}).get("android") or {}
         done, total = inventory.get("adopted"), inventory.get("total")
         if type(done) is int and type(total) is int and 0 <= done <= total and total > 0:
@@ -55,7 +56,7 @@ def read_archive(stream):
 def main():
     raw_path = Path(sys.argv[1])
     feed = read_archive(sys.stdin.buffer)
-    required = {"OKR:MVP:Remaining", "OKR:DS:Available", "OKR:DS:Missing", "OKR:DS:InUse",
+    required = {"OKR:MVP:Remaining", "OKR:MVVM:Screens", "OKR:DS:Available", "OKR:DS:Missing", "OKR:DS:InUse",
                 "OKR:DS:NoEquivalent", "OKR:DS:NeedsChanges", "OKR:DS:Ready"}
     if {row["name"] for row in feed["metrics"]} != required:
         raise ValueError("mobile_okrs archive lacks required Android metric series")

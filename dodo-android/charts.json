@@ -45,6 +45,16 @@
     ]
   },
   {
+    "id": "mvvm-screens",
+    "group": "Architecture",
+    "title": "Screens on MVVM",
+    "note": "The Android OKR scanner estimates the screen count from Kotlin files that extend BaseViewModel in context and app. Each matching file counts once.",
+    "kind": "line",
+    "series": [
+      "OKR:MVVM:Screens"
+    ]
+  },
+  {
     "id": "tests-unit",
     "group": "Tests",
     "title": "Unit tests",

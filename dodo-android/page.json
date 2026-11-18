@@ -16,7 +16,8 @@
     "OKR:DS:Ready": "Ready to replace",
     "OKR:DS:NeedsChanges": "Design system change needed",
     "OKR:DS:NoEquivalent": "No equivalent component",
-    "OKR:MVP:Remaining": "MVP screens"
+    "OKR:MVP:Remaining": "MVP screens",
+    "OKR:MVVM:Screens": "MVVM screens"
   },
   "groupNotes": {
     "UI": "Compose adoption across UI modules and Kotlin sources.",
