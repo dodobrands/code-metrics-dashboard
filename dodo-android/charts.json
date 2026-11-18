@@ -22,36 +22,6 @@
     ]
   },
   {
-    "id": "ui-view-interop",
-    "group": "UI",
-    "title": "Compose inside Views",
-    "note": "Kotlin lines containing ComposeView(",
-    "kind": "line",
-    "series": [
-      "ComposeView("
-    ]
-  },
-  {
-    "id": "ui-android-interop",
-    "group": "UI",
-    "title": "Views inside Compose",
-    "note": "Kotlin lines containing AndroidView(",
-    "kind": "line",
-    "series": [
-      "AndroidView("
-    ]
-  },
-  {
-    "id": "ui-typography",
-    "group": "UI",
-    "title": "Design-system typography",
-    "note": "Kotlin lines referencing DodoTypography",
-    "kind": "line",
-    "series": [
-      "DodoTypography"
-    ]
-  },
-  {
     "id": "arch-viewmodels",
     "group": "Architecture",
     "title": "ViewModel adoption",
@@ -72,23 +42,24 @@
     ]
   },
   {
-    "id": "tests-unit",
+    "id": "tests-unit-integration",
     "group": "Tests",
-    "title": "Unit tests",
-    "note": "Kotlin lines containing @Test under src/test; parameterized invocations are not counted separately",
+    "title": "Unit and integration tests",
+    "note": "Kotlin test methods under src/test, excluding the Konsist suite. Methods in *IntegrationTest.kt count as integration tests.",
     "kind": "line",
     "series": [
-      "Tests:Unit"
+      "Tests:Unit",
+      "Tests:Integration"
     ]
   },
   {
-    "id": "tests-e2e",
+    "id": "tests-ui",
     "group": "Tests",
-    "title": "E2E tests",
-    "note": "Kotlin lines containing @Test under src/androidTest",
+    "title": "UI tests",
+    "note": "TestOps cases tracked in the repository by lines containing @AllureId.",
     "kind": "line",
     "series": [
-      "Tests:E2E"
+      "@AllureId"
     ]
   },
   {
@@ -153,36 +124,6 @@
     ]
   },
   {
-    "id": "debt-suppressions",
-    "group": "Tech debt",
-    "title": "Suppressions",
-    "note": "Kotlin lines containing @Suppress, including @SuppressLint",
-    "kind": "line",
-    "series": [
-      "@Suppress"
-    ]
-  },
-  {
-    "id": "debt-null-assertions",
-    "group": "Tech debt",
-    "title": "Non-null assertions",
-    "note": "Kotlin lines containing!!; a usage count, not a count of defects",
-    "kind": "line",
-    "series": [
-      "!!"
-    ]
-  },
-  {
-    "id": "code-toggles",
-    "group": "Codebase",
-    "title": "Feature toggles",
-    "note": "entries in FeatureCode, GrowthBookFeature and GrowthBookExperiment",
-    "kind": "line",
-    "series": [
-      "Toggles"
-    ]
-  },
-  {
     "id": "code-modules",
     "group": "Codebase",
     "title": "Modules",
@@ -190,16 +131,6 @@
     "kind": "line",
     "series": [
       "Modules:Total"
-    ]
-  },
-  {
-    "id": "code-kotlin",
-    "group": "Codebase",
-    "title": "Kotlin files",
-    "note": "tracked.kt files, including production code and tests",
-    "kind": "line",
-    "series": [
-      "kt"
     ]
   }
 ]

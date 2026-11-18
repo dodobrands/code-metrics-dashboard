@@ -4,27 +4,22 @@
     "Modules:Mixed": "Mixed",
     "Modules:ViewOnly": "View only",
     "@Composable": "Lines with @Composable",
-    "ComposeView(": "Lines with ComposeView(",
-    "AndroidView(": "Lines with AndroidView(",
-    "DodoTypography": "Lines with DodoTypography",
     ": BaseViewModel(": "Lines with BaseViewModel inheritance",
     ": BasePresenter<": "Lines with BasePresenter inheritance",
-    "Tests:Unit": "Unit test annotations",
+    "Tests:Unit": "Unit tests",
     "Tests:E2E": "E2E test annotations",
     "Screenshot:Baselines": "Golden images",
     "Detekt:Baseline": "Detekt baseline entries",
-    "@Suppress": "Lines with @Suppress",
-    "!!": "Lines with !!",
-    "Toggles": "Feature toggles",
     "Modules:Total": "Modules",
-    "kt": "Kotlin files"
+    "Tests:Integration": "Integration tests",
+    "@AllureId": "TestOps case annotations"
   },
   "groupNotes": {
-    "UI": "Compose adoption at module level, interoperability with Views, and use of design-system typography. Pattern series count matching lines, including comments and tests.",
+    "UI": "Compose adoption across UI modules and Kotlin sources.",
     "Architecture": "ViewModel and MVP inheritance patterns over time. These counts describe source code, not a screen migration percentage.",
-    "Tests": "Unit and E2E test annotations, screenshot golden images, and their distribution across modules. Counts do not measure test coverage.",
-    "Tech debt": "Detekt baseline entries and source-level markers to follow over time. These counts provide context, not a quality score.",
-    "Codebase": "The size and structure of the codebase, and feature-toggle registry entries."
+    "Tests": "Unit and integration tests, UI cases linked to TestOps, and screenshot baselines.",
+    "Tech debt": "Existing detekt findings recorded in the baseline.",
+    "Codebase": "Gradle modules included in the Android project."
   },
   "hero": {
     "chart": "ui-module-stacks",
