@@ -22,23 +22,26 @@
     ]
   },
   {
-    "id": "arch-viewmodels",
-    "group": "Architecture",
-    "title": "ViewModel adoption",
-    "note": "Kotlin lines matching the BaseViewModel inheritance pattern; this is not a count of migrated screens",
+    "id": "ds-usage",
+    "group": "Design system",
+    "title": "Design system use and remaining work",
+    "note": "Recognized component calls on Android screens. Each call counts once in its category.",
     "kind": "line",
     "series": [
-      ": BaseViewModel("
+      "OKR:DS:InUse",
+      "OKR:DS:Ready",
+      "OKR:DS:NeedsChanges",
+      "OKR:DS:NoEquivalent"
     ]
   },
   {
-    "id": "arch-presenters",
+    "id": "mvp-remaining",
     "group": "Architecture",
-    "title": "Remaining MVP presenters",
-    "note": "Kotlin lines matching the BasePresenter inheritance pattern",
+    "title": "Screens remaining on MVP",
+    "note": "Remaining presenters in feature modules and the app, counted by the Android OKR migration scanner.",
     "kind": "line",
     "series": [
-      ": BasePresenter<"
+      "OKR:MVP:Remaining"
     ]
   },
   {
@@ -96,6 +99,22 @@
         }
       },
       {
+        "label": "UI / E2E",
+        "seriesPrefix": "Tests:UI:ByModule:",
+        "topN": 30,
+        "shorten": {
+          "dropSegments": [
+            "context",
+            "infrastracture",
+            "impl"
+          ],
+          "dropSuffixes": [
+            "-impl"
+          ],
+          "collapseRepeats": true
+        }
+      },
+      {
         "label": "Screenshot baselines",
         "seriesPrefix": "Screenshot:ByModule:",
         "topN": 30,
@@ -131,6 +150,14 @@
     "kind": "line",
     "series": [
       "Modules:Total"
+    ]
+  },
+  {
+    "id": "ds-inventory",
+    "roadmapOnly": true,
+    "series": [
+      "OKR:DS:Available",
+      "OKR:DS:Missing"
     ]
   }
 ]

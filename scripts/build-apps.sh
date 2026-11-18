@@ -42,6 +42,10 @@ jq -c '.[]' "$APPS" | while read -r app; do
   echo "== $dir ($repo)"
   mkdir -p "$dir/data"
   fetch_raw "$repo" >"$dir/data/raw.json"
+  feed=$(jq -r '.metricsFeed // empty' <<<"$app")
+  if [ -n "$feed" ]; then
+    bash scripts/merge-metrics.sh "$dir/data/raw.json" "$feed"
+  fi
   (cd "$dir" && swift run --package-path "$TOOLS" build data/raw.json)
   # An app with roadmap/kaiten.json takes its roadmap from Kaiten. It runs after the
   # data build: a card's progress can come from the chart data just written.

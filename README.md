@@ -71,6 +71,12 @@ The first deploy may find no data yet — a repository's backfill takes a few ni
 The build then writes empty chart files and the page stands with its header, roadmap and
 sections; charts appear as the series arrive.
 
+An optional `metricsFeed` URL in `apps.json` adds public numeric series to the app's
+code metrics at each deploy. Dodo Android reads the Android engineering feed generated
+by the daily mobile OKR scan. A failed download stops the build and keeps the previous
+Pages deployment. A `roadmapOnly` entry in `charts.json` supplies series for
+`progressSource` without drawing another chart on the page.
+
 ## Roadmap from Kaiten
 
 An app's roadmap comes either from Kaiten or from hand-written JSON in `roadmap/`, never both:

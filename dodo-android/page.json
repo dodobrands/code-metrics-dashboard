@@ -12,11 +12,15 @@
     "Detekt:Baseline": "Detekt baseline entries",
     "Modules:Total": "Modules",
     "Tests:Integration": "Integration tests",
-    "@AllureId": "TestOps case annotations"
+    "@AllureId": "TestOps case annotations",
+    "OKR:DS:InUse": "Using the design system",
+    "OKR:DS:Ready": "Ready to replace",
+    "OKR:DS:NeedsChanges": "Design system change needed",
+    "OKR:DS:NoEquivalent": "No equivalent component",
+    "OKR:MVP:Remaining": "MVP screens"
   },
   "groupNotes": {
     "UI": "Compose adoption across UI modules and Kotlin sources.",
-    "Architecture": "ViewModel and MVP inheritance patterns over time. These counts describe source code, not a screen migration percentage.",
     "Tests": "Unit and integration tests, UI cases linked to TestOps, and screenshot baselines.",
     "Tech debt": "Existing detekt findings recorded in the baseline.",
     "Codebase": "Gradle modules included in the Android project."
