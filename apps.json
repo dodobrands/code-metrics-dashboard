@@ -38,6 +38,6 @@
     "ogTitle": "Android Engineering — Dodo Pizza",
     "ogDescription": "Compose adoption, architecture, tests and live code metrics for the Dodo Pizza Android app.",
     "lede": "A live look at the",
-    "roadmap": false
+    "roadmap": true
   }
 ]

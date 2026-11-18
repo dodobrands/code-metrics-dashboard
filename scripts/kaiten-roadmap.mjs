@@ -145,9 +145,14 @@ export async function pull(dir, token) {
     }
   }
 
+  return roadmapFromCards(dir, token, seen.values(), config);
+}
+
+// Shared rendering input for the deploy and an internal preview with its own card selection.
+export async function roadmapFromCards(dir, token, cards, config) {
   const columns = { backlog: [], progress: [], done: [] };
   const tasks = {};
-  for (const card of seen.values()) {
+  for (const card of cards) {
     const key = columnKey(card.column);
     const title = card.properties[PROP.title]?.trim();
     if (!key) continue;
