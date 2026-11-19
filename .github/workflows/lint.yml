@@ -39,9 +39,6 @@ jobs:
           repositories: code-metrics
       - uses: jdx/mise-action@v5
         with:
-          # Temporary pin until 2026.11.10 (min_version in mise.toml) clears mise-action's
-          # 24h minimum_release_age; remove after 2026-11-19 15:05Z.
-          version: 2026.11.10
           github_token: ${{ steps.codemetrics-token.outputs.token }}
       - run: npm ci
       - run: biome check .
