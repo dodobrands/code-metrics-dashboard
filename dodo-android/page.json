@@ -22,15 +22,13 @@
     "UI:XmlLayouts": "XML layouts",
     "OKR:DS:Available": "Implemented",
     "OKR:DS:Missing": "Remaining",
-    "OKR:MVVM:Comparable": "BaseViewModel files",
-    "Coverage:Unit": "Unit tests",
-    "Coverage:UI": "UI tests",
+    "Coverage:Unit": "Instruction coverage",
+    "Coverage:UI": "Instruction coverage",
     "Screenshot:ModulesWithGoldens": "With golden images",
     "Screenshot:ModulesWithoutGoldens": "Without golden images"
   },
   "groupNotes": {
     "UI": "Compose adoption across UI modules and Kotlin sources.",
-    "Tests": "Unit tests, UI cases linked to TestOps, and screenshot baselines.",
     "Tech debt": "Existing detekt findings recorded in the baseline.",
     "Codebase": "Gradle modules included in the Android project."
   },

@@ -1,4 +1,4 @@
-"""Rebuild the fixed pre-OKR portion of the MVVM chart from a full Android clone."""
+"""Rebuild the fixed pre-OKR portion of the Android MVP and MVVM charts from a full Android clone."""
 import csv
 from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
@@ -11,6 +11,17 @@ REVISION = "1c1dc986a40d2635c78508b8894b44eab45647a4"
 START = date(2025, 3, 1)
 STOP = date(2026, 5, 4)
 OUTPUT = Path(__file__).resolve().parents[1] / "dodo-android/mvvm-history.csv"
+
+
+def matching_files(git, sha, pattern):
+    result = subprocess.run(
+        git + ["grep", "-lzF", pattern, sha, "--",
+               ":(glob)project/app/**/*.kt", ":(glob)project/context/*/**/*.kt"],
+        stdout=subprocess.PIPE,
+    )
+    if result.returncode not in (0, 1):
+        result.check_returncode()
+    return result.stdout.count(b"\0")
 
 
 def generate(repo):
@@ -29,20 +40,16 @@ def generate(repo):
         if sha not in counts:
             # The app and feature modules lived under project/ throughout this period.
             # Match the OKR scanner's literal and count matching Kotlin files once.
-            result = subprocess.run(
-                git + ["grep", "-lzF", ") : BaseViewModel", sha, "--",
-                       ":(glob)project/app/**/*.kt", ":(glob)project/context/*/**/*.kt"],
-                stdout=subprocess.PIPE,
-            )
-            if result.returncode not in (0, 1):
-                result.check_returncode()
-            counts[sha] = result.stdout.count(b"\0")
-        rows.append((day.isoformat(), counts[sha]))
+            viewmodels = matching_files(git, sha, ") : BaseViewModel")
+            presenters = (matching_files(git, sha, ") : BasePresenter")
+                          + matching_files(git, sha, ") : MoxyFSMPresenter"))
+            counts[sha] = viewmodels, presenters
+        rows.append((day.isoformat(), *counts[sha]))
         day = next_day
 
     with OUTPUT.open("w", newline="") as out:
         writer = csv.writer(out, lineterminator="\n")
-        writer.writerow(["date", "viewmodels"])
+        writer.writerow(["date", "viewmodels", "presenters"])
         writer.writerows(rows)
 
 

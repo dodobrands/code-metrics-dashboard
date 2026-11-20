@@ -22,7 +22,6 @@ def read_archive(stream):
         # The three June 30–July 2 snapshots repeat the May 4 module counts.
         if day >= "2026-05-04" and not "2026-06-30" <= day <= "2026-07-02":
             emit("MVP:Remaining", day, migration.get("total_presenters"))
-            emit("MVVM:Comparable", day, migration.get("total_viewmodels"))
             emit("MVVM:Screens", day, migration.get("total_viewmodels"))
         inventory = (entry.get("ds_components") or {}).get("android") or {}
         done, total = inventory.get("adopted"), inventory.get("total")
@@ -66,18 +65,21 @@ def read_archive(stream):
 def main():
     raw_path = Path(sys.argv[1])
     feed = read_archive(sys.stdin.buffer)
-    required = {"OKR:MVVM:Comparable", "OKR:MVP:Remaining", "OKR:MVVM:Screens", "OKR:DS:Available", "OKR:DS:Missing", "OKR:DS:InUse",
+    required = {"OKR:MVP:Remaining", "OKR:MVVM:Screens", "OKR:DS:Available", "OKR:DS:Missing", "OKR:DS:InUse",
                 "OKR:DS:NoEquivalent", "OKR:DS:NeedsChanges", "OKR:DS:Ready"}
     if {row["name"] for row in feed["metrics"]} != required:
         raise ValueError("mobile_okrs archive lacks required Android metric series")
-    mvvm = next(row for row in feed["metrics"] if row["name"] == "OKR:MVVM:Screens")
     history = Path(__file__).resolve().parents[1] / "dodo-android/mvvm-history.csv"
     with history.open(newline="") as source:
-        before_okr = [{"timestamp": row["date"] + "T00:00:00Z", "value": int(row["viewmodels"])}
-                      for row in csv.DictReader(source)]
-    if before_okr[-1]["timestamp"] >= mvvm["commits"][0]["timestamp"]:
-        raise ValueError("Android Git history overlaps daily OKR observations")
-    mvvm["commits"] = before_okr + mvvm["commits"]
+        rows = list(csv.DictReader(source))
+    by_name = {row["name"]: row["commits"] for row in feed["metrics"]}
+    for name, column in [("OKR:MVVM:Screens", "viewmodels"), ("OKR:MVP:Remaining", "presenters")]:
+        commits = by_name[name]
+        before_okr = [{"timestamp": row["date"] + "T00:00:00Z", "value": int(row[column])}
+                      for row in rows]
+        if before_okr[-1]["timestamp"] >= commits[0]["timestamp"]:
+            raise ValueError(f"Android Git history overlaps daily OKR observations for {name}")
+        commits[:0] = before_okr
     raw = json.loads(raw_path.read_text())
     if required.intersection(row["name"] for row in raw["metrics"]):
         raise ValueError("Duplicate OKR metrics in the base payload")

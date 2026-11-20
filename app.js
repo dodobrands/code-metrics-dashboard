@@ -196,7 +196,7 @@ function lineChart(canvas, spec, byName, bounds) {
     label: nameOf(n), data: byName.get(n).points.map(([x, y]) => ({ x, y })),
     spanGaps: spec.maxGapDays == null ? false : spec.maxGapDays * DAY,
     borderColor: colors[i % colors.length], backgroundColor: colors[i % colors.length],
-    borderWidth: 1.75, pointRadius: spec.maxGapDays && byName.get(n).points.length < 60 ? 2 : 0, pointHoverRadius: 3, tension: 0.12, fill: false,
+    borderWidth: 1.75, pointRadius: spec.maxGapDays && byName.get(n).points.length < 60 ? 2 : 0, pointHoverRadius: 3, tension: spec.percent ? 0 : 0.12, fill: false,
   }));
   if (spec.latest && datasets.length) {
     const timestamp = Math.max(...datasets.map((dataset) => dataset.data.at(-1)?.x ?? -Infinity));

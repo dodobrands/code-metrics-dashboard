@@ -60,10 +60,10 @@
     "id": "mvp-remaining",
     "group": "Architecture",
     "title": "MVP and MVVM in the migration scan",
-    "note": "Share of matched presenter and BaseViewModel files in app and context. On April 7, 2026 the old scan found 340 Kotlin files mentioning Presenter. Recounting that day’s develop revision by inheritance gives 91 presenter files. The chart uses the revised daily scan from May 4.",
+    "note": "Share of presenter and BaseViewModel files matched by inheritance in app and context. Each percentage uses the combined count for that day.",
     "kind": "share",
     "series": [
-      "OKR:MVVM:Comparable",
+      "OKR:MVVM:Screens",
       "OKR:MVP:Remaining"
     ],
     "maxGapDays": 1,
@@ -84,45 +84,30 @@
     "latest": true
   },
   {
-    "id": "tests-coverage",
-    "group": "Tests",
-    "title": "Code coverage by test suite",
-    "note": "Share of measured bytecode instructions executed in nightly develop runs, from separate JaCoCo reports. The suites can execute the same instructions.",
-    "kind": "line",
-    "percent": true,
-    "maxGapDays": 1,
-    "series": [
-      "Coverage:Unit",
-      "Coverage:UI"
-    ],
-    "selfBounds": true,
-    "latest": true
-  },
-  {
     "id": "tests-unit",
     "group": "Tests",
     "title": "Unit tests",
-    "note": "Methods annotated with @Test in Kotlin unit tests under src/test, excluding the Konsist suite.",
+    "note": "Percentage of bytecode instructions covered by unit tests in nightly JaCoCo reports.",
     "kind": "line",
     "series": [
-      "Tests:Unit"
+      "Coverage:Unit"
     ],
-    "activeSeries": "Tests:Unit",
     "selfBounds": true,
-    "latest": true
+    "latest": true,
+    "percent": true
   },
   {
     "id": "tests-ui",
     "group": "Tests",
     "title": "UI tests",
-    "note": "TestOps cases tracked in the repository by lines containing @AllureId.",
+    "note": "Percentage of bytecode instructions covered by UI tests in nightly JaCoCo reports.",
     "kind": "line",
     "series": [
-      "@AllureId"
+      "Coverage:UI"
     ],
-    "activeSeries": "@AllureId",
     "selfBounds": true,
-    "latest": true
+    "latest": true,
+    "percent": true
   },
   {
     "id": "screenshot-reach",
