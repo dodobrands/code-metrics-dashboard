@@ -149,7 +149,7 @@ export async function pull(dir, token) {
 }
 
 // Shared rendering input for the deploy and an internal preview with its own card selection.
-export async function roadmapFromCards(dir, token, cards, config) {
+export async function roadmapFromCards(dir, token, cards, config, children = (id) => all(token, `/cards/${id}/children`)) {
   const columns = { backlog: [], progress: [], done: [] };
   const tasks = {};
   for (const card of cards) {
@@ -167,7 +167,7 @@ export async function roadmapFromCards(dir, token, cards, config) {
       const rule = config.progressSource?.[card.id];
       let p = rule ? metricProgress(rule, await chartSeries(dir, rule.chart)) : null;
       if (rule && p === null) console.warn(`kaiten: card ${card.id}: chart "${rule.chart}" lacks data for its progressSource series — using Kaiten children`);
-      p ??= progress(await all(token, `/cards/${card.id}/children`));
+      p ??= progress(await children(card.id));
       if (p !== null) task.progress = p;
     }
     const id = `kaiten-${card.id}`;

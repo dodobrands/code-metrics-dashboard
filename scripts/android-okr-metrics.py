@@ -18,10 +18,11 @@ def read_archive(stream):
     def inventory_and_migration(entry):
         day = entry["date"]
         migration = (entry.get("android") or {}).get("mvvm_migration") or {}
-        emit("MVP:Remaining", day, migration.get("total_presenters"))
         # The scanner switched to BaseViewModel subclasses on May 4 (mobile_okrs PR #1).
         # The three June 30–July 2 snapshots repeat the May 4 module counts.
         if day >= "2026-05-04" and not "2026-06-30" <= day <= "2026-07-02":
+            emit("MVP:Remaining", day, migration.get("total_presenters"))
+            emit("MVVM:Comparable", day, migration.get("total_viewmodels"))
             emit("MVVM:Screens", day, migration.get("total_viewmodels"))
         inventory = (entry.get("ds_components") or {}).get("android") or {}
         done, total = inventory.get("adopted"), inventory.get("total")
@@ -60,7 +61,7 @@ def read_archive(stream):
 def main():
     raw_path = Path(sys.argv[1])
     feed = read_archive(sys.stdin.buffer)
-    required = {"OKR:MVP:Remaining", "OKR:MVVM:Screens", "OKR:DS:Available", "OKR:DS:Missing", "OKR:DS:InUse",
+    required = {"OKR:MVVM:Comparable", "OKR:MVP:Remaining", "OKR:MVVM:Screens", "OKR:DS:Available", "OKR:DS:Missing", "OKR:DS:InUse",
                 "OKR:DS:NoEquivalent", "OKR:DS:NeedsChanges", "OKR:DS:Ready"}
     if {row["name"] for row in feed["metrics"]} != required:
         raise ValueError("mobile_okrs archive lacks required Android metric series")

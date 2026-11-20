@@ -16,8 +16,17 @@
     "OKR:DS:Ready": "Ready to replace",
     "OKR:DS:NeedsChanges": "Design system change needed",
     "OKR:DS:NoEquivalent": "No equivalent component",
-    "OKR:MVP:Remaining": "MVP screens",
-    "OKR:MVVM:Screens": "MVVM screens"
+    "OKR:MVP:Remaining": "Presenter files",
+    "OKR:MVVM:Screens": "BaseViewModel files",
+    "UI:ComposeFiles": "Kotlin files with @Composable",
+    "UI:XmlLayouts": "XML layouts",
+    "OKR:DS:Available": "Implemented",
+    "OKR:DS:Missing": "Remaining",
+    "OKR:MVVM:Comparable": "BaseViewModel files",
+    "Coverage:Unit": "Unit tests",
+    "Coverage:UI": "UI tests",
+    "Screenshot:ModulesWithGoldens": "With golden images",
+    "Screenshot:ModulesWithoutGoldens": "Without golden images"
   },
   "groupNotes": {
     "UI": "Compose adoption across UI modules and Kotlin sources.",

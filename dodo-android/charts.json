@@ -3,58 +3,100 @@
     "id": "ui-module-stacks",
     "group": "UI",
     "title": "Modules by UI stack",
-    "note": "share of UI modules containing @Composable, XML layouts, or both; modules without either are excluded",
+    "note": "Each UI module counts once. The scanner looks for Kotlin files containing @Composable and XML layout resources.",
     "kind": "share",
     "series": [
       "Modules:ComposeOnly",
       "Modules:Mixed",
       "Modules:ViewOnly"
-    ]
+    ],
+    "selfBounds": true,
+    "latest": true,
+    "activeSeries": "Modules:Mixed"
   },
   {
     "id": "ui-compose",
     "group": "UI",
-    "title": "Compose surface",
-    "note": "Kotlin lines containing @Composable, including previews and tests",
-    "kind": "line",
+    "title": "Compose share of UI source files",
+    "note": "Each Kotlin file containing @Composable and each XML layout in src/main counts once. A file can contain several composables.",
+    "kind": "share",
     "series": [
-      "@Composable"
-    ]
+      "UI:ComposeFiles",
+      "UI:XmlLayouts"
+    ],
+    "activeSeries": "UI:ComposeFiles",
+    "selfBounds": true,
+    "latest": true
   },
   {
     "id": "ds-usage",
     "group": "Design system",
     "title": "Design system use and remaining work",
-    "note": "Recognized component calls on Android screens. Each call counts once in its category.",
-    "kind": "line",
+    "note": "Share of recognized component calls across scanned Android screens. Repeated uses count separately. The denominator excludes system controls.",
+    "kind": "share",
     "series": [
       "OKR:DS:InUse",
       "OKR:DS:Ready",
       "OKR:DS:NeedsChanges",
       "OKR:DS:NoEquivalent"
-    ]
+    ],
+    "selfBounds": true,
+    "latest": true
+  },
+  {
+    "id": "ds-inventory",
+    "series": [
+      "OKR:DS:Available",
+      "OKR:DS:Missing"
+    ],
+    "group": "Design system",
+    "title": "Android component catalog",
+    "kind": "share",
+    "note": "Each catalog component applicable to Android counts once. Availability measures how much of the catalog the team has implemented.",
+    "selfBounds": true,
+    "latest": true
   },
   {
     "id": "mvp-remaining",
     "group": "Architecture",
-    "title": "Screens remaining on MVP",
-    "note": "Remaining presenters in feature modules and the app, counted by the Android OKR migration scanner.",
-    "kind": "line",
+    "title": "MVP and MVVM in the migration scan",
+    "note": "Share of matched presenter and BaseViewModel files in app and context. On April 7, 2026 the old scan found 340 Kotlin files mentioning Presenter. Recounting that day’s develop revision by inheritance gives 91 presenter files. The chart uses the revised daily scan from May 4.",
+    "kind": "share",
     "series": [
+      "OKR:MVVM:Comparable",
       "OKR:MVP:Remaining"
-    ]
+    ],
+    "maxGapDays": 1,
+    "selfBounds": true,
+    "latest": true
   },
   {
     "id": "mvvm-screens",
     "group": "Architecture",
-    "title": "Screens on MVVM",
-    "note": "One Kotlin file extending BaseViewModel in app or context counts as one screen. Daily counts come from Android Git history through May 3, 2026 and from Mobile OKR after that. Gaps mark missing or unreliable snapshots.",
+    "title": "BaseViewModel files matched by the scanner",
+    "note": "Counts Kotlin files in app and context with a constructor followed by direct BaseViewModel inheritance, including new features. Direct AndroidX subclasses such as AuthContainerViewModel, declarations without that constructor pattern and indirect subclasses fall outside this count. Gaps mark missing observations.",
     "selfBounds": true,
     "maxGapDays": 1,
     "kind": "line",
     "series": [
       "OKR:MVVM:Screens"
-    ]
+    ],
+    "latest": true
+  },
+  {
+    "id": "tests-coverage",
+    "group": "Tests",
+    "title": "Code coverage by test suite",
+    "note": "Share of measured bytecode instructions executed in nightly develop runs, from separate JaCoCo reports. The suites can execute the same instructions.",
+    "kind": "line",
+    "percent": true,
+    "maxGapDays": 1,
+    "series": [
+      "Coverage:Unit",
+      "Coverage:UI"
+    ],
+    "selfBounds": true,
+    "latest": true
   },
   {
     "id": "tests-unit",
@@ -64,7 +106,10 @@
     "kind": "line",
     "series": [
       "Tests:Unit"
-    ]
+    ],
+    "activeSeries": "Tests:Unit",
+    "selfBounds": true,
+    "latest": true
   },
   {
     "id": "tests-ui",
@@ -74,7 +119,24 @@
     "kind": "line",
     "series": [
       "@AllureId"
-    ]
+    ],
+    "activeSeries": "@AllureId",
+    "selfBounds": true,
+    "latest": true
+  },
+  {
+    "id": "screenshot-reach",
+    "group": "Tests",
+    "title": "Screenshot coverage of UI modules",
+    "note": "A UI module has Compose code or XML layouts. A module counts as covered when it contains at least one checked-in golden PNG. This measures module reach.",
+    "kind": "share",
+    "series": [
+      "Screenshot:ModulesWithGoldens",
+      "Screenshot:ModulesWithoutGoldens"
+    ],
+    "activeSeries": "Screenshot:ModulesWithGoldens",
+    "selfBounds": true,
+    "latest": true
   },
   {
     "id": "tests-screenshots",
@@ -84,34 +146,21 @@
     "kind": "line",
     "series": [
       "Screenshot:Baselines"
-    ]
+    ],
+    "activeSeries": "Screenshot:Baselines",
+    "selfBounds": true,
+    "latest": true
   },
   {
     "id": "tests-by-module",
     "group": "Tests",
     "title": "Tests by module",
-    "note": "latest count per Gradle module: the 30 largest, the rest folded into Other",
+    "note": "Share of all unit tests or golden images in the latest snapshot. The smallest modules are grouped under Other.",
     "kind": "bar",
     "toggle": [
       {
         "label": "Unit tests",
         "seriesPrefix": "Tests:Unit:ByModule:",
-        "topN": 30,
-        "shorten": {
-          "dropSegments": [
-            "context",
-            "infrastracture",
-            "impl"
-          ],
-          "dropSuffixes": [
-            "-impl"
-          ],
-          "collapseRepeats": true
-        }
-      },
-      {
-        "label": "UI / E2E",
-        "seriesPrefix": "Tests:UI:ByModule:",
         "topN": 30,
         "shorten": {
           "dropSegments": [
@@ -141,7 +190,8 @@
           "collapseRepeats": true
         }
       }
-    ]
+    ],
+    "shareOfTotal": true
   },
   {
     "id": "debt-baseline",
@@ -151,7 +201,10 @@
     "kind": "line",
     "series": [
       "Detekt:Baseline"
-    ]
+    ],
+    "activeSeries": "Detekt:Baseline",
+    "selfBounds": true,
+    "latest": true
   },
   {
     "id": "code-modules",
@@ -161,14 +214,8 @@
     "kind": "line",
     "series": [
       "Modules:Total"
-    ]
-  },
-  {
-    "id": "ds-inventory",
-    "roadmapOnly": true,
-    "series": [
-      "OKR:DS:Available",
-      "OKR:DS:Missing"
-    ]
+    ],
+    "selfBounds": true,
+    "latest": true
   }
 ]
