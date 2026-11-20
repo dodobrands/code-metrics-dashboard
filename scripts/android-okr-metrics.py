@@ -26,6 +26,11 @@ def read_archive(stream):
             emit("MVVM:Screens", day, migration.get("total_viewmodels"))
         inventory = (entry.get("ds_components") or {}).get("android") or {}
         done, total = inventory.get("adopted"), inventory.get("total")
+        # ds_metrics rescanned the Android Git trees after code search returned empty results.
+        # mobile_okrs retained the original counts on these two days.
+        # https://github.com/dodobrands/ds_metrics/commit/3071c5761a3ca6500240c228291f04c68c0d6264
+        if day in ("2026-08-29", "2026-08-30") and (done, total) == (3, 34):
+            done = 31
         if type(done) is int and type(total) is int and 0 <= done <= total and total > 0:
             emit("DS:Available", day, done)
             emit("DS:Missing", day, total - done)

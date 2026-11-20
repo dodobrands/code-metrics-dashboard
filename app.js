@@ -714,13 +714,6 @@ async function main() {
     const card = document.createElement("figure");
     card.className = "card";
     card.innerHTML = `<figcaption><h3>${escapeHtml(spec.title)}</h3>${spec.note ? `<p>${escapeHtml(spec.note)}</p>` : ""}</figcaption><div class="canvas-wrap"><canvas></canvas></div>`;
-    if (spec.catalog) {
-      const details = document.createElement("details");
-      details.className = "catalog-list";
-      details.innerHTML = "<summary>Component names</summary>" +
-        Object.entries(spec.catalog).map(([label, names]) => `<p><b>${escapeHtml(label)}</b> · ${names.map(escapeHtml).join(", ")}</p>`).join("");
-      card.querySelector("figcaption").appendChild(details);
-    }
     section.appendChild(card);
     const canvas = card.querySelector("canvas");
     const b = spec.selfBounds ? (seriesBounds(byName, spec.activeSeries) || bounds) : bounds;

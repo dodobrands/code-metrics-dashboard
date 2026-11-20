@@ -150,8 +150,6 @@ h1 {
 .chart-reading { display: flex; flex-wrap: wrap; align-items: baseline; gap: .35em 1.1em; margin-top: var(--sp-2); font-size: 13px; }
 .chart-reading time { color: var(--muted); font: 11px var(--mono); }
 .chart-reading b { font-variant-numeric: tabular-nums; }
-.catalog-list { margin-top: var(--sp-2); font-size: 13px; overflow-wrap: anywhere; }
-.catalog-list summary { cursor: pointer; }
 
 .card {
   margin: 0 0 var(--sp-4);
