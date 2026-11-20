@@ -191,6 +191,10 @@ check goals from a private window.
 Metrics come from the `code-metrics` service. Data is **never committed** — it is generated at
 publish time and injected into the Pages artifact only.
 
+> **Only two sources.** A page reads metric values only from `code-metrics`; the only other
+> allowed source is Kaiten, for the roadmap. Nothing is read from an app's repository or anywhere
+> else. A metric that is missing goes into `code-metrics` first, from the producer repo's CI.
+
 ```
 bash scripts/build-apps.sh   # stamp pages, then per app: fetch → build → roadmap, inside <dir>/
 ```
