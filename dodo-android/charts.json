@@ -111,19 +111,6 @@
     "latest": true
   },
   {
-    "id": "tests-screenshots",
-    "group": "Tests",
-    "title": "Screenshot baselines",
-    "note": "tracked golden PNG images under src/screenshotTestDebug/reference; one test may have several images",
-    "kind": "line",
-    "series": [
-      "Screenshot:Baselines"
-    ],
-    "activeSeries": "Screenshot:Baselines",
-    "selfBounds": true,
-    "latest": true
-  },
-  {
     "id": "tests-by-module",
     "group": "Tests",
     "title": "Tests by module",
