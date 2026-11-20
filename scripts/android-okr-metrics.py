@@ -37,14 +37,13 @@ def read_archive(stream):
     def design_system_usage(entry):
         usage = entry.get("android") or {}
         day = entry["date"]
-        emit("DS:InUse", day, usage.get("ds"))
-        emit("DS:NoEquivalent", day, usage.get("gaps"))
-        ready, custom = usage.get("custom_ready"), usage.get("custom")
-        replaceable = usage.get("replaceable")
-        if type(ready) is int and type(custom) is int and 0 <= ready <= custom:
+        ds, gaps, ready, custom, replaceable = (usage.get(k) for k in
+            ("ds", "gaps", "custom_ready", "custom", "replaceable"))
+        if all(type(n) is int and n >= 0 for n in (ds, gaps, ready, custom, replaceable)) and ready <= custom:
+            emit("DS:InUse", day, ds)
+            emit("DS:NoEquivalent", day, gaps)
             emit("DS:NeedsChanges", day, custom - ready)
-            if type(replaceable) is int and replaceable >= 0:
-                emit("DS:Ready", day, replaceable + ready)
+            emit("DS:Ready", day, replaceable + ready)
 
     with tarfile.open(fileobj=stream, mode="r|gz") as archive:
         for member in archive:
@@ -69,21 +68,31 @@ def main():
                 "OKR:DS:NoEquivalent", "OKR:DS:NeedsChanges", "OKR:DS:Ready"}
     if {row["name"] for row in feed["metrics"]} != required:
         raise ValueError("mobile_okrs archive lacks required Android metric series")
-    history = Path(__file__).resolve().parents[1] / "dodo-android/mvvm-history.csv"
-    with history.open(newline="") as source:
-        rows = list(csv.DictReader(source))
-    by_name = {row["name"]: row["commits"] for row in feed["metrics"]}
-    for name, column in [("OKR:MVVM:Screens", "viewmodels"), ("OKR:MVP:Remaining", "presenters")]:
-        commits = by_name[name]
-        before_okr = [{"timestamp": row["date"] + "T00:00:00Z", "value": int(row[column])}
-                      for row in rows]
-        if before_okr[-1]["timestamp"] >= commits[0]["timestamp"]:
-            raise ValueError(f"Android Git history overlaps daily OKR observations for {name}")
-        commits[:0] = before_okr
     raw = json.loads(raw_path.read_text())
     if required.intersection(row["name"] for row in raw["metrics"]):
         raise ValueError("Duplicate OKR metrics in the base payload")
     raw["metrics"].extend(feed["metrics"])
+    by_name = {row["name"]: row for row in raw["metrics"]}
+    history = Path(__file__).resolve().parents[1] / "dodo-android"
+    # Prefer a live observation on overlaps, including sources that backfill older dates.
+    for filename, columns in (
+        ("mvvm-history.csv", {"viewmodels": "OKR:MVVM:Screens", "presenters": "OKR:MVP:Remaining"}),
+        ("ds-catalog-history.csv", {k: "OKR:DS:" + k for k in ("Available", "Missing")}),
+        ("ds-usage-history.csv", {k: "OKR:DS:" + k for k in ("InUse", "Ready", "NeedsChanges", "NoEquivalent")}),
+        ("coverage-history.csv", {"unit": "Coverage:Unit", "ui": "Coverage:UI"}),
+    ):
+        with (history / filename).open(newline="") as source:
+            rows = list(csv.DictReader(source))
+        for column, name in columns.items():
+            if name not in by_name:
+                by_name[name] = {"name": name, "commits": []}
+                raw["metrics"].append(by_name[name])
+            points = by_name[name]["commits"]
+            observed = {p["timestamp"][:10] for p in points}
+            number = float if name.startswith("Coverage:") else int
+            points.extend({"timestamp": r["date"] + "T00:00:00Z", "value": number(r[column])}
+                          for r in rows if r[column] and r["date"] not in observed)
+            points.sort(key=lambda p: p["timestamp"])
     staged = raw_path.with_suffix(".merged.tmp")
     staged.write_text(json.dumps(raw, separators=(",", ":")))
     staged.replace(raw_path)

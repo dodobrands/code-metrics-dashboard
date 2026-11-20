@@ -84,6 +84,17 @@ snapshots reconstructed from the Android repository. To reproduce the fixed hist
 from a full clone, run `python3 scripts/android-mvvm-history.py /path/to/dodo-mobile-android`.
 From May 4, the regular Pages build appends daily Mobile OKR observations.
 
+Android DS history starts on March 19, 2024. To reproduce the historical CSVs, run
+`python3 scripts/android-ds-history.py /path/to/android /path/to/mobile_okrs /path/to/ds_metrics`.
+The reference scanner revisions are mobile_okrs `5829fb82` and ds_metrics `5af81314`.
+Subsequent usage and catalog observations come from the scheduled Mobile OKR scan.
+
+The Android Code Metrics workflow measures Compose files, layouts and screenshot module reach.
+Scheduled develop Code Checks archive separate unit and UI JaCoCo results. Code Metrics imports
+retained reports on its normal nightly run and retries them on subsequent runs. Pages reads
+these series from code-metrics and includes verified measurements predating the new workflow
+from `dodo-android/coverage-history.csv`. A live measurement takes precedence for its day.
+
 ## Roadmap from Kaiten
 
 An app's roadmap comes either from Kaiten or from hand-written JSON in `roadmap/`, never both:
