@@ -15,6 +15,12 @@
       "subtitle": "Roadmap · Live metrics",
       "eyebrow": "DRINKIT · ANDROID",
       "output": "drinkit-android/og.png"
+    },
+    {
+      "title": "Android Engineering",
+      "subtitle": "Compose · Architecture · Tests · Live metrics",
+      "eyebrow": "DODO PIZZA · ANDROID",
+      "output": "dodo-android/og.png"
     }
   ]
 }

@@ -26,5 +26,19 @@
     "lede": "Roadmap and a live look at the",
     "roadmap": true,
     "metrika": 114223578
+  },
+  {
+    "dir": "dodo-android",
+    "mobileOkrs": true,
+    "repo": "dodobrands/dodo-mobile-android",
+    "name": "Dodo Android",
+    "eyebrow": "Dodo Pizza · Android",
+    "heading": "Android Engineering",
+    "title": "Dodo Android—Engineering",
+    "description": "Engineering hub for the Dodo Pizza Android app — a live view of Compose adoption, architecture, tests and code quality.",
+    "ogTitle": "Android Engineering — Dodo Pizza",
+    "ogDescription": "Compose adoption, architecture, tests and live code metrics for the Dodo Pizza Android app.",
+    "lede": "A live look at the",
+    "roadmap": true
   }
 ]

@@ -124,3 +124,14 @@ test("shareSeries keeps the two-series zero-total fallback", () => {
     { name: "Literal", points: [{ x: 1, y: 75 }, { x: 2, y: 100 }] },
   ]);
 });
+
+test("measured shares retain counts and gaps on the common observation dates", () => {
+  const [series] = shareSeries([
+    { name: "used", points: [[1, 0], [2, 8], [4, 2], [5, 4]] },
+    { name: "remaining", points: [[1, 0], [4, 6], [5, 4]] },
+  ], { includeCounts: true, maxGapMs: 1 });
+  assert.deepEqual(series.points, [
+    { x: 1, y: null, count: 0, total: 0 }, { x: 2, y: null },
+    { x: 4, y: 25, count: 2, total: 8 }, { x: 5, y: 50, count: 4, total: 8 },
+  ]);
+});

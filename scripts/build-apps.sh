@@ -42,6 +42,9 @@ jq -c '.[]' "$APPS" | while read -r app; do
   echo "== $dir ($repo)"
   mkdir -p "$dir/data"
   fetch_raw "$repo" >"$dir/data/raw.json"
+  if jq -e '.mobileOkrs == true' <<<"$app" >/dev/null; then
+    bash scripts/merge-metrics.sh "$dir/data/raw.json"
+  fi
   (cd "$dir" && swift run --package-path "$TOOLS" build data/raw.json)
   # An app with roadmap/kaiten.json takes its roadmap from Kaiten. It runs after the
   # data build: a card's progress can come from the chart data just written.

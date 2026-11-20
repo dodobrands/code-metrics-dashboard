@@ -48,6 +48,7 @@ jobs:
 
       - name: Fetch + build metrics
         env:
+          MOBILE_OKRS_READ_TOKEN: ${{ secrets.MOBILE_OKRS_READ_TOKEN }}
           CODEMETRICS_URL: ${{ vars.CODEMETRICS_URL }}
           CODEMETRICS_TOKEN: ${{ secrets.CODEMETRICS_READ_TOKEN }}
           # Roadmap cards of apps with roadmap/kaiten.json (scripts/kaiten-roadmap.mjs).
