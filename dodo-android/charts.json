@@ -71,19 +71,6 @@
     "latest": true
   },
   {
-    "id": "mvvm-screens",
-    "group": "Architecture",
-    "title": "BaseViewModel files matched by the scanner",
-    "note": "Counts Kotlin files in app and context with a constructor followed by direct BaseViewModel inheritance, including new features. Direct AndroidX subclasses such as AuthContainerViewModel, declarations without that constructor pattern and indirect subclasses fall outside this count. Gaps mark missing observations.",
-    "selfBounds": true,
-    "maxGapDays": 1,
-    "kind": "line",
-    "series": [
-      "OKR:MVVM:Screens"
-    ],
-    "latest": true
-  },
-  {
     "id": "tests-unit",
     "group": "Tests",
     "title": "Unit tests",
