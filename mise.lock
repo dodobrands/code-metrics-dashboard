@@ -17,18 +17,18 @@ url_api = "https://api.github.com/repos/rhysd/actionlint/releases/assets/3849248
 provenance = "github-attestations"
 
 [[tools."github:dodo-ai-platform/code-metrics"]]
-version = "1.6.10"
+version = "1.8.0"
 backend = "github:dodo-ai-platform/code-metrics"
 
 [tools."github:dodo-ai-platform/code-metrics"."platforms.linux-x64"]
-checksum = "sha256:fe705c0b5a285fde2255f5925f5ca0493af750bcd401d3eb6413ef1395df31c6"
-url = "https://github.com/dodo-ai-platform/code-metrics/releases/download/1.6.10/codemetrics_1.6.10_linux_x86_64.tar.gz"
-url_api = "https://api.github.com/repos/dodo-ai-platform/code-metrics/releases/assets/608513366"
+checksum = "sha256:a3bd181a1f6a18527e86974fd4efb88997f7930adbc018ff72c6e09bc0f57a62"
+url = "https://github.com/dodo-ai-platform/code-metrics/releases/download/1.8.0/codemetrics_1.8.0_linux_x86_64.tar.gz"
+url_api = "https://api.github.com/repos/dodo-ai-platform/code-metrics/releases/assets/777075837"
 
 [tools."github:dodo-ai-platform/code-metrics"."platforms.macos-arm64"]
-checksum = "sha256:d69816a00484bccae80a87f514133a5b2f99a315d083aeb2c4479149ad8f0a55"
-url = "https://github.com/dodo-ai-platform/code-metrics/releases/download/1.6.10/codemetrics_1.6.10_darwin_arm64.tar.gz"
-url_api = "https://api.github.com/repos/dodo-ai-platform/code-metrics/releases/assets/608500298"
+checksum = "sha256:c79a95a1519a85d18d4b6b223ae5ca0774d64dc3618cdee4588777ea008aa488"
+url = "https://github.com/dodo-ai-platform/code-metrics/releases/download/1.8.0/codemetrics_1.8.0_darwin_arm64.tar.gz"
+url_api = "https://api.github.com/repos/dodo-ai-platform/code-metrics/releases/assets/777051471"
 
 [[tools.node]]
 version = "26.13.0"
