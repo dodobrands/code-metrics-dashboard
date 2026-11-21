@@ -199,7 +199,7 @@ publish time and injected into the Pages artifact only.
 bash scripts/build-apps.sh   # stamp pages, then per app: fetch → build → roadmap, inside <dir>/
 ```
 
-Per app: `codemetrics get --repo <repo>` (or the HTTP API with `CODEMETRICS_URL` +
+Per app: `codemetrics get --compact --repo <repo>` (or the HTTP API with `CODEMETRICS_URL` +
 `CODEMETRICS_TOKEN` when the CLI isn't installed) into `<dir>/data/raw.json`, then
 `swift run --package-path Tools/DashboardBuild build data/raw.json` with `<dir>` as the working
 directory, and `build-roadmap` where `apps.json` says so.
