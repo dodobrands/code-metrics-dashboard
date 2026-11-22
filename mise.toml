@@ -1,3 +1,9 @@
+# mise itself, not a tool: 2026.11.10 is the first release whose bundled aqua registry
+# knows ImageMagick's 7.1.2-36+ asset names (the deploy's share-image step installs it
+# via `mise x`). Older mise fails with "no asset found: ...-gcc-x86_64.AppImage".
+# mise-action caches its binary per config hash, so this edit also makes CI fetch a new one.
+min_version = "2026.11.10"
+
 [settings]
 lockfile = true
 # Lock (and auto-lock during `mise install`) only the platforms we run: CI linux-x64,

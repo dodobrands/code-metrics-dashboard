@@ -24,7 +24,10 @@ fetch_raw() { # repo → JSON on stdout
   if [ -n "${CODEMETRICS_FETCH:-}" ]; then
     "$CODEMETRICS_FETCH" "$1"
   elif command -v codemetrics >/dev/null; then
-    codemetrics get --repo "$1"
+    # --compact splices the service's pages as they are instead of decoding and
+    # re-encoding every value — most of the fetch's time went to that. Same data,
+    # compact JSON; the build tools parse it either way.
+    codemetrics get --compact --repo "$1"
   else
     : "${CODEMETRICS_URL:?CODEMETRICS_URL is required without the codemetrics CLI}"
     : "${CODEMETRICS_TOKEN:?CODEMETRICS_TOKEN is required without the codemetrics CLI}"
