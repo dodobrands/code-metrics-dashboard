@@ -25,11 +25,13 @@
     "Coverage:Unit": "Instruction coverage",
     "Coverage:UI": "Instruction coverage",
     "Screenshot:ModulesWithGoldens": "With golden images",
-    "Screenshot:ModulesWithoutGoldens": "Without golden images"
+    "Screenshot:ModulesWithoutGoldens": "Without golden images",
+    "Lint:Baseline": "Baseline entries",
+    "Lint:BaselineRuleIds": "Distinct issue IDs"
   },
   "groupNotes": {
     "UI": "Compose adoption across UI modules and Kotlin sources.",
-    "Tech debt": "Existing detekt findings recorded in the baseline.",
+    "Tech debt": "Detekt and Android Lint findings recorded in checked-in baselines.",
     "Codebase": "Gradle modules included in the Android project."
   },
   "hero": {
@@ -46,5 +48,6 @@
         "class": "mixed"
       }
     ]
-  }
+  },
+  "defaultRangeDays": 91
 }

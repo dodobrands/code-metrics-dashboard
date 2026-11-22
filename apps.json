@@ -29,7 +29,6 @@
   },
   {
     "dir": "dodo-android",
-    "mobileOkrs": true,
     "repo": "dodobrands/dodo-mobile-android",
     "name": "Dodo Android",
     "eyebrow": "Dodo Pizza · Android",

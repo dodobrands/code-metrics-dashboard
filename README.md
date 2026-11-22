@@ -10,6 +10,7 @@ app; every app lives at `…/<dir>/`, and that is the link to share.
 |---|---|---|
 | Dodo Pizza iOS | `dodobrands/dodo-mobile-ios` | [`dodo-ios/`](https://dodobrands.github.io/code-metrics-dashboard/dodo-ios/) |
 | Drinkit Android | `dodobrands/drinkit-mobile-android` | [`drinkit-android/`](https://dodobrands.github.io/code-metrics-dashboard/drinkit-android/) |
+| Dodo Pizza Android | `dodobrands/dodo-mobile-android` | [`dodo-android/`](https://dodobrands.github.io/code-metrics-dashboard/dodo-android/) |
 
 ## How the site is put together
 
@@ -44,7 +45,7 @@ to `dodobrands.github.io/…` and 404.
 | File | Required | What it is |
 |---|---|---|
 | `charts.json` | yes | the chart spec: id, group, title, note, kind, series — by **store names**, the metric names as the app's repository writes them. Shared by the page and the build. |
-| `page.json` | no | `labels` (store name → legend label), `groupNotes` (a paragraph under a chart group's heading), `hero` (the headline as shares of one chart's last values: `{ chart, noun, parts: [{ series, text, class? }] }`). Without it: built-in labels, no notes, the Swift 6 headline when the data has one. |
+| `page.json` | no | `labels` (store name → legend label), `groupNotes` (a paragraph under a chart group's heading), `hero` (the headline as shares of one chart's last values: `{ chart, noun, parts: [{ series, text, class? }] }`). `defaultRangeDays` selects an initial window from the range picker. Without a page config: built-in labels, no notes, the Swift 6 headline when the data has one. |
 | `sections.html` | no | product sections that belong to this app only, inserted under the charts. Its link text is the one place a non-Latin proper noun is allowed (a channel's own title) — see `scripts/latin-only.mjs`. |
 | `mascot.html` | no | the footer easter egg's button — the app's own creature, carrying `id="mascot"`. Without it: the dodo. |
 | `phrases.json` | no | the lines that creature says, replacing the shared `phrases.json` wholesale — an app whose mascot is not the dodo needs its own, because much of the shared list speaks as the bird. A non-empty array of non-empty strings, or the build fails. Without it: the shared list. |
@@ -71,35 +72,11 @@ The first deploy may find no data yet — a repository's backfill takes a few ni
 The build then writes empty chart files and the page stands with its header, roadmap and
 sections; charts appear as the series arrive.
 
-An app with `mobileOkrs: true` reads the committed daily Android snapshots and DS usage
-history from `dodobrands/mobile_okrs` during the Pages build. Configure the dashboard
-repository secret `MOBILE_OKRS_READ_TOKEN` with read-only Contents access to that repository.
-Locally the same command uses the signed-in GitHub CLI. The build streams the archive
-and adds only aggregate counts and dates to the chart data. A failed download stops the build and keeps the previous
-Pages deployment. A `roadmapOnly` entry in `charts.json` supplies series for
-`progressSource` without drawing another chart on the page.
-
-The Android MVP and MVVM charts start in March 2025. Through May 3, 2026 they use daily UTC
-snapshots reconstructed from the Android repository. To reproduce the fixed history
-from a full clone, run `python3 scripts/android-mvvm-history.py /path/to/dodo-mobile-android`.
-From May 4, the regular Pages build appends daily Mobile OKR observations.
-
-Android DS history starts on March 19, 2024. To reproduce the historical CSVs, run
-`python3 scripts/android-ds-history.py /path/to/android /path/to/mobile_okrs /path/to/ds_metrics`.
-The reference scanner revisions are mobile_okrs `5829fb82` and ds_metrics `5af81314`.
-Subsequent usage and catalog observations come from the scheduled Mobile OKR scan.
-
-The Android Code Metrics workflow measures Compose files, layouts and screenshot module reach.
-Scheduled develop Code Checks archive separate unit and UI JaCoCo results. Code Metrics imports
-retained reports on its normal nightly run and retries them on subsequent runs. Pages reads
-these series from code-metrics and includes verified measurements predating the new workflow
-from `dodo-android/coverage-history.csv`. A live measurement takes precedence for its day.
-
 ## Roadmap from Kaiten
 
 An app's roadmap comes either from Kaiten or from hand-written JSON in `roadmap/`, never both:
 an app with `roadmap/kaiten.json` takes Kaiten's cards only, pulled at every deploy. Drinkit
-Android is hand-written; Dodo iOS is on Kaiten.
+Android uses hand-written cards. Dodo iOS and Dodo Android use Kaiten.
 
 ### Put a card on the page
 

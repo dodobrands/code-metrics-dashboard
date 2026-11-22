@@ -60,13 +60,12 @@
     "id": "mvp-remaining",
     "group": "Architecture",
     "title": "MVP and MVVM in the migration scan",
-    "note": "Share of presenter and BaseViewModel files matched by inheritance in app and context. Each percentage uses the combined count for that day.",
+    "note": "Share of presenter and BaseViewModel files matched by inheritance in app and context. Each percentage uses the combined count for that day. Straight segments join successive observations across missing days.",
     "kind": "share",
     "series": [
       "OKR:MVVM:Screens",
       "OKR:MVP:Remaining"
     ],
-    "maxGapDays": 1,
     "selfBounds": true,
     "latest": true
   },
@@ -97,10 +96,22 @@
     "percent": true
   },
   {
+    "id": "screenshot-goldens",
+    "group": "Tests",
+    "title": "Screenshot baselines",
+    "note": "Golden PNG files checked into the screenshot reference directories. Each image counts once.",
+    "kind": "line",
+    "series": [
+      "Screenshot:Baselines"
+    ],
+    "selfBounds": true,
+    "latest": true
+  },
+  {
     "id": "screenshot-reach",
     "group": "Tests",
     "title": "Screenshot coverage of UI modules",
-    "note": "A UI module has Compose code or XML layouts. A module counts as covered when it contains at least one checked-in golden PNG. This measures module reach.",
+    "note": "Share of UI modules with at least one golden PNG. Splitting uncovered code into separate UI modules can lower the share even as the number of images grows.",
     "kind": "share",
     "series": [
       "Screenshot:ModulesWithGoldens",
@@ -162,6 +173,32 @@
       "Detekt:Baseline"
     ],
     "activeSeries": "Detekt:Baseline",
+    "selfBounds": true,
+    "latest": true
+  },
+  {
+    "id": "lint-baseline",
+    "group": "Tech debt",
+    "title": "Android Lint baseline",
+    "note": "Findings recorded across module baselines. Triangles mark samples with more distinct issue IDs than the preceding sample. Enabling rules and updating baselines can bring existing findings into this count.",
+    "kind": "line",
+    "series": [
+      "Lint:Baseline",
+      "Lint:BaselineRuleIds"
+    ],
+    "selfBounds": true,
+    "latest": true,
+    "ruleCountSeries": "Lint:BaselineRuleIds"
+  },
+  {
+    "id": "lint-rule-ids",
+    "group": "Tech debt",
+    "title": "Rules represented in Lint baselines",
+    "note": "Distinct issue IDs with at least one recorded finding across all module baselines. A new ID appears here when its first finding enters a baseline.",
+    "kind": "line",
+    "series": [
+      "Lint:BaselineRuleIds"
+    ],
     "selfBounds": true,
     "latest": true
   },

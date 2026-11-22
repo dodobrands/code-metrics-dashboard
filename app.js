@@ -17,7 +17,7 @@ Chart.register(zoomPlugin);
 // only the invitation below is styled.
 console.log(logo);
 console.log(
-  "%cDodo's iOS team is hiring → https://dodoteam.ru/vacancies/",
+  "%cExplore careers at Dodo → https://dodoteam.ru/vacancies/",
   "font:600 13px 'Martian Mono',ui-monospace,monospace;color:#f05138",
 );
 // Axis ticks and legend default to Chart.js' own sans-serif; match the page's mono.
@@ -192,11 +192,19 @@ function lineChart(canvas, spec, byName, bounds) {
   // A chart without an explicit `series` list draws every series in its data
   // file — used for dynamic sets like the per-type build warnings.
   const names = spec.series ?? [...byName.keys()];
-  const datasets = names.filter((n) => byName.has(n)).map((n, i) => ({
+  const ruleCounts = byName.get(spec.ruleCountSeries)?.points ?? [];
+  const ruleIncreases = new Map();
+  for (let i = 1; i < ruleCounts.length; i++) {
+    const [timestamp, count] = ruleCounts[i];
+    const previous = ruleCounts[i - 1][1];
+    if (count > previous) ruleIncreases.set(timestamp, [previous, count]);
+  }
+  const datasets = names.filter((n) => n !== spec.ruleCountSeries && byName.has(n)).map((n, i) => ({
     label: nameOf(n), data: byName.get(n).points.map(([x, y]) => ({ x, y })),
-    spanGaps: spec.maxGapDays == null ? false : spec.maxGapDays * DAY,
     borderColor: colors[i % colors.length], backgroundColor: colors[i % colors.length],
-    borderWidth: 1.75, pointRadius: spec.maxGapDays && byName.get(n).points.length < 60 ? 2 : 0, pointHoverRadius: 3, tension: spec.percent ? 0 : 0.12, fill: false,
+    pointStyle: spec.ruleCountSeries ? (ctx) => ruleIncreases.has(ctx.raw?.x) ? "triangle" : "circle" : "circle",
+    pointRadius: (ctx) => ruleIncreases.has(ctx.raw?.x) ? 6 : spec.latest && byName.get(n).points.length < 100 ? 2 : 0,
+    borderWidth: 1.75, pointHoverRadius: 3, tension: spec.latest ? 0 : 0.12, fill: false,
   }));
   if (spec.latest && datasets.length) {
     const timestamp = Math.max(...datasets.map((dataset) => dataset.data.at(-1)?.x ?? -Infinity));
@@ -211,6 +219,10 @@ function lineChart(canvas, spec, byName, bounds) {
     opts.scales.y.ticks.callback = (value) => `${value}%`;
   }
   opts.plugins.tooltip = tooltipConfig((y) => spec.percent ? `${y}%` : String(y));
+  if (spec.ruleCountSeries) opts.plugins.tooltip.callbacks.afterBody = (items) => {
+    const change = ruleIncreases.get(items[0]?.parsed.x);
+    return change ? `Distinct issue IDs: ${change.join(" → ")}` : "";
+  };
   mount(canvas, { type: "line", data: { datasets }, options: opts });
 }
 
@@ -592,7 +604,7 @@ function shareChart(canvas, spec, byName, bounds) {
   const colors = palette();
   const source = spec.series.map((name) => byName.get(name));
   if (source.some((series) => !series)) return;
-  const normalized = shareSeries(source, { includeCounts: spec.latest, maxGapMs: spec.maxGapDays * DAY });
+  const normalized = shareSeries(source, { includeCounts: spec.latest });
   if (spec.latest) {
     const latest = normalized.map(({ name, points }) => ({ name, ...points.at(-1) }));
     if (latest[0]?.total) showLatest(canvas, latest[0].x, latest.map((point) =>
@@ -641,6 +653,10 @@ const RANGES = [
   { label: "Last week", ms: 7 * DAY },
 ];
 function applyAxisWindow(options, range) {
+  if (range.shared) {
+    Object.assign(options.scales.x, { min: range.min, max: range.max });
+    return;
+  }
   const limits = options.plugins.zoom?.limits?.x;
   // Keep a young series on its own axis when a longer range or All time is selected.
   const start = Math.max(range.min, limits?.min ?? range.min);
@@ -648,7 +664,7 @@ function applyAxisWindow(options, range) {
   Object.assign(options.scales.x, start < end ? { min: start, max: end } : range);
 }
 
-function rangePicker(bounds) {
+function rangePicker(bounds, defaultRangeDays) {
   const sel = document.getElementById("rangepick");
   if (!sel) return;
   for (const r of RANGES) {
@@ -656,16 +672,24 @@ function rangePicker(bounds) {
     o.textContent = r.label;
     sel.appendChild(o);
   }
-  sel.onchange = () => {
+  const apply = () => {
     const r = RANGES[sel.selectedIndex];
     const min = r.ms == null ? bounds.min : Math.max(bounds.min, bounds.max - r.ms);
-    axisWindow = { min, max: bounds.max };
-    goal("range", { range: r.label });
+    axisWindow = { min, max: bounds.max, shared: Boolean(defaultRangeDays && r.ms) };
     for (const c of charts) {
       applyAxisWindow(c.options, axisWindow);
       c.update("none");
     }
   };
+  sel.onchange = () => {
+    apply();
+    goal("range", { range: RANGES[sel.selectedIndex].label });
+  };
+  const index = RANGES.findIndex((r) => r.ms === defaultRangeDays * DAY);
+  if (index >= 0) {
+    sel.selectedIndex = index;
+    apply();
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -678,7 +702,7 @@ document.addEventListener("click", (e) => {
 
 async function main() {
   const [specs, meta, page] = await Promise.all([
-    fetch("charts.json", { cache: "no-store" }).then((r) => r.json()).then((charts) => charts.filter((c) => !c.roadmapOnly)),
+    fetch("charts.json", { cache: "no-store" }).then((r) => r.json()),
     fetch("data/meta.json", { cache: "no-store" }).then((r) => r.json()),
     loadPage(fetch, document.body.dataset.pageConfig),
   ]);
@@ -727,7 +751,7 @@ async function main() {
   // Typography the sections in the same synchronous task as the render, so the
   // text is final before paint — no reflow once the charts come in.
   typographize(app);
-  rangePicker(bounds);
+  rangePicker(bounds, page.defaultRangeDays);
 }
 
 // --- roadmap modals (board + per-task dialogs are built into index.html at
