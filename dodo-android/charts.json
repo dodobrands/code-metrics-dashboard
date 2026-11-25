@@ -1,0 +1,213 @@
+[
+  {
+    "id": "ui-module-stacks",
+    "group": "UI",
+    "title": "Modules by UI stack",
+    "note": "Each UI module counts once. The scanner looks for Kotlin files containing @Composable and XML layout resources.",
+    "kind": "share",
+    "series": [
+      "Modules:ComposeOnly",
+      "Modules:Mixed",
+      "Modules:ViewOnly"
+    ],
+    "selfBounds": true,
+    "latest": true
+  },
+  {
+    "id": "ui-compose",
+    "group": "UI",
+    "title": "Compose share of UI source files",
+    "note": "Each Kotlin file containing @Composable and each XML layout in src/main counts once. A file can contain several composables.",
+    "kind": "share",
+    "series": [
+      "UI:ComposeFiles",
+      "UI:XmlLayouts"
+    ],
+    "selfBounds": true,
+    "latest": true
+  },
+  {
+    "id": "ds-usage",
+    "group": "Design system",
+    "title": "Design system use and remaining work",
+    "note": "Share of recognized component calls across scanned Android screens. Repeated uses count separately. The denominator excludes system controls.",
+    "kind": "share",
+    "series": [
+      "OKR:DS:InUse",
+      "OKR:DS:Ready",
+      "OKR:DS:NeedsChanges",
+      "OKR:DS:NoEquivalent"
+    ],
+    "selfBounds": true,
+    "latest": true
+  },
+  {
+    "id": "ds-inventory",
+    "series": [
+      "OKR:DS:Available",
+      "OKR:DS:Missing"
+    ],
+    "group": "Design system",
+    "title": "Android component catalog",
+    "kind": "share",
+    "note": "Each catalog component applicable to Android counts once. Availability measures how much of the catalog the team has implemented.",
+    "selfBounds": true,
+    "latest": true
+  },
+  {
+    "id": "mvp-remaining",
+    "group": "Architecture",
+    "title": "MVP and MVVM in the migration scan",
+    "note": "Share of presenter and BaseViewModel files matched by inheritance in app and context. Each percentage uses the combined count for that day. Straight segments join successive observations across missing days.",
+    "kind": "share",
+    "series": [
+      "OKR:MVVM:Screens",
+      "OKR:MVP:Remaining"
+    ],
+    "selfBounds": true,
+    "latest": true
+  },
+  {
+    "id": "tests-unit",
+    "group": "Tests",
+    "title": "Unit tests",
+    "note": "Percentage of bytecode instructions covered by unit tests in nightly JaCoCo reports.",
+    "kind": "line",
+    "series": [
+      "Coverage:Unit"
+    ],
+    "selfBounds": true,
+    "latest": true,
+    "percent": true
+  },
+  {
+    "id": "tests-ui",
+    "group": "Tests",
+    "title": "UI tests",
+    "note": "Percentage of bytecode instructions covered by UI tests in nightly JaCoCo reports.",
+    "kind": "line",
+    "series": [
+      "Coverage:UI"
+    ],
+    "selfBounds": true,
+    "latest": true,
+    "percent": true
+  },
+  {
+    "id": "screenshot-goldens",
+    "group": "Tests",
+    "title": "Screenshot baselines",
+    "note": "Golden PNG files checked into the screenshot reference directories. Each image counts once.",
+    "kind": "line",
+    "series": [
+      "Screenshot:Baselines"
+    ],
+    "selfBounds": true,
+    "latest": true
+  },
+  {
+    "id": "screenshot-reach",
+    "group": "Tests",
+    "title": "Screenshot coverage of UI modules",
+    "note": "Share of UI modules with at least one golden PNG. Splitting uncovered code into separate UI modules can lower the share even as the number of images grows.",
+    "kind": "share",
+    "series": [
+      "Screenshot:ModulesWithGoldens",
+      "Screenshot:ModulesWithoutGoldens"
+    ],
+    "selfBounds": true,
+    "latest": true
+  },
+  {
+    "id": "tests-by-module",
+    "group": "Tests",
+    "title": "Tests by module",
+    "note": "Share of all unit tests or golden images in the latest snapshot. The smallest modules are grouped under Other.",
+    "kind": "bar",
+    "toggle": [
+      {
+        "label": "Unit tests",
+        "seriesPrefix": "Tests:Unit:ByModule:",
+        "topN": 30,
+        "shorten": {
+          "dropSegments": [
+            "context",
+            "infrastracture",
+            "impl"
+          ],
+          "dropSuffixes": [
+            "-impl"
+          ],
+          "collapseRepeats": true
+        }
+      },
+      {
+        "label": "Screenshot baselines",
+        "seriesPrefix": "Screenshot:ByModule:",
+        "topN": 30,
+        "shorten": {
+          "dropSegments": [
+            "context",
+            "infrastracture",
+            "impl"
+          ],
+          "dropSuffixes": [
+            "-impl"
+          ],
+          "collapseRepeats": true
+        }
+      }
+    ],
+    "shareOfTotal": true
+  },
+  {
+    "id": "debt-baseline",
+    "group": "Tech debt",
+    "title": "Detekt baseline",
+    "note": "entries excluded from normal detekt checks by the checked-in baseline",
+    "kind": "line",
+    "series": [
+      "Detekt:Baseline"
+    ],
+    "selfBounds": true,
+    "latest": true
+  },
+  {
+    "id": "lint-baseline",
+    "group": "Tech debt",
+    "title": "Android Lint baseline",
+    "note": "Findings recorded across module baselines. Triangles mark samples with more distinct issue IDs than the preceding sample. Enabling rules and updating baselines can bring existing findings into this count.",
+    "kind": "line",
+    "series": [
+      "Lint:Baseline",
+      "Lint:BaselineRuleIds"
+    ],
+    "selfBounds": true,
+    "latest": true,
+    "ruleCountSeries": "Lint:BaselineRuleIds"
+  },
+  {
+    "id": "lint-rule-ids",
+    "group": "Tech debt",
+    "title": "Rules represented in Lint baselines",
+    "note": "Distinct issue IDs with at least one recorded finding across all module baselines. A new ID appears here when its first finding enters a baseline.",
+    "kind": "line",
+    "series": [
+      "Lint:BaselineRuleIds"
+    ],
+    "selfBounds": true,
+    "latest": true
+  },
+  {
+    "id": "code-modules",
+    "group": "Codebase",
+    "title": "Modules",
+    "note": "Gradle project paths included in settings.gradle, excluding the wiki",
+    "kind": "line",
+    "series": [
+      "Modules:Total"
+    ],
+    "selfBounds": true,
+    "latest": true
+  }
+]

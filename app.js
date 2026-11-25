@@ -17,7 +17,7 @@ Chart.register(zoomPlugin);
 // only the invitation below is styled.
 console.log(logo);
 console.log(
-  "%cDodo's iOS team is hiring → https://dodoteam.ru/vacancies/",
+  "%cExplore careers at Dodo → https://dodoteam.ru/vacancies/",
   "font:600 13px 'Martian Mono',ui-monospace,monospace;color:#f05138",
 );
 // Axis ticks and legend default to Chart.js' own sans-serif; match the page's mono.
@@ -100,7 +100,7 @@ window.visualViewport?.addEventListener("resize", () => {
 });
 
 function mount(canvas, config) {
-  if (axisWindow) Object.assign(config.options.scales.x, axisWindow);
+  if (axisWindow) applyAxisWindow(config.options, axisWindow);
   const chart = new Chart(canvas, config);
   watcher.observe(canvas);
   canvas.title = "scroll to zoom · shift-drag to pan · double-click to reset";
@@ -116,7 +116,8 @@ function seriesBounds(byName) {
   let min = Infinity, max = -Infinity;
   for (const s of byName.values())
     for (const [t] of s.points) { if (t < min) min = t; if (t > max) max = t; }
-  return Number.isFinite(min) && max > min ? { min, max } : null;
+  if (!Number.isFinite(min)) return null;
+  return max > min ? { min, max } : { min: min - DAY / 2, max: max + DAY / 2 };
 }
 
 const isDark = () => matchMedia("(prefers-color-scheme: dark)").matches;
@@ -161,18 +162,63 @@ const ZOOM = {
 // zoom/pan is clamped to the data extent [bounds.min, bounds.max] via limits.x.
 const baseOptions = (scales, single, bounds) => ({ responsive: true, maintainAspectRatio: false, animation: false, normalized: true, interaction: { mode: "index", intersect: false }, layout: { padding: { top: 8, right: 8, bottom: 0, left: 0 } }, plugins: { legend: single ? { display: false } : legendConfig(), zoom: { ...ZOOM, limits: { x: { min: bounds.min, max: bounds.max, minRange: 864e5 } } } }, scales });
 
+function useDateTicks(opts) {
+  const date = new Intl.DateTimeFormat("en", { month: "short", day: "numeric", timeZone: "UTC" });
+  const month = new Intl.DateTimeFormat("en", { month: "short", year: "numeric", timeZone: "UTC" });
+  opts.scales.x.ticks.callback = function (value) {
+    const duration = this.max - this.min;
+    if (duration < 366 * DAY) return date.format(value);
+    if (duration < 3 * 366 * DAY) return month.format(value);
+    return new Date(value).getUTCFullYear();
+  };
+}
+
+function showLatest(canvas, timestamp, values) {
+  const caption = canvas.closest("figure").querySelector("figcaption");
+  const date = new Date(timestamp).toISOString().slice(0, 10);
+  const summary = document.createElement("div");
+  summary.className = "chart-reading";
+  summary.innerHTML = `<time datetime="${date}">${date}</time>` +
+    values.map(([label, value]) => `<span>${escapeHtml(label)} <b>${escapeHtml(value)}</b></span>`).join("");
+  caption.appendChild(summary);
+}
+
 function lineChart(canvas, spec, byName, bounds) {
   const colors = palette();
   // A chart without an explicit `series` list draws every series in its data
   // file — used for dynamic sets like the per-type build warnings.
   const names = spec.series ?? [...byName.keys()];
-  const datasets = names.filter((n) => byName.has(n)).map((n, i) => ({
+  const ruleCounts = byName.get(spec.ruleCountSeries)?.points ?? [];
+  const ruleIncreases = new Map();
+  for (let i = 1; i < ruleCounts.length; i++) {
+    const [timestamp, count] = ruleCounts[i];
+    const previous = ruleCounts[i - 1][1];
+    if (count > previous) ruleIncreases.set(timestamp, [previous, count]);
+  }
+  const datasets = names.filter((n) => n !== spec.ruleCountSeries && byName.has(n)).map((n, i) => ({
     label: nameOf(n), data: byName.get(n).points.map(([x, y]) => ({ x, y })),
     borderColor: colors[i % colors.length], backgroundColor: colors[i % colors.length],
-    borderWidth: 1.75, pointRadius: 0, pointHoverRadius: 3, tension: 0.12, fill: false,
+    pointStyle: spec.ruleCountSeries ? (ctx) => ruleIncreases.has(ctx.raw?.x) ? "triangle" : "circle" : "circle",
+    pointRadius: (ctx) => ruleIncreases.has(ctx.raw?.x) ? 6 : spec.latest && byName.get(n).points.length < 100 ? 2 : 0,
+    borderWidth: 1.75, pointHoverRadius: 3, tension: spec.latest ? 0 : 0.12, fill: false,
   }));
+  if (spec.latest && datasets.length) {
+    const timestamp = Math.max(...datasets.map((dataset) => dataset.data.at(-1)?.x ?? -Infinity));
+    if (Number.isFinite(timestamp)) showLatest(canvas, timestamp, datasets
+      .filter((dataset) => dataset.data.at(-1)?.x === timestamp)
+      .map((dataset) => [dataset.label, `${dataset.data.at(-1).y}${spec.percent ? "%" : ""}`]));
+  }
   const opts = baseOptions(commonScales(bounds), datasets.length === 1, bounds);
-  opts.plugins.tooltip = tooltipConfig((y) => `${y}`);
+  if (spec.selfBounds) useDateTicks(opts);
+  if (spec.percent) {
+    opts.scales.y.max = 100;
+    opts.scales.y.ticks.callback = (value) => `${value}%`;
+  }
+  opts.plugins.tooltip = tooltipConfig((y) => spec.percent ? `${y}%` : String(y));
+  if (spec.ruleCountSeries) opts.plugins.tooltip.callbacks.afterBody = (items) => {
+    const change = ruleIncreases.get(items[0]?.parsed.x);
+    return change ? `Distinct issue IDs: ${change.join(" → ")}` : "";
+  };
   mount(canvas, { type: "line", data: { datasets }, options: opts });
 }
 
@@ -201,19 +247,19 @@ function rankRows(items, topN) {
 
 // Draw ranked horizontal bars; returns the Chart so a toggle can destroy and
 // redraw it. Grows the card so every bar keeps a legible height.
-function drawBars(canvas, rows, percent = false) {
+function drawBars(canvas, rows, percent = false, total = 0) {
   const colors = palette();
   const { muted } = ink();
   const grid = isDark() ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)";
   canvas.parentElement.style.height = `${Math.max(160, rows.length * 22 + 24)}px`;
   return new Chart(canvas, {
     type: "bar",
-    data: { labels: rows.map((r) => r.label), datasets: [{ data: rows.map((r) => r.value), backgroundColor: colors[0], borderRadius: 3, barThickness: 12 }] },
+    data: { labels: rows.map((r) => r.label), datasets: [{ data: rows.map((r) => total ? 100 * r.value / total : r.value), backgroundColor: colors[0], borderRadius: 3, barThickness: 12 }] },
     options: {
       responsive: true, maintainAspectRatio: false, animation: false, indexAxis: "y",
       // Long labels (a few method signatures) truncate with an ellipsis; the
       // untruncated label is the tooltip title.
-      plugins: { legend: { display: false }, tooltip: { callbacks: { title: (items) => items[0].label, label: (i) => ` ${i.parsed.x}${percent ? "%" : ""}` } } },
+      plugins: { legend: { display: false }, tooltip: { callbacks: { title: (items) => items[0].label, label: (i) => total ? ` ${rows[i.dataIndex].value} of ${total} (${i.parsed.x.toFixed(1)}%)` : ` ${i.parsed.x}${percent ? "%" : ""}` } } },
       scales: {
         x: { beginAtZero: true, max: percent ? 100 : undefined, grid: { color: grid, drawTicks: false }, border: { display: false }, ticks: { color: muted, font: { size: 11 }, precision: 0, callback: (v) => (percent ? `${v}%` : v) } },
         y: { grid: { display: false }, border: { display: false }, ticks: { color: muted, font: { size: 11 }, autoSkip: false, callback(v) { const l = this.getLabelForValue(v); return l.length > 28 ? `${l.slice(0, 27)}…` : l; } } },
@@ -248,9 +294,10 @@ function toggleBarChart(card, canvas, spec, byName) {
       return { label, value: p.length ? p[p.length - 1][1] : 0 };
     });
     chart?.destroy();
+    const total = spec.shareOfTotal ? items.reduce((sum, item) => sum + item.value, 0) : 0;
     chart = spec.percent
       ? drawBars(canvas, rankShares(items, g.topN), true)
-      : drawBars(canvas, rankRows(items, g.topN));
+      : drawBars(canvas, rankRows(items, g.topN), Boolean(total), total);
     for (const [i, b] of [...ctrl.children].entries()) b.setAttribute("aria-pressed", String(i === gi));
   };
   spec.toggle.forEach((g, gi) => {
@@ -532,7 +579,7 @@ function toggleShareChart(card, canvas, spec, byName, bounds) {
 }
 
 // Stacked 100% area from a set of series (SwiftUI/UIKit) or a version histogram.
-function stack100(canvas, datasets, bounds) {
+function stack100(canvas, datasets, bounds, spec = {}) {
   const scales = commonScales(bounds);
   scales.y = { ...scales.y, stacked: true, min: 0, max: 100, ticks: { ...scales.y.ticks, callback: (v) => `${v}%` } };
   const opts = baseOptions(scales, false, bounds);
@@ -542,13 +589,23 @@ function stack100(canvas, datasets, bounds) {
   // plain box swatch below fills from backgroundColor instead, so it stays visible.
   opts.plugins.legend = { ...opts.plugins.legend, labels: { ...opts.plugins.legend.labels, usePointStyle: false } };
   opts.plugins.tooltip = tooltipConfig((y) => `${y.toFixed(1)}%`);
+  if (spec.selfBounds) useDateTicks(opts);
+  if (spec.latest) opts.plugins.tooltip.callbacks.label = (item) =>
+    ` ${item.dataset.label}: ${item.raw.count} of ${item.raw.total} (${item.raw.y.toFixed(1)}%)`;
   opts.plugins.tooltip.filter = (item) => item.parsed.y > 0; // hide 0% rows
   return mount(canvas, { type: "line", data: { datasets }, options: opts });
 }
 
 function shareChart(canvas, spec, byName, bounds) {
   const colors = palette();
-  const normalized = shareSeries(spec.series.map((name) => byName.get(name)));
+  const source = spec.series.map((name) => byName.get(name));
+  if (source.some((series) => !series)) return;
+  const normalized = shareSeries(source, { includeCounts: spec.latest });
+  if (spec.latest) {
+    const latest = normalized.map(({ name, points }) => ({ name, ...points.at(-1) }));
+    if (latest[0]?.total) showLatest(canvas, latest[0].x, latest.map((point) =>
+      [nameOf(point.name), `${point.y.toFixed(1)}% · ${point.count}/${point.total}`]));
+  }
   return stack100(canvas, normalized.map(({ name, points }, index) => ({
     label: nameOf(name),
     data: points,
@@ -558,7 +615,7 @@ function shareChart(canvas, spec, byName, bounds) {
     pointRadius: 0,
     fill: index === 0 ? "origin" : "-1",
     tension: 0,
-  })), bounds);
+  })), bounds, spec);
 }
 
 // Swift version share — newest version at the bottom so it grows upward.
@@ -591,7 +648,19 @@ const RANGES = [
   { label: "Last month", ms: 30 * DAY },
   { label: "Last week", ms: 7 * DAY },
 ];
-function rangePicker(bounds) {
+function applyAxisWindow(options, range) {
+  if (range.shared) {
+    Object.assign(options.scales.x, { min: range.min, max: range.max });
+    return;
+  }
+  const limits = options.plugins.zoom?.limits?.x;
+  // Keep a young series on its own axis when a longer range or All time is selected.
+  const start = Math.max(range.min, limits?.min ?? range.min);
+  const end = Math.min(range.max, limits?.max ?? range.max);
+  Object.assign(options.scales.x, start < end ? { min: start, max: end } : range);
+}
+
+function rangePicker(bounds, defaultRangeDays) {
   const sel = document.getElementById("rangepick");
   if (!sel) return;
   for (const r of RANGES) {
@@ -599,17 +668,24 @@ function rangePicker(bounds) {
     o.textContent = r.label;
     sel.appendChild(o);
   }
-  sel.onchange = () => {
+  const apply = () => {
     const r = RANGES[sel.selectedIndex];
     const min = r.ms == null ? bounds.min : Math.max(bounds.min, bounds.max - r.ms);
-    axisWindow = { min, max: bounds.max };
-    goal("range", { range: r.label });
+    axisWindow = { min, max: bounds.max, shared: Boolean(defaultRangeDays && r.ms) };
     for (const c of charts) {
-      c.options.scales.x.min = min;
-      c.options.scales.x.max = bounds.max;
+      applyAxisWindow(c.options, axisWindow);
       c.update("none");
     }
   };
+  sel.onchange = () => {
+    apply();
+    goal("range", { range: RANGES[sel.selectedIndex].label });
+  };
+  const index = RANGES.findIndex((r) => r.ms === defaultRangeDays * DAY);
+  if (index >= 0) {
+    sel.selectedIndex = index;
+    apply();
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -671,7 +747,7 @@ async function main() {
   // Typography the sections in the same synchronous task as the render, so the
   // text is final before paint — no reflow once the charts come in.
   typographize(app);
-  rangePicker(bounds);
+  rangePicker(bounds, page.defaultRangeDays);
 }
 
 // --- roadmap modals (board + per-task dialogs are built into index.html at

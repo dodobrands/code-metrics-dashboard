@@ -10,6 +10,7 @@ app; every app lives at `…/<dir>/`, and that is the link to share.
 |---|---|---|
 | Dodo Pizza iOS | `dodobrands/dodo-mobile-ios` | [`dodo-ios/`](https://dodobrands.github.io/code-metrics-dashboard/dodo-ios/) |
 | Drinkit Android | `dodobrands/drinkit-mobile-android` | [`drinkit-android/`](https://dodobrands.github.io/code-metrics-dashboard/drinkit-android/) |
+| Dodo Pizza Android | `dodobrands/dodo-mobile-android` | [`dodo-android/`](https://dodobrands.github.io/code-metrics-dashboard/dodo-android/) |
 
 ## How the site is put together
 
@@ -44,7 +45,7 @@ to `dodobrands.github.io/…` and 404.
 | File | Required | What it is |
 |---|---|---|
 | `charts.json` | yes | the chart spec: id, group, title, note, kind, series — by **store names**, the metric names as the app's repository writes them. Shared by the page and the build. |
-| `page.json` | no | `labels` (store name → legend label), `groupNotes` (a paragraph under a chart group's heading), `hero` (the headline as shares of one chart's last values: `{ chart, noun, parts: [{ series, text, class? }] }`). Without it: built-in labels, no notes, the Swift 6 headline when the data has one. |
+| `page.json` | no | `labels` (store name → legend label), `groupNotes` (a paragraph under a chart group's heading), `hero` (the headline as shares of one chart's last values: `{ chart, noun, parts: [{ series, text, class? }] }`). `defaultRangeDays` selects an initial window from the range picker. Without a page config: built-in labels, no notes, the Swift 6 headline when the data has one. |
 | `sections.html` | no | product sections that belong to this app only, inserted under the charts. Its link text is the one place a non-Latin proper noun is allowed (a channel's own title) — see `scripts/latin-only.mjs`. |
 | `mascot.html` | no | the footer easter egg's button — the app's own creature, carrying `id="mascot"`. Without it: the dodo. |
 | `phrases.json` | no | the lines that creature says, replacing the shared `phrases.json` wholesale — an app whose mascot is not the dodo needs its own, because much of the shared list speaks as the bird. A non-empty array of non-empty strings, or the build fails. Without it: the shared list. |
@@ -64,8 +65,8 @@ to `dodobrands.github.io/…` and 404.
    rule if the series keys are module paths (below).
 4. Optionally add `page.json`, `sections.html`, `roadmap/`, `mascot.html` (+ `phrases.json`).
 5. Add the app's card to `og.json`.
-6. Run the checks (below). Nothing in `deploy.yml`, `app.js` or the templates changes: the
-   deploy loop, the switcher and the lint glob all read `apps.json`.
+6. Run the checks below. The deploy loop and app switcher pick up the new entry in
+   `apps.json`. Apps that use existing chart types share the same renderer.
 
 The first deploy may find no data yet — a repository's backfill takes a few nightly runs.
 The build then writes empty chart files and the page stands with its header, roadmap and
@@ -75,7 +76,7 @@ sections; charts appear as the series arrive.
 
 An app's roadmap comes either from Kaiten or from hand-written JSON in `roadmap/`, never both:
 an app with `roadmap/kaiten.json` takes Kaiten's cards only, pulled at every deploy. Drinkit
-Android is hand-written; Dodo iOS is on Kaiten.
+Android uses hand-written cards. Dodo iOS and Dodo Android use Kaiten.
 
 ### Put a card on the page
 
