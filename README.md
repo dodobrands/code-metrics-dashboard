@@ -65,8 +65,8 @@ to `dodobrands.github.io/…` and 404.
    rule if the series keys are module paths (below).
 4. Optionally add `page.json`, `sections.html`, `roadmap/`, `mascot.html` (+ `phrases.json`).
 5. Add the app's card to `og.json`.
-6. Run the checks (below). Nothing in `deploy.yml`, `app.js` or the templates changes: the
-   deploy loop, the switcher and the lint glob all read `apps.json`.
+6. Run the checks below. The deploy loop and app switcher pick up the new entry in
+   `apps.json`. Apps that use existing chart types share the same renderer.
 
 The first deploy may find no data yet — a repository's backfill takes a few nightly runs.
 The build then writes empty chart files and the page stands with its header, roadmap and
