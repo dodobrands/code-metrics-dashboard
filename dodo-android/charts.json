@@ -11,8 +11,7 @@
       "Modules:ViewOnly"
     ],
     "selfBounds": true,
-    "latest": true,
-    "activeSeries": "Modules:Mixed"
+    "latest": true
   },
   {
     "id": "ui-compose",
@@ -24,7 +23,6 @@
       "UI:ComposeFiles",
       "UI:XmlLayouts"
     ],
-    "activeSeries": "UI:ComposeFiles",
     "selfBounds": true,
     "latest": true
   },
@@ -117,7 +115,6 @@
       "Screenshot:ModulesWithGoldens",
       "Screenshot:ModulesWithoutGoldens"
     ],
-    "activeSeries": "Screenshot:ModulesWithGoldens",
     "selfBounds": true,
     "latest": true
   },
@@ -172,7 +169,6 @@
     "series": [
       "Detekt:Baseline"
     ],
-    "activeSeries": "Detekt:Baseline",
     "selfBounds": true,
     "latest": true
   },

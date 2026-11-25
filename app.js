@@ -112,14 +112,10 @@ function mount(canvas, config) {
 // Min/max timestamp across a chart's own series — for charts that scale to
 // their own data range (`selfBounds`) instead of the shared full-history axis,
 // so a young metric isn't a flat line squished at the far right.
-function seriesBounds(byName, activeSeries) {
+function seriesBounds(byName) {
   let min = Infinity, max = -Infinity;
   for (const s of byName.values())
     for (const [t] of s.points) { if (t < min) min = t; if (t > max) max = t; }
-  // Include the last measured zero before adoption starts.
-  const points = byName.get(activeSeries)?.points ?? [];
-  const first = points.findIndex(([, value]) => value > 0);
-  if (first > 0) min = points[first - 1][0];
   if (!Number.isFinite(min)) return null;
   return max > min ? { min, max } : { min: min - DAY / 2, max: max + DAY / 2 };
 }
@@ -740,7 +736,7 @@ async function main() {
     card.innerHTML = `<figcaption><h3>${escapeHtml(spec.title)}</h3>${spec.note ? `<p>${escapeHtml(spec.note)}</p>` : ""}</figcaption><div class="canvas-wrap"><canvas></canvas></div>`;
     section.appendChild(card);
     const canvas = card.querySelector("canvas");
-    const b = spec.selfBounds ? (seriesBounds(byName, spec.activeSeries) || bounds) : bounds;
+    const b = spec.selfBounds ? (seriesBounds(byName) || bounds) : bounds;
     if (spec.kind === "share") { if (spec.toggle) toggleShareChart(card, canvas, spec, byName, b); else shareChart(canvas, spec, byName, b); }
     else if (spec.kind === "versions") versionsChart(canvas, spec, byName, b);
     else if (spec.kind === "coverage") coverageChart(card, canvas, spec, byName, b);
