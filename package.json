@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "chart.js": "^4.6.2",
-    "chartjs-plugin-zoom": "^2.2.0",
+    "chartjs-plugin-zoom": "^3.0.2",
     "typopo": "^3.1.0"
   }
 }
